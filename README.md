@@ -1,0 +1,61 @@
+# CyclesTooner - Blender Toon Shader Assistant
+
+CyclesToonerは、Blenderでトゥーンレンダリング（セルルック）表現を効率的に行うためのアドオンです。  
+Principled BSDFマテリアルを一括でToon BSDFに変換する機能や、Cyclesレンダラーでも綺麗に表示できる「背面法」によるアウトライン自動生成機能を提供します。
+
+## 機能概要
+
+### 1. マテリアル変換 (Material Converter)
+選択したオブジェクト（およびその子階層の全オブジェクト）のマテリアルを自動的に変換します。
+
+*   **Convert**:
+    *   `Principled BSDF` を `Toon BSDF` (Size: 0.8) に置き換えます。
+    *   `Base Color` や `Normal` の接続は維持されます。
+    *   `Alpha` に接続がある場合、透過表示用にノードを自動で組み替えます（Invert Color + Mix Shader + Transparent BSDF）。
+    *   実行時、レンダリングエンジンが EEVEE の場合は自動的に **Cycles** に切り替わります。
+*   **Revert**:
+    *   CyclesToonerによって変換されたマテリアルを、元の `Principled BSDF` に戻します。
+
+### 2. アウトライン生成 (Outline Generator)
+Cyclesレンダラーでのトゥーン表現に最適な「背面法」を用いたアウトライン用メッシュを自動生成します。
+
+*   **Add Outline**:
+    *   選択中のコレクション内の全メッシュを参照するアウトライン用オブジェクトを作成します。
+    *   **Geometry Nodes** を使用し、元のモデルを法線方向にわずかに押し出して裏面を表示する仕組みです。
+    *   **太さの調整**:
+        *   頂点グループ（Vertex Group）のウェイト値で太さを制御できます（デフォルト: 0.5）。
+        *   基本の太さ係数はモディファイア設定 (`Value`) で一括調整可能です。
+    *   ビューポートでの選択不可（Selectable OFF）、CyclesのRay Visibility（Diffuse/Shadow OFF）設定も自動で行います。
+*   **Remove Outline**:
+    *   作成したアウトラインメッシュを削除します。
+    *   不要になったGeometry Nodeグループやマテリアルも自動的にクリーンアップします。
+
+## インストール方法
+
+1.  このリポジトリのファイルをZIP形式でダウンロードするか、フォルダごと用意します。
+2.  Blenderを開き、`編集 (Edit)` > `プリファレンス (Preferences)` > `アドオン (Add-ons)` を開きます。
+3.  `インストール (Install)` ボタンを押し、アドオンのファイル（またはZIP）を選択します。
+4.  リストに表示された **"Material: CyclesTooner"** にチェックを入れて有効化します。
+
+## 使い方
+
+3Dビューポートのサイドバー（Nキー）にある **Tool** タブ内に **CyclesTooner** パネルが表示されます。
+
+### マテリアルの変換
+1.  変換したいオブジェクトを選択します（複数選択可）。
+2.  **Convert** ボタンを押すと、マテリアルがトゥーン調に変換されます。
+3.  元に戻したい場合は **Revert** ボタンを押します。
+
+### アウトラインの作成
+1.  アウトライナー等で、対象のオブジェクトが含まれる **コレクション** を選択（アクティブに）します。
+2.  **Add Outline** ボタンを押します。
+    *   コレクションと同じ階層に `～_Outline` というオブジェクトが生成されます。
+3.  アウトラインの太さを頂点ウェイトで調整したい場合は、Modifiers の `ToonOutlineGN` の `Weight` にある「Input Attribute Toggle」をクリックし、ウェイト情報のある頂点ウェイト名を記載してください。
+4.  削除したい場合は、生成されたアウトラインオブジェクト、または元のコレクションを選択して **Remove Outline** ボタンを押します。
+
+## 動作環境
+*   Blender 5.0 (推奨) / 3.0以上
+*   推奨レンダラー: **Cycles** (アウトライン機能はCyclesの仕様に最適化されています)
+
+## LICENSE
+[MIT License](LICENSE)
