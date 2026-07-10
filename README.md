@@ -1,7 +1,7 @@
 # CyclesTooner - Blender Toon Shader Assistant
 
-CyclesToonerは、Blenderでトゥーンレンダリング（セルルック）表現を効率的に行うためのアドオンです。  
-Principled BSDFマテリアルを一括でToon BSDFに変換する機能や、Cyclesレンダラーでも綺麗に表示できる「背面法」によるアウトライン自動生成機能を提供します。
+CyclesToonerは、Principled BSDF、MMD（mmd_shader）、VRM（MToon）といったシェーダーを、Cyclesで扱える Toon BSDF に簡易変換し、トゥーンレンダリング（セルルック）表現を効率的に行うためのBlenderアドオンです。  
+あわせて、Cyclesレンダラーでも綺麗に表示できる「背面法」によるアウトライン自動生成機能も備えています。
 
 ## 機能概要
 

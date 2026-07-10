@@ -1,7 +1,7 @@
 # CyclesTooner - Blender Toon Shader Assistant
 
-CyclesTooner is a Blender add-on designed to streamline the process of creating toon (cel-shaded) looks.  
-It provides features to batch convert Principled BSDF materials to Toon BSDF and automatically generate outlines using the "inverted hull" (backfacing) method, optimized for the Cycles renderer.
+CyclesTooner is a Blender add-on that streamlines toon (cel-shaded) rendering by simply converting Principled BSDF, MMD (mmd_shader), and VRM (MToon) shaders into a Toon BSDF usable in Cycles.  
+It also includes automatic outline generation using the "inverted hull" (backfacing) method, which renders cleanly in the Cycles renderer.
 
 ## Features
 
