@@ -11,6 +11,7 @@ Automatically converts materials for selected objects (and all their children re
 *   **Convert**:
     *   Replaces `Principled BSDF` with `Toon BSDF` (Size: 0.8 / Smooth: 0.2).
     *   Directly converts MMD Tools `MMDShaderDev` / `mmd_shader` materials to `Toon BSDF`.
+    *   Directly converts VRM Add-on for Blender `MToon` materials to `Toon BSDF`.
     *   Preserves `Base Color` and `Normal` connections.
     *   Automatically adds opacity control nodes (Mix Shader + Transparent BSDF).
     *   If there is an `Alpha` connection, both the Alpha input and Opacity setting are applied.
@@ -61,6 +62,11 @@ The **CyclesTooner** panel is located in the **Tool** tab of the 3D Viewport Sid
 Materials loaded by MMD Tools with `mmd_shader` can be converted directly with **Convert**.
 
 CyclesTooner preserves `mmd_base_tex` image color/alpha and MMD Diffuse Color where possible. MMD material Alpha is folded into the initial **Opacity** value. The conversion removes `MMDShaderDev` nodes, so **Revert** restores a simplified `Principled BSDF` material rather than the original MMDShaderDev node setup. Exact Sphere/Toon texture compositing is not preserved.
+
+#### Direct MToon Conversion
+Materials loaded by VRM Add-on for Blender with `MToon` can be converted directly with **Convert**.
+
+CyclesTooner preserves base texture color/alpha and MToon Base Color where possible. MToon Alpha is folded into the initial **Opacity** value. The conversion removes `MToon` nodes, so **Revert** restores a simplified `Principled BSDF` material rather than the original MToon node setup. Exact MToon Shade Color, MatCap, Rim, Emission, and Outline effects are not preserved.
 
 ### Creating Outlines
 1.  Select (make active) the **Collection** containing your target objects in the Outliner.

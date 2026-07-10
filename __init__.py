@@ -3,7 +3,9 @@
 bl_info = {
     "name": "CyclesTooner",
     "author": "Codex",
-    "version": (1, 11),
+    # Version format: (major, minor, dev). Increment dev for uncommitted changes,
+    # then increment minor and reset dev to 0 when committing a completed change.
+    "version": (1, 13, 0),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > Tool",
     "description": "Convert Principled BSDF to Toon BSDF",

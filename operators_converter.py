@@ -10,6 +10,8 @@ CYCLES_TOONER_TRANSPARENT_NODE = "CyclesTooner_Transparent"
 CYCLES_TOONER_SOURCE_SHADER_PROP = "cyclestooner_source_shader"
 CYCLES_TOONER_MMD_BASE_TEX = "CyclesTooner_MMDBaseTex"
 CYCLES_TOONER_MMD_DIFFUSE_MULTIPLY = "CyclesTooner_MMDDiffuseMultiply"
+CYCLES_TOONER_MTOON_BASE_TEX = "CyclesTooner_MToonBaseTex"
+CYCLES_TOONER_MTOON_BASE_MULTIPLY = "CyclesTooner_MToonBaseMultiply"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 DEFAULT_TOON_SMOOTH = 0.2
 
@@ -163,6 +165,59 @@ def find_output_node(nodes):
     return output_node
 
 
+def ensure_material_output_node(nodes, location=(400, 0)):
+    output_node = find_output_node(nodes)
+    if output_node:
+        return output_node
+
+    output_node = nodes.new(type='ShaderNodeOutputMaterial')
+    output_node.location = location
+    return output_node
+
+
+def find_cycles_tooner_mix_node(nodes):
+    node = nodes.get(CYCLES_TOONER_MIX_NODE)
+    if node and node.type == 'MIX_SHADER':
+        return node
+
+    for node in nodes:
+        if node.type != 'MIX_SHADER':
+            continue
+        if node.name.startswith(CYCLES_TOONER_MIX_NODE):
+            return node
+        if node.label == "CyclesTooner Opacity Mix":
+            return node
+
+    return None
+
+
+def repair_cycles_tooner_output(mat):
+    if not mat.use_nodes or not mat.node_tree:
+        return False
+
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    mix_node = find_cycles_tooner_mix_node(nodes)
+    if not mix_node:
+        return False
+
+    output_node = ensure_material_output_node(
+        nodes,
+        location=(mix_node.location.x + 330, mix_node.location.y + 20),
+    )
+    surface_input = output_node.inputs.get('Surface')
+    shader_output = mix_node.outputs.get('Shader')
+    if not surface_input or not shader_output:
+        return False
+
+    if surface_input.is_linked and surface_input.links[0].from_node == mix_node:
+        return True
+
+    _replace_input_link(links, surface_input, shader_output)
+    output_node.location = (mix_node.location.x + 330, mix_node.location.y + 20)
+    return True
+
+
 def find_toon_node_from_root(root_node):
     if root_node.type == 'BSDF_TOON':
         return root_node
@@ -215,6 +270,48 @@ def get_input_default(node, socket_name, fallback=None):
     return fallback
 
 
+def value_to_rgba(value, fallback=(1.0, 1.0, 1.0, 1.0)):
+    try:
+        values = tuple(value)
+    except TypeError:
+        return fallback
+
+    if len(values) >= 4:
+        return tuple(values[:4])
+    if len(values) >= 3:
+        return tuple(values[:3]) + (1.0,)
+    return fallback
+
+
+def get_nested_attr(obj, attr_path):
+    current = obj
+    for attr in attr_path.split("."):
+        if current is None or not hasattr(current, attr):
+            return None
+        current = getattr(current, attr)
+    return current
+
+
+def find_image_texture_node_for_image(nodes, image):
+    if image is None:
+        return None
+    for node in nodes:
+        if node.type == 'TEX_IMAGE' and getattr(node, "image", None) == image:
+            return node
+    return None
+
+
+def node_name_contains(node, patterns):
+    node_tree_name = node.node_tree.name if node.type == 'GROUP' and node.node_tree else ""
+    target = f"{node.name} {node.label} {node.bl_idname} {node_tree_name}".lower()
+    return any(pattern in target for pattern in patterns)
+
+
+def node_socket_names_contain(node, patterns):
+    socket_names = " ".join([socket.name for socket in list(node.inputs) + list(node.outputs)]).lower()
+    return any(pattern in socket_names for pattern in patterns)
+
+
 def get_mmd_shader_node(nodes):
     node = nodes.get("mmd_shader")
     if node:
@@ -227,6 +324,160 @@ def get_mmd_shader_node(nodes):
             return node
 
     return None
+
+
+def get_mtoon_extension(mat):
+    extension = getattr(mat, "vrm_addon_extension", None)
+    if not extension:
+        return None
+
+    for attr in ("mtoon1", "mtoon0", "mtoon"):
+        mtoon = getattr(extension, attr, None)
+        if mtoon:
+            return mtoon
+
+    return extension
+
+
+def get_mtoon_shader_node(nodes):
+    for node in nodes:
+        if node.type == 'GROUP' and node_name_contains(node, ("mtoon",)):
+            return node
+        if node.type == 'GROUP' and node_socket_names_contain(node, ("lit color texture", "shade color texture", "shading shift texture")):
+            return node
+        if node_name_contains(node, ("mtoon",)):
+            return node
+    return None
+
+
+def is_mtoon_shader_material(mat, root_node=None):
+    if not mat.use_nodes or not mat.node_tree:
+        return False
+
+    if CYCLES_TOONER_OPACITY_NODE in mat.node_tree.nodes:
+        return False
+
+    mtoon_extension = get_mtoon_extension(mat)
+    if mtoon_extension and (
+        hasattr(mtoon_extension, "pbr_metallic_roughness")
+        or hasattr(mtoon_extension, "base_color_factor")
+        or hasattr(mtoon_extension, "shade_color_factor")
+        or hasattr(mtoon_extension, "texture")
+    ):
+        return True
+
+    if root_node and node_name_contains(root_node, ("mtoon",)):
+        return True
+
+    return get_mtoon_shader_node(mat.node_tree.nodes) is not None
+
+
+def get_mtoon_base_color(mat, mtoon_extension, mtoon_node):
+    attr_paths = (
+        "pbr_metallic_roughness.base_color_factor",
+        "base_color_factor",
+        "lit_color_factor",
+        "color",
+    )
+    for attr_path in attr_paths:
+        value = get_nested_attr(mtoon_extension, attr_path)
+        if value is not None:
+            return value_to_rgba(value)
+
+    for socket_name in ("Base Color", "Lit Color", "Color", "Diffuse Color"):
+        value = get_input_default(mtoon_node, socket_name)
+        if value is not None:
+            return value_to_rgba(value)
+
+    if len(mat.diffuse_color) >= 3:
+        return value_to_rgba(mat.diffuse_color)
+
+    return (1.0, 1.0, 1.0, 1.0)
+
+
+def get_mtoon_alpha_value(mat, base_color):
+    if len(base_color) > 3:
+        return clamp_opacity(base_color[3])
+    if len(mat.diffuse_color) > 3:
+        return clamp_opacity(mat.diffuse_color[3])
+    return 1.0
+
+
+def get_mtoon_base_texture_node(mat, mtoon_extension):
+    nodes = mat.node_tree.nodes
+
+    image_attr_paths = (
+        "pbr_metallic_roughness.base_color_texture.source",
+        "pbr_metallic_roughness.base_color_texture.image",
+        "base_color_texture.source",
+        "base_color_texture.image",
+        "main_texture.source",
+        "main_texture.image",
+        "texture.source",
+        "texture.image",
+    )
+    for attr_path in image_attr_paths:
+        image = get_nested_attr(mtoon_extension, attr_path)
+        node = find_image_texture_node_for_image(nodes, image)
+        if node:
+            return node
+
+    name_patterns = ("base", "main", "lit", "color", "texture")
+    best_node = None
+    for node in nodes:
+        if node.type != 'TEX_IMAGE':
+            continue
+        name = f"{node.name} {node.label}".lower()
+        if any(pattern in name for pattern in name_patterns):
+            return node
+        if not best_node:
+            best_node = node
+
+    return best_node
+
+
+def build_mtoon_color_source(mat, toon_node, base_color, texture_node):
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+
+    if texture_node and texture_node.type == 'TEX_IMAGE':
+        texture_node.name = CYCLES_TOONER_MTOON_BASE_TEX
+        texture_node.label = "CyclesTooner MToon Base Texture"
+        texture_node.location = (toon_node.location.x - 720, toon_node.location.y - 80)
+        color_socket = texture_node.outputs.get("Color")
+        if color_socket and not is_white_color(base_color):
+            multiply_node = nodes.new(type='ShaderNodeMixRGB')
+            multiply_node.name = CYCLES_TOONER_MTOON_BASE_MULTIPLY
+            multiply_node.label = "CyclesTooner MToon Base"
+            multiply_node.blend_type = 'MULTIPLY'
+            multiply_node.inputs['Fac'].default_value = 1.0
+            multiply_node.inputs['Color2'].default_value = base_color
+            multiply_node.location = (toon_node.location.x - 360, toon_node.location.y)
+            links.new(color_socket, multiply_node.inputs['Color1'])
+            return multiply_node.outputs['Color']
+
+        if color_socket:
+            return color_socket
+
+    toon_node.inputs['Color'].default_value = base_color
+    return None
+
+
+def collect_mtoon_shader_nodes_to_remove(nodes):
+    nodes_to_remove = []
+    keep_names = {CYCLES_TOONER_MTOON_BASE_TEX}
+
+    for node in nodes:
+        if node.name in keep_names:
+            continue
+        if node.type == 'GROUP' and node_name_contains(node, ("mtoon",)):
+            nodes_to_remove.append(node)
+        elif node.type == 'GROUP' and node_socket_names_contain(node, ("lit color texture", "shade color texture", "shading shift texture")):
+            nodes_to_remove.append(node)
+        elif node_name_contains(node, ("mtoon", "vrmtoon")):
+            nodes_to_remove.append(node)
+
+    return nodes_to_remove
 
 
 def is_mmd_shader_material(mat, root_node=None):
@@ -318,7 +569,7 @@ def build_mmd_color_source(mat, toon_node, diffuse_color):
     return None
 
 
-def get_mmd_opacity(mat, alpha_value):
+def get_source_opacity(mat, alpha_value):
     if CYCLES_TOONER_OPACITY_PROP in mat:
         return mat.get(CYCLES_TOONER_OPACITY_PROP, 1.0)
     if hasattr(mat, "cyclestooner_opacity"):
@@ -432,7 +683,7 @@ def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opa
         transparent_node.label = "CyclesTooner Transparent"
     transparent_node.location = (toon_node.location.x, toon_node.location.y - 240)
 
-    mix_node = nodes.get(CYCLES_TOONER_MIX_NODE)
+    mix_node = find_cycles_tooner_mix_node(nodes)
     if not mix_node or mix_node.type != 'MIX_SHADER':
         mix_node = nodes.new(type='ShaderNodeMixShader')
         mix_node.name = CYCLES_TOONER_MIX_NODE
@@ -534,20 +785,25 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         # マテリアル出力ノードを探す
         output_node = find_output_node(nodes)
         if not output_node:
+            if repair_cycles_tooner_output(mat):
+                return True
+            if is_mtoon_shader_material(mat):
+                return self.process_mtoon_material(mat, ensure_material_output_node(nodes))
             return False
 
         # 出力ノードの 'Surface' 入力を取得
         surface_input = output_node.inputs.get('Surface')
         if not surface_input or not surface_input.is_linked:
+            if repair_cycles_tooner_output(mat):
+                return True
+            if is_mtoon_shader_material(mat):
+                return self.process_mtoon_material(mat, output_node)
             return False
             
         # 接続されているリンクから元のノード（Principled BSDFであることを期待）を取得
         link = surface_input.links[0]
         principled_node = link.from_node
 
-        if is_mmd_shader_material(mat, principled_node):
-            return self.process_mmd_material(mat, output_node)
-        
         # 接続先が Principled BSDF でない場合は何もしない
         if principled_node.type == 'MIX_SHADER':
             toon_node = find_toon_node_from_root(principled_node)
@@ -563,6 +819,12 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
                 )
                 remove_nodes_if_present(nodes, obsolete_nodes)
                 return True
+
+        if is_mmd_shader_material(mat, principled_node):
+            return self.process_mmd_material(mat, output_node)
+
+        if is_mtoon_shader_material(mat, principled_node):
+            return self.process_mtoon_material(mat, output_node)
 
         if principled_node.type != 'BSDF_PRINCIPLED':
             return False
@@ -622,11 +884,46 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
             tree.links.new(color_source, toon_node.inputs['Color'])
 
         texture_alpha_socket = get_texture_alpha_socket(base_texture_node)
-        opacity = get_mmd_opacity(mat, alpha_value)
+        opacity = get_source_opacity(mat, alpha_value)
         setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=texture_alpha_socket, opacity=opacity)
 
         mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "MMDShaderDev"
         remove_nodes_if_present(nodes, collect_mmd_shader_nodes_to_remove(nodes))
+        repair_cycles_tooner_output(mat)
+
+        return True
+
+    def process_mtoon_material(self, mat, output_node):
+        tree = mat.node_tree
+        nodes = tree.nodes
+        output_node = output_node or ensure_material_output_node(nodes)
+
+        mtoon_extension = get_mtoon_extension(mat)
+        mtoon_node = get_mtoon_shader_node(nodes)
+        base_color = get_mtoon_base_color(mat, mtoon_extension, mtoon_node)
+        alpha_value = get_mtoon_alpha_value(mat, base_color)
+        base_texture_node = get_mtoon_base_texture_node(mat, mtoon_extension)
+
+        toon_node = nodes.new(type='ShaderNodeBsdfToon')
+        toon_node.location = (
+            mtoon_node.location.x if mtoon_node else output_node.location.x - 400,
+            (mtoon_node.location.y - 200) if mtoon_node else output_node.location.y - 200,
+        )
+        output_node.location = (toon_node.location.x + 760, toon_node.location.y + 20)
+        toon_node.inputs['Size'].default_value = 0.8
+        apply_toon_smooth(mat, toon_node, get_material_smooth(mat))
+
+        color_source = build_mtoon_color_source(mat, toon_node, base_color, base_texture_node)
+        if color_source:
+            tree.links.new(color_source, toon_node.inputs['Color'])
+
+        texture_alpha_socket = get_texture_alpha_socket(base_texture_node)
+        opacity = get_source_opacity(mat, alpha_value)
+        setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=texture_alpha_socket, opacity=opacity)
+
+        mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "MToon"
+        remove_nodes_if_present(nodes, collect_mtoon_shader_nodes_to_remove(nodes))
+        repair_cycles_tooner_output(mat)
 
         return True
 
