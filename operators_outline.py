@@ -1,10 +1,34 @@
 import bpy
 
 OUTLINE_SOURCE_SUFFIX = "_Outline_Source"
+OUTLINE_CONTAINER_SUFFIX = "_Outline_Collection"
+MODEL_COLLECTION_SUFFIX = "_Collection"
+OUTLINE_ROOT_PROPERTY = "cyclestooner_outline_root_object"
+OUTLINE_SOURCE_PROPERTY = "cyclestooner_outline_source_collection"
+OUTLINE_OBJECT_PROPERTY = "cyclestooner_outline_object"
 
 
-def get_outline_source_collection_name(target_collection):
-    return f"{target_collection.name}{OUTLINE_SOURCE_SUFFIX}"
+def get_outline_base_name(target_collection):
+    if target_collection.name.endswith(OUTLINE_SOURCE_SUFFIX):
+        return target_collection.name.removesuffix(OUTLINE_SOURCE_SUFFIX)
+    return target_collection.name
+
+
+def get_outline_source_collection_name(target):
+    name = target.name if hasattr(target, "name") else str(target)
+    if name.endswith(OUTLINE_SOURCE_SUFFIX):
+        return name
+    return f"{name}{OUTLINE_SOURCE_SUFFIX}"
+
+
+def get_outline_container_collection_name(target):
+    name = target.name if hasattr(target, "name") else str(target)
+    return f"{name}{OUTLINE_CONTAINER_SUFFIX}"
+
+
+def get_model_collection_name(target):
+    name = target.name if hasattr(target, "name") else str(target)
+    return f"{name}{MODEL_COLLECTION_SUFFIX}"
 
 
 def get_outline_target_name(outline_obj):
@@ -14,7 +38,34 @@ def get_outline_target_name(outline_obj):
 
 
 def get_outline_object_name(target_collection):
-    return f"{target_collection.name}_Outline"
+    return f"{get_outline_base_name(target_collection)}_Outline"
+
+
+def get_root_object(obj):
+    root = obj
+    while root and root.parent:
+        root = root.parent
+    return root
+
+
+def collect_root_hierarchy_objects(root_obj):
+    objects = []
+
+    def visit(obj):
+        objects.append(obj)
+        for child in obj.children:
+            visit(child)
+
+    visit(root_obj)
+    return objects
+
+
+def find_object_parent_collection(obj, preferred_collection, scene_collection):
+    if preferred_collection and obj.name in preferred_collection.objects:
+        return preferred_collection
+    if obj.users_collection:
+        return obj.users_collection[0]
+    return scene_collection
 
 
 def find_parent_collection(target_collection, scene_collection):
@@ -24,7 +75,45 @@ def find_parent_collection(target_collection, scene_collection):
     return scene_collection
 
 
+def link_collection_once(parent_collection, child_collection):
+    if parent_collection == child_collection:
+        return
+    if child_collection.name not in parent_collection.children:
+        parent_collection.children.link(child_collection)
+
+
+def unlink_collection_child(parent_collection, child_collection):
+    if not parent_collection or parent_collection == child_collection:
+        return
+    if child_collection.name not in parent_collection.children:
+        return
+    parent_collection.children.unlink(child_collection)
+
+
+def ensure_root_model_collection(root_obj, parent_collection):
+    model_name = get_model_collection_name(root_obj)
+    model_collection = bpy.data.collections.get(model_name)
+    if not model_collection:
+        model_collection = bpy.data.collections.new(model_name)
+    link_collection_once(parent_collection, model_collection)
+
+    for obj in collect_root_hierarchy_objects(root_obj):
+        if obj.name not in model_collection.objects:
+            model_collection.objects.link(obj)
+        for collection in list(obj.users_collection):
+            if collection == model_collection:
+                continue
+            collection.objects.unlink(obj)
+
+    return model_collection
+
+
 def find_outline_object(target_collection):
+    outline_name = target_collection.get(OUTLINE_OBJECT_PROPERTY)
+    if outline_name:
+        outline_obj = bpy.data.objects.get(outline_name)
+        if outline_obj:
+            return outline_obj
     return bpy.data.objects.get(get_outline_object_name(target_collection))
 
 
@@ -35,6 +124,15 @@ def collection_contains_object(collection, obj):
 def find_outline_collection_for_object(obj, preferred_collection=None):
     if not obj:
         return None
+    root_obj = get_root_object(obj)
+    for collection in bpy.data.collections:
+        if not collection.get(OUTLINE_OBJECT_PROPERTY):
+            continue
+        if collection.get(OUTLINE_ROOT_PROPERTY) == root_obj.name:
+            return collection
+        if collection_contains_object(collection, obj):
+            return collection
+
     if (
         preferred_collection
         and collection_contains_object(preferred_collection, obj)
@@ -118,6 +216,28 @@ def collect_visible_outline_objects(target_collection, view_layer):
     return objects
 
 
+def collect_visible_root_outline_objects(root_obj, view_layer):
+    objects = []
+
+    def visit(obj):
+        if not is_outline_excluded_object(obj, view_layer):
+            objects.append(obj)
+        for child in obj.children:
+            visit(child)
+
+    visit(root_obj)
+    return objects
+
+
+def link_outline_source_objects(source_collection, source_objects):
+    linked_count = 0
+    for obj in source_objects:
+        if not source_collection.objects.get(obj.name):
+            source_collection.objects.link(obj)
+            linked_count += 1
+    return linked_count
+
+
 def create_filtered_outline_collection(target_collection, parent_collection, view_layer):
     source_objects = collect_visible_outline_objects(target_collection, view_layer)
     if not source_objects:
@@ -131,12 +251,35 @@ def create_filtered_outline_collection(target_collection, parent_collection, vie
     source_collection = bpy.data.collections.new(source_name)
     parent_collection.children.link(source_collection)
 
-    linked_count = 0
-    for obj in source_objects:
-        if not source_collection.objects.get(obj.name):
-            source_collection.objects.link(obj)
-            linked_count += 1
+    linked_count = link_outline_source_objects(source_collection, source_objects)
 
+    return source_collection, linked_count
+
+
+def create_root_outline_collections(root_obj, parent_collection, view_layer):
+    source_objects = collect_visible_root_outline_objects(root_obj, view_layer)
+    if not source_objects:
+        return None, 0
+
+    model_collection = ensure_root_model_collection(root_obj, parent_collection)
+    container_name = get_outline_container_collection_name(root_obj)
+    container_collection = bpy.data.collections.get(container_name)
+    if not container_collection:
+        container_collection = bpy.data.collections.new(container_name)
+    link_collection_once(model_collection, container_collection)
+    unlink_collection_child(parent_collection, container_collection)
+
+    source_name = get_outline_source_collection_name(root_obj)
+    old_collection = bpy.data.collections.get(source_name)
+    if old_collection:
+        bpy.data.collections.remove(old_collection)
+
+    source_collection = bpy.data.collections.new(source_name)
+    source_collection[OUTLINE_ROOT_PROPERTY] = root_obj.name
+    source_collection[OUTLINE_OBJECT_PROPERTY] = get_outline_object_name(source_collection)
+    container_collection.children.link(source_collection)
+
+    linked_count = link_outline_source_objects(source_collection, source_objects)
     return source_collection, linked_count
 
 
@@ -148,6 +291,16 @@ def remove_outline_source_collection(collection_name):
     return True
 
 
+def remove_outline_container_if_empty(container_name):
+    container_collection = bpy.data.collections.get(container_name)
+    if not container_collection:
+        return False
+    if container_collection.objects or container_collection.children:
+        return False
+    bpy.data.collections.remove(container_collection)
+    return True
+
+
 def resolve_outline_target_collection(context, selected_objects):
     if not selected_objects:
         return None
@@ -156,9 +309,17 @@ def resolve_outline_target_collection(context, selected_objects):
     if active_obj not in selected_objects:
         return None
 
+    source_name = active_obj.get(OUTLINE_SOURCE_PROPERTY)
+    if source_name:
+        source_collection = bpy.data.collections.get(source_name)
+        if source_collection:
+            return source_collection
+
     target_name = get_outline_target_name(active_obj)
     if target_name:
         target_collection = bpy.data.collections.get(target_name)
+        if not target_collection:
+            target_collection = bpy.data.collections.get(get_outline_source_collection_name(target_name))
         if target_collection:
             return target_collection
         return None
@@ -180,15 +341,24 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        # アクティブなコレクションが存在するかチェック
-        return context.collection is not None
+        return context.active_object is not None
 
     def execute(self, context):
-        target_collection = context.collection
-        parent_collection = find_parent_collection(target_collection, context.scene.collection)
+        selected_objects = list(context.selected_objects)
+        active_obj = context.active_object
+        if not selected_objects or active_obj not in selected_objects:
+            self.report({'WARNING'}, "アウトライン対象のオブジェクトを選択してください。")
+            return {'CANCELLED'}
 
-        source_collection, source_count = create_filtered_outline_collection(
-            target_collection,
+        root_obj = get_root_object(active_obj)
+        parent_collection = find_object_parent_collection(root_obj, context.collection, context.scene.collection)
+        outline_name = f"{root_obj.name}_Outline"
+        if bpy.data.objects.get(outline_name):
+            self.report({'WARNING'}, "このルートオブジェクトのアウトラインは既に存在します。Refresh Outlineを使用してください。")
+            return {'CANCELLED'}
+
+        source_collection, source_count = create_root_outline_collections(
+            root_obj,
             parent_collection,
             context.view_layer,
         )
@@ -198,15 +368,22 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
             return {'CANCELLED'}
 
         # 1. アウトライン用メッシュとオブジェクトの作成
-        mesh_name = f"{target_collection.name}_Outline_Mesh"
-        obj_name = f"{target_collection.name}_Outline"
+        mesh_name = f"{root_obj.name}_Outline_Mesh"
+        obj_name = outline_name
         
         # メッシュデータ作成（空）
         mesh = bpy.data.meshes.new(mesh_name)
         obj = bpy.data.objects.new(obj_name, mesh)
         
-        # コレクションにリンク（ターゲットコレクションの兄弟として）
-        parent_collection.objects.link(obj)
+        # コレクションにリンク（ルート専用アウトライン管理コレクション内に配置）
+        container_collection = bpy.data.collections.get(get_outline_container_collection_name(root_obj))
+        if container_collection:
+            container_collection.objects.link(obj)
+        else:
+            parent_collection.objects.link(obj)
+        source_collection[OUTLINE_OBJECT_PROPERTY] = obj.name
+        obj[OUTLINE_SOURCE_PROPERTY] = source_collection.name
+        obj[OUTLINE_ROOT_PROPERTY] = root_obj.name
         
         # 2. マテリアルの作成・設定
         mat_name = "Toon_Outline"
@@ -231,7 +408,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         
         # 4. ジオメトリノードの設定
         mod = obj.modifiers.new(name="ToonOutlineGN", type='NODES')
-        node_group = self._create_geometry_node_group(f"GN_Outline_{target_collection.name}")
+        node_group = self._create_geometry_node_group(f"GN_Outline_{root_obj.name}")
         mod.node_group = node_group
         
         set_modifier_input(mod, 'Collection', source_collection)
@@ -243,7 +420,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         obj.select_set(True)
         context.view_layer.objects.active = obj
         
-        self.report({'INFO'}, f"コレクション '{target_collection.name}' のアウトラインを作成しました。({source_count} meshes)")
+        self.report({'INFO'}, f"ルートオブジェクト '{root_obj.name}' のアウトラインを作成しました。({source_count} meshes)")
         return {'FINISHED'}
 
     def _setup_outline_material(self, mat):
@@ -449,20 +626,38 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
             self.report({'WARNING'}, "アウトラインのCollection入力が見つかりませんでした。")
             return {'CANCELLED'}
 
-        source_objects = collect_visible_outline_objects(target_collection, context.view_layer)
+        root_name = target_collection.get(OUTLINE_ROOT_PROPERTY)
+        root_obj = bpy.data.objects.get(root_name) if root_name else None
+        source_objects = (
+            collect_visible_root_outline_objects(root_obj, context.view_layer)
+            if root_obj
+            else collect_visible_outline_objects(target_collection, context.view_layer)
+        )
         if not source_objects:
             self.report({'WARNING'}, "アウトライン対象の表示メッシュが見つかりませんでした。既存の対象は維持しました。")
             return {'CANCELLED'}
 
-        parent_collection = find_parent_collection(target_collection, context.scene.collection)
-        source_collection, source_count = create_filtered_outline_collection(
-            target_collection,
-            parent_collection,
-            context.view_layer,
-        )
+        if root_obj:
+            parent_collection = find_object_parent_collection(root_obj, context.collection, context.scene.collection)
+            source_collection, source_count = create_root_outline_collections(
+                root_obj,
+                parent_collection,
+                context.view_layer,
+            )
+        else:
+            parent_collection = find_parent_collection(target_collection, context.scene.collection)
+            source_collection, source_count = create_filtered_outline_collection(
+                target_collection,
+                parent_collection,
+                context.view_layer,
+            )
         if not source_collection:
             self.report({'WARNING'}, "アウトライン対象の表示メッシュが見つかりませんでした。既存の対象は維持しました。")
             return {'CANCELLED'}
+        if root_obj:
+            source_collection[OUTLINE_OBJECT_PROPERTY] = outline_obj.name
+            outline_obj[OUTLINE_SOURCE_PROPERTY] = source_collection.name
+            outline_obj[OUTLINE_ROOT_PROPERTY] = root_obj.name
 
         if not set_modifier_input(mod, 'Collection', source_collection):
             self.report({'WARNING'}, "アウトラインのCollection入力を更新できませんでした。")
@@ -492,6 +687,13 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
         active_obj = context.active_object
         if active_obj and active_obj.name.endswith("_Outline"):
              objects_to_delete.append(active_obj)
+
+        if not objects_to_delete and context.selected_objects:
+            target_collection = resolve_outline_target_collection(context, list(context.selected_objects))
+            if target_collection:
+                target_obj = find_outline_object(target_collection)
+                if target_obj:
+                    objects_to_delete.append(target_obj)
         
         # 判定2: アウトラインの選択がなければ、選択コレクションから探す
         if not objects_to_delete and context.collection:
@@ -509,10 +711,18 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
         node_groups_to_check = set()
         materials_to_check = set()
         source_collections_to_remove = set()
+        container_collections_to_remove = set()
         
         for obj in objects_to_delete:
-            if obj.name.endswith("_Outline"):
+            source_name = obj.get(OUTLINE_SOURCE_PROPERTY)
+            if source_name:
+                source_collections_to_remove.add(source_name)
+            elif obj.name.endswith("_Outline"):
                 source_collections_to_remove.add(f"{obj.name.removesuffix('_Outline')}{OUTLINE_SOURCE_SUFFIX}")
+
+            root_name = obj.get(OUTLINE_ROOT_PROPERTY)
+            if root_name:
+                container_collections_to_remove.add(get_outline_container_collection_name(root_name))
 
             # Geometry Nodeの取得
             for mod in obj.modifiers:
@@ -532,6 +742,11 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
         for collection_name in source_collections_to_remove:
             if remove_outline_source_collection(collection_name):
                 remove_count_src += 1
+
+        remove_count_container = 0
+        for collection_name in container_collections_to_remove:
+            if remove_outline_container_if_empty(collection_name):
+                remove_count_container += 1
             
         # 削除後のクリーンアップ: ユーザー数が0になったリソースを削除
         remove_count_ng = 0
@@ -548,5 +763,5 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
                 bpy.data.materials.remove(mat)
                 remove_count_mat += 1
 
-        self.report({'INFO'}, f"アウトラインを削除しました。(Cleanup: Src={remove_count_src}, NG={remove_count_ng}, Mat={remove_count_mat})")
+        self.report({'INFO'}, f"アウトラインを削除しました。(Cleanup: Container={remove_count_container}, Src={remove_count_src}, NG={remove_count_ng}, Mat={remove_count_mat})")
         return {'FINISHED'}

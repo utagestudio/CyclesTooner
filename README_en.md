@@ -30,7 +30,8 @@ Automatically converts materials for selected objects (and all their children re
 Generates outline meshes using the "inverted hull" method via Geometry Nodes, ideal for toon shading in Cycles.
 
 *   **Add Outline**:
-    *   Creates an outline object that references all meshes within the selected **Collection**.
+    *   Creates an outline object from meshes under the selected object's topmost parent, including Empty roots.
+    *   Creates a root management collection containing every object under the root and the outline management collection.
     *   Uses **Geometry Nodes** to slightly extrude the model along its normals and display backfaces.
     *   Hidden mesh objects are excluded from the outline source.
     *   **Thickness Control**:
@@ -72,10 +73,12 @@ Materials loaded by VRM Add-on for Blender with `MToon` can be converted directl
 CyclesTooner preserves base texture color/alpha and MToon Base Color where possible. MToon Alpha is folded into the initial **Opacity** value. The conversion removes `MToon` nodes, so **Revert** restores a simplified `Principled BSDF` material rather than the original MToon node setup. Exact MToon Shade Color, MatCap, Rim, Emission, and Outline effects are not preserved.
 
 ### Creating Outlines
-1.  Select (make active) the **Collection** containing your target objects in the Outliner.
+1.  Select an object inside the model you want to outline.
 2.  Click the **Add Outline** button.
-    *   A new object named `~_Outline` will be created in the same hierarchy.
-    *   An internal `~_Outline_Source` collection is also created to exclude hidden meshes.
+    *   The selected object's topmost parent is used as the outline root, and only that hierarchy is targeted.
+    *   A collection named `~_Collection` is created beside the root, and every object under the root is moved into it.
+    *   A collection named `~_Outline_Collection` is created inside `~_Collection`.
+    *   The generated `~_Outline` object and internal `~_Outline_Source` collection are created inside `~_Outline_Collection`.
 3.  If you show or hide model parts, select a target part or the generated outline and click **Refresh Outline** to update the outline source.
 4.  If you want to adjust the outline thickness using vertex weights, click the "Input Attribute Toggle" on the `Weight` input of the `ToonOutlineGN` modifier, and enter the name of the vertex group containing the weight information.
 5.  To remove it, select either the outline object or the original collection and click **Remove Outline**.
