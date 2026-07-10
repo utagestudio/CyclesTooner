@@ -662,6 +662,49 @@ def remove_nodes_if_present(nodes, nodes_to_remove):
             nodes.remove(node)
 
 
+def collect_reachable_nodes_from_output(output_node):
+    reachable = set()
+
+    def visit_socket_input(input_socket):
+        for link in input_socket.links:
+            visit_node(link.from_node)
+
+    def visit_node(node):
+        if node.name in reachable:
+            return
+        reachable.add(node.name)
+        for input_socket in node.inputs:
+            visit_socket_input(input_socket)
+
+    reachable.add(output_node.name)
+    surface_input = output_node.inputs.get('Surface')
+    if surface_input:
+        visit_socket_input(surface_input)
+
+    return reachable
+
+
+def remove_unreachable_nodes_from_output(mat):
+    if not mat.use_nodes or not mat.node_tree:
+        return 0
+
+    nodes = mat.node_tree.nodes
+    output_node = find_output_node(nodes)
+    if not output_node:
+        return 0
+
+    reachable = collect_reachable_nodes_from_output(output_node)
+    nodes_to_remove = [node for node in nodes if node.name not in reachable]
+    remove_count = 0
+
+    for node in nodes_to_remove:
+        if nodes.get(node.name) == node:
+            nodes.remove(node)
+            remove_count += 1
+
+    return remove_count
+
+
 def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opacity=1.0):
     tree = mat.node_tree
     nodes = tree.nodes
@@ -924,6 +967,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "MToon"
         remove_nodes_if_present(nodes, collect_mtoon_shader_nodes_to_remove(nodes))
         repair_cycles_tooner_output(mat)
+        remove_unreachable_nodes_from_output(mat)
 
         return True
 
