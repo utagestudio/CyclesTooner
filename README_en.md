@@ -11,10 +11,15 @@ Automatically converts materials for selected objects (and all their children re
 *   **Convert**:
     *   Replaces `Principled BSDF` with `Toon BSDF` (Size: 0.8).
     *   Preserves `Base Color` and `Normal` connections.
-    *   If there is an `Alpha` connection, it automatically sets up the node tree for transparency (Invert Color + Mix Shader + Transparent BSDF).
+    *   Automatically adds opacity control nodes (Mix Shader + Transparent BSDF).
+    *   If there is an `Alpha` connection, both the Alpha input and Opacity setting are applied.
     *   Automatically switches the render engine to **Cycles** if EEVEE is currently selected.
 *   **Revert**:
     *   Restores materials converted by CyclesTooner back to `Principled BSDF`.
+*   **Opacity**:
+    *   Applies opacity in bulk to toon materials on selected objects and their children from the sidebar slider.
+    *   Allows per-material opacity adjustment when the active object's material has been converted by CyclesTooner.
+    *   `1.0` is fully opaque, and `0.0` is fully transparent.
 
 ### 2. Outline Generator
 Generates outline meshes using the "inverted hull" method via Geometry Nodes, ideal for toon shading in Cycles.
@@ -44,7 +49,9 @@ The **CyclesTooner** panel is located in the **Tool** tab of the 3D Viewport Sid
 ### Converting Materials
 1.  Select the object(s) you want to convert.
 2.  Click the **Convert** button to apply toon shading.
-3.  Click the **Revert** button to restore the original materials.
+3.  Adjust the **Opacity** slider and click **Apply Opacity** to apply transparency to the selected toon materials in bulk.
+4.  If the active material has been converted by CyclesTooner, use the **Material** opacity field for per-material adjustment.
+5.  Click the **Revert** button to restore the original materials.
 
 ### Creating Outlines
 1.  Select (make active) the **Collection** containing your target objects in the Outliner.

@@ -30,6 +30,26 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
         # オペレーター実行ボタンを配置 (リバート)
         row = column.row()
         row.operator("object.to_toon_reverter", text="Revert")
+
+        column.separator()
+
+        # 透明度の一括適用
+        column.prop(context.scene, "cyclestooner_batch_opacity", text="Opacity")
+        row = column.row()
+        op = row.operator("object.set_toon_opacity", text="Apply Opacity")
+        op.opacity = context.scene.cyclestooner_batch_opacity
+
+        active_mat = context.object.active_material if context.object else None
+        if (
+            active_mat
+            and active_mat.name != "Toon_Outline"
+            and active_mat.use_nodes
+            and active_mat.node_tree
+            and active_mat.node_tree.nodes.get("CyclesTooner_Opacity")
+        ):
+            box = column.box()
+            box.label(text=f"Material: {active_mat.name}")
+            box.prop(active_mat, "cyclestooner_opacity", text="Opacity")
         
         column.separator()
         

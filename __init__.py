@@ -2,8 +2,8 @@
 # アドオン情報
 bl_info = {
     "name": "CyclesTooner",
-    "author": "Antigravity",
-    "version": (1, 8),
+    "author": "Codex",
+    "version": (1, 9),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > Tool",
     "description": "Convert Principled BSDF to Toon BSDF",
@@ -42,6 +42,7 @@ else:
 classes = (
     operators_converter.OBJECT_OT_ToonConverter,
     operators_converter.OBJECT_OT_ToonReverter,
+    operators_converter.OBJECT_OT_SetToonOpacity,
     operators_outline.OBJECT_OT_AddOutline,
     operators_outline.OBJECT_OT_RemoveOutline,
     ui.VIEW3D_PT_CyclesTooner,
@@ -54,10 +55,33 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
+    bpy.types.Scene.cyclestooner_batch_opacity = bpy.props.FloatProperty(
+        name="Opacity",
+        description="Opacity applied to selected toon materials",
+        min=0.0,
+        max=1.0,
+        default=1.0,
+        subtype='FACTOR',
+    )
+    bpy.types.Material.cyclestooner_opacity = bpy.props.FloatProperty(
+        name="Opacity",
+        description="Opacity for this CyclesTooner material",
+        min=0.0,
+        max=1.0,
+        default=1.0,
+        subtype='FACTOR',
+        update=operators_converter.update_material_opacity_property,
+    )
+
 def unregister():
     """
     アドオン無効化時の解除処理
     """
+    if hasattr(bpy.types.Material, "cyclestooner_opacity"):
+        del bpy.types.Material.cyclestooner_opacity
+    if hasattr(bpy.types.Scene, "cyclestooner_batch_opacity"):
+        del bpy.types.Scene.cyclestooner_batch_opacity
+
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
