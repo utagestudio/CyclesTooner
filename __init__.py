@@ -5,7 +5,7 @@ bl_info = {
     "author": "Codex",
     # Version format: (major, minor, dev). Increment dev for uncommitted changes,
     # then increment minor and reset dev to 0 when committing a completed change.
-    "version": (1, 14, 1),
+    "version": (1, 15, 0),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > Tool",
     "description": "Convert Principled BSDF to Toon BSDF",
@@ -47,6 +47,7 @@ classes = (
     operators_converter.OBJECT_OT_SetToonOpacity,
     operators_converter.OBJECT_OT_SetToonSmooth,
     operators_outline.OBJECT_OT_AddOutline,
+    operators_outline.OBJECT_OT_RefreshOutline,
     operators_outline.OBJECT_OT_RemoveOutline,
     ui.VIEW3D_PT_CyclesTooner,
 )

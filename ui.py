@@ -62,6 +62,10 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
         row = column.row()
         row.scale_y = 1.2
         row.operator("object.add_toon_outline", text="Add Outline")
+
+        # オペレーター実行ボタンを配置 (アウトライン更新)
+        row = column.row()
+        row.operator("object.refresh_toon_outline", text="Refresh Outline")
         
         # オペレーター実行ボタンを配置 (アウトライン削除)
         row = column.row()

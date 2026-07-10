@@ -40,6 +40,8 @@ Generates outline meshes using the "inverted hull" method via Geometry Nodes, id
 *   **Remove Outline**:
     *   Deletes the generated outline mesh.
     *   Automatically cleans up unused Geometry Node groups and materials created by the add-on.
+*   **Refresh Outline**:
+    *   Updates an existing outline source to match the current visibility state only while a model part or generated outline is selected.
 
 ## Installation
 
@@ -74,8 +76,9 @@ CyclesTooner preserves base texture color/alpha and MToon Base Color where possi
 2.  Click the **Add Outline** button.
     *   A new object named `~_Outline` will be created in the same hierarchy.
     *   An internal `~_Outline_Source` collection is also created to exclude hidden meshes.
-3.  If you want to adjust the outline thickness using vertex weights, click the "Input Attribute Toggle" on the `Weight` input of the `ToonOutlineGN` modifier, and enter the name of the vertex group containing the weight information.
-4.  To remove it, select either the outline object or the original collection and click **Remove Outline**.
+3.  If you show or hide model parts, select a target part or the generated outline and click **Refresh Outline** to update the outline source.
+4.  If you want to adjust the outline thickness using vertex weights, click the "Input Attribute Toggle" on the `Weight` input of the `ToonOutlineGN` modifier, and enter the name of the vertex group containing the weight information.
+5.  To remove it, select either the outline object or the original collection and click **Remove Outline**.
 
 ## Requirements
 *   Blender 5.0 (Recommended) / 3.0+
