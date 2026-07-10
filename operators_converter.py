@@ -1,6 +1,7 @@
 import bpy
 
 CYCLES_TOONER_OPACITY_PROP = "cyclestooner_opacity"
+CYCLES_TOONER_SMOOTH_PROP = "cyclestooner_smooth"
 CYCLES_TOONER_OPACITY_NODE = "CyclesTooner_Opacity"
 CYCLES_TOONER_ALPHA_MULTIPLY_NODE = "CyclesTooner_AlphaOpacity"
 CYCLES_TOONER_TRANSPARENCY_NODE = "CyclesTooner_Transparency"
@@ -10,9 +11,14 @@ CYCLES_TOONER_SOURCE_SHADER_PROP = "cyclestooner_source_shader"
 CYCLES_TOONER_MMD_BASE_TEX = "CyclesTooner_MMDBaseTex"
 CYCLES_TOONER_MMD_DIFFUSE_MULTIPLY = "CyclesTooner_MMDDiffuseMultiply"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
+DEFAULT_TOON_SMOOTH = 0.2
 
 
 def clamp_opacity(value):
+    return max(0.0, min(1.0, float(value)))
+
+
+def clamp_smooth(value):
     return max(0.0, min(1.0, float(value)))
 
 
@@ -50,6 +56,13 @@ def update_material_opacity_property(self, context):
     set_material_opacity(self, opacity)
 
 
+def update_material_smooth_property(self, context):
+    if self.name == OUTLINE_MATERIAL_NAME:
+        return
+    smooth = clamp_smooth(getattr(self, "cyclestooner_smooth", DEFAULT_TOON_SMOOTH))
+    set_material_smooth(self, smooth)
+
+
 def set_material_opacity(mat, opacity):
     opacity = clamp_opacity(opacity)
     mat[CYCLES_TOONER_OPACITY_PROP] = opacity
@@ -79,6 +92,31 @@ def set_material_opacity(mat, opacity):
     return False
 
 
+def set_material_smooth(mat, smooth):
+    smooth = clamp_smooth(smooth)
+    mat[CYCLES_TOONER_SMOOTH_PROP] = smooth
+
+    if hasattr(mat, "cyclestooner_smooth"):
+        current = getattr(mat, "cyclestooner_smooth", None)
+        if current is None or abs(current - smooth) > 0.0001:
+            mat["cyclestooner_skip_smooth_update"] = True
+            try:
+                mat.cyclestooner_smooth = smooth
+            finally:
+                if "cyclestooner_skip_smooth_update" in mat:
+                    del mat["cyclestooner_skip_smooth_update"]
+
+    if mat.get("cyclestooner_skip_smooth_update"):
+        return False
+
+    toon_node = find_cycles_toon_node(mat)
+    if toon_node:
+        apply_toon_smooth(mat, toon_node, smooth)
+        return True
+
+    return False
+
+
 def sync_material_opacity_property(mat, opacity):
     if not hasattr(mat, "cyclestooner_opacity"):
         return
@@ -89,6 +127,18 @@ def sync_material_opacity_property(mat, opacity):
     finally:
         if "cyclestooner_skip_update" in mat:
             del mat["cyclestooner_skip_update"]
+
+
+def sync_material_smooth_property(mat, smooth):
+    if not hasattr(mat, "cyclestooner_smooth"):
+        return
+
+    mat["cyclestooner_skip_smooth_update"] = True
+    try:
+        mat.cyclestooner_smooth = clamp_smooth(smooth)
+    finally:
+        if "cyclestooner_skip_smooth_update" in mat:
+            del mat["cyclestooner_skip_smooth_update"]
 
 
 def _set_material_blend_settings(mat, opacity):
@@ -127,6 +177,33 @@ def find_toon_node_from_root(root_node):
                 return node
 
     return None
+
+
+def find_cycles_toon_node(mat):
+    if not mat.use_nodes or not mat.node_tree:
+        return None
+
+    output_node = find_output_node(mat.node_tree.nodes)
+    if not output_node:
+        return None
+
+    surface_input = output_node.inputs.get('Surface')
+    if not surface_input or not surface_input.is_linked:
+        return None
+
+    return find_toon_node_from_root(surface_input.links[0].from_node)
+
+
+def get_material_smooth(mat):
+    return clamp_smooth(mat.get(CYCLES_TOONER_SMOOTH_PROP, getattr(mat, "cyclestooner_smooth", DEFAULT_TOON_SMOOTH)))
+
+
+def apply_toon_smooth(mat, toon_node, smooth):
+    smooth_input = toon_node.inputs.get('Smooth')
+    if smooth_input:
+        smooth_input.default_value = clamp_smooth(smooth)
+        mat[CYCLES_TOONER_SMOOTH_PROP] = clamp_smooth(smooth)
+        sync_material_smooth_property(mat, smooth)
 
 
 def get_input_default(node, socket_name, fallback=None):
@@ -221,6 +298,7 @@ def build_mmd_color_source(mat, toon_node, diffuse_color):
     if texture_node and texture_node.type == 'TEX_IMAGE':
         texture_node.name = CYCLES_TOONER_MMD_BASE_TEX
         texture_node.label = "CyclesTooner MMD Base Texture"
+        texture_node.location = (toon_node.location.x - 720, toon_node.location.y - 80)
         color_socket = texture_node.outputs.get("Color")
         if color_socket and not is_white_color(diffuse_color):
             multiply_node = nodes.new(type='ShaderNodeMixRGB')
@@ -229,7 +307,7 @@ def build_mmd_color_source(mat, toon_node, diffuse_color):
             multiply_node.blend_type = 'MULTIPLY'
             multiply_node.inputs['Fac'].default_value = 1.0
             multiply_node.inputs['Color2'].default_value = diffuse_color
-            multiply_node.location = (toon_node.location.x - 240, toon_node.location.y + 120)
+            multiply_node.location = (toon_node.location.x - 360, toon_node.location.y)
             links.new(color_socket, multiply_node.inputs['Color1'])
             return multiply_node.outputs['Color']
 
@@ -344,7 +422,7 @@ def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opa
         opacity_node = nodes.new(type='ShaderNodeValue')
         opacity_node.name = CYCLES_TOONER_OPACITY_NODE
         opacity_node.label = "CyclesTooner Opacity"
-        opacity_node.location = (toon_node.location.x + 180, toon_node.location.y + 180)
+    opacity_node.location = (toon_node.location.x - 420, toon_node.location.y + 170)
     opacity_node.outputs['Value'].default_value = opacity
 
     transparent_node = nodes.get(CYCLES_TOONER_TRANSPARENT_NODE)
@@ -352,14 +430,14 @@ def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opa
         transparent_node = nodes.new(type='ShaderNodeBsdfTransparent')
         transparent_node.name = CYCLES_TOONER_TRANSPARENT_NODE
         transparent_node.label = "CyclesTooner Transparent"
-        transparent_node.location = (toon_node.location.x + 220, toon_node.location.y - 180)
+    transparent_node.location = (toon_node.location.x, toon_node.location.y - 240)
 
     mix_node = nodes.get(CYCLES_TOONER_MIX_NODE)
     if not mix_node or mix_node.type != 'MIX_SHADER':
         mix_node = nodes.new(type='ShaderNodeMixShader')
         mix_node.name = CYCLES_TOONER_MIX_NODE
         mix_node.label = "CyclesTooner Opacity Mix"
-        mix_node.location = (toon_node.location.x + 520, toon_node.location.y)
+    mix_node.location = (toon_node.location.x + 430, toon_node.location.y)
 
     effective_opacity_socket = opacity_node.outputs['Value']
 
@@ -369,7 +447,7 @@ def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opa
             alpha_multiply_node = nodes.new(type='ShaderNodeMath')
             alpha_multiply_node.name = CYCLES_TOONER_ALPHA_MULTIPLY_NODE
             alpha_multiply_node.label = "CyclesTooner Alpha x Opacity"
-            alpha_multiply_node.location = (toon_node.location.x + 300, toon_node.location.y + 120)
+        alpha_multiply_node.location = (toon_node.location.x - 200, toon_node.location.y + 170)
         alpha_multiply_node.operation = 'MULTIPLY'
         _replace_input_link(links, alpha_multiply_node.inputs[0], alpha_source)
         _replace_input_link(links, alpha_multiply_node.inputs[1], opacity_node.outputs['Value'])
@@ -380,7 +458,7 @@ def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opa
         transparency_node = nodes.new(type='ShaderNodeMath')
         transparency_node.name = CYCLES_TOONER_TRANSPARENCY_NODE
         transparency_node.label = "CyclesTooner Transparency"
-        transparency_node.location = (toon_node.location.x + 420, toon_node.location.y + 60)
+    transparency_node.location = (toon_node.location.x + 40, toon_node.location.y + 230)
     transparency_node.operation = 'SUBTRACT'
     transparency_node.use_clamp = True
     transparency_node.inputs[0].default_value = 1.0
@@ -495,6 +573,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         toon_node = nodes.new(type='ShaderNodeBsdfToon')
         toon_node.location = (principled_node.location.x, principled_node.location.y - 200)
         toon_node.inputs['Size'].default_value = 0.8
+        apply_toon_smooth(mat, toon_node, get_material_smooth(mat))
         
         # --- Base Color (Color) の移行 ---
         base_color_input = principled_node.inputs.get('Base Color')
@@ -534,7 +613,9 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
             mmd_shader_node.location.x if mmd_shader_node else output_node.location.x - 400,
             (mmd_shader_node.location.y - 200) if mmd_shader_node else output_node.location.y - 200,
         )
+        output_node.location = (toon_node.location.x + 760, toon_node.location.y + 20)
         toon_node.inputs['Size'].default_value = 0.8
+        apply_toon_smooth(mat, toon_node, get_material_smooth(mat))
 
         color_source = build_mmd_color_source(mat, toon_node, diffuse_color)
         if color_source:
@@ -669,11 +750,14 @@ class OBJECT_OT_ToonReverter(bpy.types.Operator):
 
         if CYCLES_TOONER_OPACITY_PROP in mat:
             del mat[CYCLES_TOONER_OPACITY_PROP]
+        if CYCLES_TOONER_SMOOTH_PROP in mat:
+            del mat[CYCLES_TOONER_SMOOTH_PROP]
         if CYCLES_TOONER_SOURCE_SHADER_PROP in mat:
             del mat[CYCLES_TOONER_SOURCE_SHADER_PROP]
         if hasattr(mat, "blend_method"):
             mat.blend_method = 'OPAQUE'
         sync_material_opacity_property(mat, 1.0)
+        sync_material_smooth_property(mat, DEFAULT_TOON_SMOOTH)
             
         return True
 
@@ -736,3 +820,35 @@ class OBJECT_OT_SetToonOpacity(bpy.types.Operator):
         )
         remove_nodes_if_present(nodes, obsolete_nodes)
         return True
+
+
+class OBJECT_OT_SetToonSmooth(bpy.types.Operator):
+    """
+    選択されたオブジェクトと子孫のToon化済みマテリアルへSmoothを一括適用します。
+    """
+    bl_idname = "object.set_toon_smooth"
+    bl_label = "Apply Smooth"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    smooth: bpy.props.FloatProperty(
+        name="Smooth",
+        min=0.0,
+        max=1.0,
+        default=DEFAULT_TOON_SMOOTH,
+        subtype='FACTOR',
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return bool(context.selected_objects)
+
+    def execute(self, context):
+        objects_to_process = collect_selected_objects_recursive(context.selected_objects)
+        processed_count = 0
+
+        for mat in iter_object_materials(objects_to_process):
+            if set_material_smooth(mat, self.smooth):
+                processed_count += 1
+
+        self.report({'INFO'}, f"{processed_count} 個のマテリアルにSmoothを適用しました。")
+        return {'FINISHED'}

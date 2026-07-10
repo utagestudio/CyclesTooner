@@ -38,6 +38,10 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
         row = column.row()
         op = row.operator("object.set_toon_opacity", text="Apply Opacity")
         op.opacity = context.scene.cyclestooner_batch_opacity
+        column.prop(context.scene, "cyclestooner_batch_smooth", text="Smooth")
+        row = column.row()
+        op = row.operator("object.set_toon_smooth", text="Apply Smooth")
+        op.smooth = context.scene.cyclestooner_batch_smooth
 
         active_mat = context.object.active_material if context.object else None
         if (
@@ -50,6 +54,7 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
             box = column.box()
             box.label(text=f"Material: {active_mat.name}")
             box.prop(active_mat, "cyclestooner_opacity", text="Opacity")
+            box.prop(active_mat, "cyclestooner_smooth", text="Smooth")
         
         column.separator()
         

@@ -9,7 +9,7 @@ It provides features to batch convert Principled BSDF materials to Toon BSDF and
 Automatically converts materials for selected objects (and all their children recursively).
 
 *   **Convert**:
-    *   Replaces `Principled BSDF` with `Toon BSDF` (Size: 0.8).
+    *   Replaces `Principled BSDF` with `Toon BSDF` (Size: 0.8 / Smooth: 0.2).
     *   Directly converts MMD Tools `MMDShaderDev` / `mmd_shader` materials to `Toon BSDF`.
     *   Preserves `Base Color` and `Normal` connections.
     *   Automatically adds opacity control nodes (Mix Shader + Transparent BSDF).
@@ -21,6 +21,9 @@ Automatically converts materials for selected objects (and all their children re
     *   Applies opacity in bulk to toon materials on selected objects and their children from the sidebar slider.
     *   Allows per-material opacity adjustment when the active object's material has been converted by CyclesTooner.
     *   `1.0` is fully opaque, and `0.0` is fully transparent.
+*   **Smooth**:
+    *   Applies Toon Smooth in bulk to toon materials on selected objects and their children from the sidebar slider.
+    *   Allows per-material Smooth adjustment when the active object's material has been converted by CyclesTooner.
 
 ### 2. Outline Generator
 Generates outline meshes using the "inverted hull" method via Geometry Nodes, ideal for toon shading in Cycles.
@@ -50,8 +53,8 @@ The **CyclesTooner** panel is located in the **Tool** tab of the 3D Viewport Sid
 ### Converting Materials
 1.  Select the object(s) you want to convert.
 2.  Click the **Convert** button to apply toon shading.
-3.  Adjust the **Opacity** slider and click **Apply Opacity** to apply transparency to the selected toon materials in bulk.
-4.  If the active material has been converted by CyclesTooner, use the **Material** opacity field for per-material adjustment.
+3.  Adjust the **Opacity** / **Smooth** sliders and click **Apply Opacity** / **Apply Smooth** to update selected toon materials in bulk.
+4.  If the active material has been converted by CyclesTooner, use the **Material** fields for per-material Opacity/Smooth adjustment.
 5.  Click the **Revert** button to restore the original materials.
 
 #### Direct MMDShaderDev Conversion
