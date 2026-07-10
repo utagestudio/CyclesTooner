@@ -30,7 +30,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libxkbcommon0 libsm6
+            libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 \
+            libxkbcommon0 libsm6 libgomp1
 
       - name: Cache Blender
         id: cache-blender
@@ -47,8 +48,14 @@ jobs:
           mkdir -p ~/blender
           tar -xf /tmp/blender.tar.xz -C ~/blender --strip-components=1
 
+      - name: Check Blender startup
+        run: ~/blender/blender --version
+
       - name: Build extension
-        run: ~/blender/blender --command extension build --source-dir . --output-dir dist
+        run: |
+          mkdir -p dist
+          ~/blender/blender --command extension build --source-dir . --output-dir dist
+          ls -la dist
 
       - name: Generate repository index
         run: ~/blender/blender --command extension server-generate --repo-dir dist --html
