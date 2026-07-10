@@ -3,7 +3,7 @@
 bl_info = {
     "name": "CyclesTooner",
     "author": "Codex",
-    "version": (1, 9),
+    "version": (1, 10),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > Tool",
     "description": "Convert Principled BSDF to Toon BSDF",

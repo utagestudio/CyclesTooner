@@ -10,6 +10,7 @@ Automatically converts materials for selected objects (and all their children re
 
 *   **Convert**:
     *   Replaces `Principled BSDF` with `Toon BSDF` (Size: 0.8).
+    *   Directly converts MMD Tools `MMDShaderDev` / `mmd_shader` materials to `Toon BSDF`.
     *   Preserves `Base Color` and `Normal` connections.
     *   Automatically adds opacity control nodes (Mix Shader + Transparent BSDF).
     *   If there is an `Alpha` connection, both the Alpha input and Opacity setting are applied.
@@ -52,6 +53,11 @@ The **CyclesTooner** panel is located in the **Tool** tab of the 3D Viewport Sid
 3.  Adjust the **Opacity** slider and click **Apply Opacity** to apply transparency to the selected toon materials in bulk.
 4.  If the active material has been converted by CyclesTooner, use the **Material** opacity field for per-material adjustment.
 5.  Click the **Revert** button to restore the original materials.
+
+#### Direct MMDShaderDev Conversion
+Materials loaded by MMD Tools with `mmd_shader` can be converted directly with **Convert**.
+
+CyclesTooner preserves `mmd_base_tex` image color/alpha and MMD Diffuse Color where possible. MMD material Alpha is folded into the initial **Opacity** value. The conversion removes `MMDShaderDev` nodes, so **Revert** restores a simplified `Principled BSDF` material rather than the original MMDShaderDev node setup. Exact Sphere/Toon texture compositing is not preserved.
 
 ### Creating Outlines
 1.  Select (make active) the **Collection** containing your target objects in the Outliner.

@@ -6,6 +6,9 @@ CYCLES_TOONER_ALPHA_MULTIPLY_NODE = "CyclesTooner_AlphaOpacity"
 CYCLES_TOONER_TRANSPARENCY_NODE = "CyclesTooner_Transparency"
 CYCLES_TOONER_MIX_NODE = "CyclesTooner_OpacityMix"
 CYCLES_TOONER_TRANSPARENT_NODE = "CyclesTooner_Transparent"
+CYCLES_TOONER_SOURCE_SHADER_PROP = "cyclestooner_source_shader"
+CYCLES_TOONER_MMD_BASE_TEX = "CyclesTooner_MMDBaseTex"
+CYCLES_TOONER_MMD_DIFFUSE_MULTIPLY = "CyclesTooner_MMDDiffuseMultiply"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 
 
@@ -124,6 +127,142 @@ def find_toon_node_from_root(root_node):
                 return node
 
     return None
+
+
+def get_input_default(node, socket_name, fallback=None):
+    if not node:
+        return fallback
+    socket = node.inputs.get(socket_name)
+    if socket and hasattr(socket, "default_value"):
+        return socket.default_value
+    return fallback
+
+
+def get_mmd_shader_node(nodes):
+    node = nodes.get("mmd_shader")
+    if node:
+        return node
+
+    for node in nodes:
+        if node.name == "mmd_shader":
+            return node
+        if node.type == 'GROUP' and node.node_tree and node.node_tree.name.startswith("MMDShaderDev"):
+            return node
+
+    return None
+
+
+def is_mmd_shader_material(mat, root_node=None):
+    if not mat.use_nodes or not mat.node_tree:
+        return False
+
+    nodes = mat.node_tree.nodes
+    mmd_shader_node = get_mmd_shader_node(nodes)
+    if mmd_shader_node:
+        return True
+
+    if root_node and root_node.name == "mmd_shader":
+        return True
+
+    return bool(nodes.get("mmd_base_tex") and nodes.get("mmd_tex_uv"))
+
+
+def get_mmd_diffuse_color(mat, mmd_shader_node):
+    diffuse = get_input_default(mmd_shader_node, "Diffuse Color")
+    if diffuse:
+        return diffuse
+
+    mmd_mat = getattr(mat, "mmd_material", None)
+    if mmd_mat and hasattr(mmd_mat, "diffuse_color"):
+        return tuple(mmd_mat.diffuse_color[:3]) + (1.0,)
+
+    if len(mat.diffuse_color) >= 3:
+        alpha = mat.diffuse_color[3] if len(mat.diffuse_color) > 3 else 1.0
+        return tuple(mat.diffuse_color[:3]) + (alpha,)
+
+    return (1.0, 1.0, 1.0, 1.0)
+
+
+def get_mmd_alpha_value(mat, mmd_shader_node):
+    alpha = get_input_default(mmd_shader_node, "Alpha")
+    if alpha is not None:
+        return clamp_opacity(alpha)
+
+    mmd_mat = getattr(mat, "mmd_material", None)
+    if mmd_mat and hasattr(mmd_mat, "alpha"):
+        return clamp_opacity(mmd_mat.alpha)
+
+    if len(mat.diffuse_color) > 3:
+        return clamp_opacity(mat.diffuse_color[3])
+
+    return 1.0
+
+
+def get_texture_alpha_socket(texture_node):
+    if not texture_node:
+        return None
+
+    alpha_socket = texture_node.outputs.get("Alpha")
+    if alpha_socket:
+        return alpha_socket
+
+    return None
+
+
+def is_white_color(color):
+    return all(abs(float(channel) - 1.0) < 0.0001 for channel in color[:3])
+
+
+def build_mmd_color_source(mat, toon_node, diffuse_color):
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    texture_node = nodes.get("mmd_base_tex") or nodes.get(CYCLES_TOONER_MMD_BASE_TEX)
+
+    if texture_node and texture_node.type == 'TEX_IMAGE':
+        texture_node.name = CYCLES_TOONER_MMD_BASE_TEX
+        texture_node.label = "CyclesTooner MMD Base Texture"
+        color_socket = texture_node.outputs.get("Color")
+        if color_socket and not is_white_color(diffuse_color):
+            multiply_node = nodes.new(type='ShaderNodeMixRGB')
+            multiply_node.name = CYCLES_TOONER_MMD_DIFFUSE_MULTIPLY
+            multiply_node.label = "CyclesTooner MMD Diffuse"
+            multiply_node.blend_type = 'MULTIPLY'
+            multiply_node.inputs['Fac'].default_value = 1.0
+            multiply_node.inputs['Color2'].default_value = diffuse_color
+            multiply_node.location = (toon_node.location.x - 240, toon_node.location.y + 120)
+            links.new(color_socket, multiply_node.inputs['Color1'])
+            return multiply_node.outputs['Color']
+
+        if color_socket:
+            return color_socket
+
+    toon_node.inputs['Color'].default_value = diffuse_color
+    return None
+
+
+def get_mmd_opacity(mat, alpha_value):
+    if CYCLES_TOONER_OPACITY_PROP in mat:
+        return mat.get(CYCLES_TOONER_OPACITY_PROP, 1.0)
+    if hasattr(mat, "cyclestooner_opacity"):
+        opacity = getattr(mat, "cyclestooner_opacity", 1.0)
+        if abs(opacity - 1.0) > 0.0001:
+            return opacity
+    return alpha_value
+
+
+def collect_mmd_shader_nodes_to_remove(nodes):
+    nodes_to_remove = []
+    keep_names = {CYCLES_TOONER_MMD_BASE_TEX, "mmd_base_tex"}
+
+    for node in nodes:
+        if node.name in keep_names:
+            continue
+        if node.name.startswith("mmd_"):
+            nodes_to_remove.append(node)
+        elif node.type == 'GROUP' and node.node_tree and node.node_tree.name.startswith("MMDShaderDev"):
+            nodes_to_remove.append(node)
+
+    return nodes_to_remove
 
 
 def get_alpha_source_from_principled(principled_node):
@@ -327,6 +466,9 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         # 接続されているリンクから元のノード（Principled BSDFであることを期待）を取得
         link = surface_input.links[0]
         principled_node = link.from_node
+
+        if is_mmd_shader_material(mat, principled_node):
+            return self.process_mmd_material(mat, output_node)
         
         # 接続先が Principled BSDF でない場合は何もしない
         if principled_node.type == 'MIX_SHADER':
@@ -376,6 +518,35 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         # 古いノードを削除
         nodes.remove(principled_node)
         
+        return True
+
+    def process_mmd_material(self, mat, output_node):
+        tree = mat.node_tree
+        nodes = tree.nodes
+
+        mmd_shader_node = get_mmd_shader_node(nodes)
+        diffuse_color = get_mmd_diffuse_color(mat, mmd_shader_node)
+        alpha_value = get_mmd_alpha_value(mat, mmd_shader_node)
+        base_texture_node = nodes.get("mmd_base_tex") or nodes.get(CYCLES_TOONER_MMD_BASE_TEX)
+
+        toon_node = nodes.new(type='ShaderNodeBsdfToon')
+        toon_node.location = (
+            mmd_shader_node.location.x if mmd_shader_node else output_node.location.x - 400,
+            (mmd_shader_node.location.y - 200) if mmd_shader_node else output_node.location.y - 200,
+        )
+        toon_node.inputs['Size'].default_value = 0.8
+
+        color_source = build_mmd_color_source(mat, toon_node, diffuse_color)
+        if color_source:
+            tree.links.new(color_source, toon_node.inputs['Color'])
+
+        texture_alpha_socket = get_texture_alpha_socket(base_texture_node)
+        opacity = get_mmd_opacity(mat, alpha_value)
+        setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=texture_alpha_socket, opacity=opacity)
+
+        mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "MMDShaderDev"
+        remove_nodes_if_present(nodes, collect_mmd_shader_nodes_to_remove(nodes))
+
         return True
 
 
@@ -498,6 +669,8 @@ class OBJECT_OT_ToonReverter(bpy.types.Operator):
 
         if CYCLES_TOONER_OPACITY_PROP in mat:
             del mat[CYCLES_TOONER_OPACITY_PROP]
+        if CYCLES_TOONER_SOURCE_SHADER_PROP in mat:
+            del mat[CYCLES_TOONER_SOURCE_SHADER_PROP]
         if hasattr(mat, "blend_method"):
             mat.blend_method = 'OPAQUE'
         sync_material_opacity_property(mat, 1.0)
