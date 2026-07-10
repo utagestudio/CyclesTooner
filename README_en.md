@@ -32,6 +32,7 @@ Generates outline meshes using the "inverted hull" method via Geometry Nodes, id
 *   **Add Outline**:
     *   Creates an outline object that references all meshes within the selected **Collection**.
     *   Uses **Geometry Nodes** to slightly extrude the model along its normals and display backfaces.
+    *   Hidden mesh objects are excluded from the outline source.
     *   **Thickness Control**:
         *   Control thickness per vertex using Vertex Weights (Default input: "Weight" set to 0.5).
         *   Adjust global thickness multiplier via the Modifier settings (`Value`).
@@ -72,6 +73,7 @@ CyclesTooner preserves base texture color/alpha and MToon Base Color where possi
 1.  Select (make active) the **Collection** containing your target objects in the Outliner.
 2.  Click the **Add Outline** button.
     *   A new object named `~_Outline` will be created in the same hierarchy.
+    *   An internal `~_Outline_Source` collection is also created to exclude hidden meshes.
 3.  If you want to adjust the outline thickness using vertex weights, click the "Input Attribute Toggle" on the `Weight` input of the `ToonOutlineGN` modifier, and enter the name of the vertex group containing the weight information.
 4.  To remove it, select either the outline object or the original collection and click **Remove Outline**.
 

@@ -1,5 +1,63 @@
 import bpy
 
+OUTLINE_SOURCE_SUFFIX = "_Outline_Source"
+
+
+def get_outline_source_collection_name(target_collection):
+    return f"{target_collection.name}{OUTLINE_SOURCE_SUFFIX}"
+
+
+def is_outline_excluded_object(obj, view_layer):
+    if obj.type != 'MESH':
+        return True
+    if obj.name.endswith("_Outline"):
+        return True
+    try:
+        if obj.hide_get(view_layer=view_layer):
+            return True
+    except TypeError:
+        if obj.hide_get():
+            return True
+    if obj.hide_viewport:
+        return True
+    if hasattr(obj, "visible_get"):
+        try:
+            if not obj.visible_get(view_layer=view_layer):
+                return True
+        except TypeError:
+            if not obj.visible_get():
+                return True
+    return False
+
+
+def create_filtered_outline_collection(target_collection, parent_collection, view_layer):
+    source_name = get_outline_source_collection_name(target_collection)
+    old_collection = bpy.data.collections.get(source_name)
+    if old_collection:
+        bpy.data.collections.remove(old_collection)
+
+    source_collection = bpy.data.collections.new(source_name)
+    parent_collection.children.link(source_collection)
+
+    linked_count = 0
+    for obj in target_collection.all_objects:
+        if is_outline_excluded_object(obj, view_layer):
+            continue
+        if not source_collection.objects.get(obj.name):
+            source_collection.objects.link(obj)
+            linked_count += 1
+
+    return source_collection, linked_count
+
+
+def remove_outline_source_collection(collection_name):
+    source_collection = bpy.data.collections.get(collection_name)
+    if not source_collection:
+        return False
+    bpy.data.collections.remove(source_collection)
+    return True
+
+
 class OBJECT_OT_AddOutline(bpy.types.Operator):
     """
     選択したコレクションのアウトライン用メッシュを作成・設定するオペレーター
@@ -27,6 +85,17 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         # 親が見つからない場合（シーン直下の場合など）はシーンコレクションを使用
         if parent_collection is None:
             parent_collection = context.scene.collection
+
+        source_collection, source_count = create_filtered_outline_collection(
+            target_collection,
+            parent_collection,
+            context.view_layer,
+        )
+
+        if source_count == 0:
+            remove_outline_source_collection(source_collection.name)
+            self.report({'WARNING'}, "アウトライン対象の表示メッシュが見つかりませんでした。")
+            return {'CANCELLED'}
 
         # 1. アウトライン用メッシュとオブジェクトの作成
         mesh_name = f"{target_collection.name}_Outline_Mesh"
@@ -85,7 +154,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         # Collection
         ident_col = get_identifier(node_group, 'Collection')
         if ident_col:
-            mod[ident_col] = target_collection
+            mod[ident_col] = source_collection
             
         # Value
         ident_val = get_identifier(node_group, 'Value')
@@ -102,7 +171,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         obj.select_set(True)
         context.view_layer.objects.active = obj
         
-        self.report({'INFO'}, f"コレクション '{target_collection.name}' のアウトラインを作成しました。")
+        self.report({'INFO'}, f"コレクション '{target_collection.name}' のアウトラインを作成しました。({source_count} meshes)")
         return {'FINISHED'}
 
     def _setup_outline_material(self, mat):
@@ -312,8 +381,12 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
         # クリーンアップ対象のリソースを特定
         node_groups_to_check = set()
         materials_to_check = set()
+        source_collections_to_remove = set()
         
         for obj in objects_to_delete:
+            if obj.name.endswith("_Outline"):
+                source_collections_to_remove.add(f"{obj.name.removesuffix('_Outline')}{OUTLINE_SOURCE_SUFFIX}")
+
             # Geometry Nodeの取得
             for mod in obj.modifiers:
                 if mod.type == 'NODES' and mod.node_group:
@@ -327,6 +400,11 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
         # オブジェクトの完全削除
         for obj in objects_to_delete:
             bpy.data.objects.remove(obj, do_unlink=True)
+
+        remove_count_src = 0
+        for collection_name in source_collections_to_remove:
+            if remove_outline_source_collection(collection_name):
+                remove_count_src += 1
             
         # 削除後のクリーンアップ: ユーザー数が0になったリソースを削除
         remove_count_ng = 0
@@ -343,5 +421,5 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
                 bpy.data.materials.remove(mat)
                 remove_count_mat += 1
 
-        self.report({'INFO'}, f"アウトラインを削除しました。(Cleanup: NG={remove_count_ng}, Mat={remove_count_mat})")
+        self.report({'INFO'}, f"アウトラインを削除しました。(Cleanup: Src={remove_count_src}, NG={remove_count_ng}, Mat={remove_count_mat})")
         return {'FINISHED'}
