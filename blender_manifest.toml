@@ -1,0 +1,25 @@
+schema_version = "1.0.0"
+
+id = "cycles_tooner"
+# Keep in sync with bl_info["version"] in __init__.py
+version = "1.16.0"
+name = "CyclesTooner"
+tagline = "Convert Principled BSDF to Toon BSDF"
+maintainer = "utagestudio"
+type = "add-on"
+website = "https://github.com/utagestudio/CyclesTooner"
+tags = ["Material"]
+blender_version_min = "4.2.0"
+license = ["SPDX:GPL-3.0-or-later"]
+
+[build]
+paths_exclude_pattern = [
+  "__pycache__/",
+  "/.git/",
+  "/*.zip",
+  "/_temp/",
+  "/.agents/",
+  "/.codex/",
+  "/.github/",
+  "/.gitignore",
+]

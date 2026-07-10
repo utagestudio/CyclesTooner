@@ -46,6 +46,22 @@ Generates outline meshes using the "inverted hull" method via Geometry Nodes, id
 
 ## Installation
 
+### From the Extension Repository (Recommended, Blender 4.2+)
+
+Registering the remote repository lets Blender detect updates on startup so you can update with one click.
+
+1.  Open Blender and go to `Edit` > `Preferences` > `Get Extensions`.
+2.  From the `Repositories` dropdown in the top right, choose `[+]` > `Add Remote Repository`.
+3.  Enter the following URL:
+    ```
+    https://utagestudio.github.io/CyclesTooner/index.json
+    ```
+4.  Enable **Check for Updates on Startup** and add the repository.
+5.  Find **CyclesTooner** in the extension list and click `Install`.
+6.  From now on, new releases are detected when Blender starts, and you can update from the `Get Extensions` page.
+
+### From a ZIP file (Blender 4.1 and earlier)
+
 1.  Download this repository as a ZIP file.
 2.  Open Blender and go to `Edit` > `Preferences` > `Add-ons`.
 3.  Click `Install` and select the downloaded ZIP file.
@@ -88,4 +104,4 @@ CyclesTooner preserves base texture color/alpha and MToon Base Color where possi
 *   Recommended Renderer: **Cycles** (The outline feature is optimized for Cycles)
 
 ## License
-[MIT License](LICENSE)
+[GPL-3.0-or-later](LICENSE)
