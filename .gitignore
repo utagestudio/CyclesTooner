@@ -2,3 +2,4 @@ __pycache__/
 *.zip
 _temp/
 dist/
+AGENTS.md
