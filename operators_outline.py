@@ -6,6 +6,8 @@ MODEL_COLLECTION_SUFFIX = "_Collection"
 OUTLINE_ROOT_PROPERTY = "cyclestooner_outline_root_object"
 OUTLINE_SOURCE_PROPERTY = "cyclestooner_outline_source_collection"
 OUTLINE_OBJECT_PROPERTY = "cyclestooner_outline_object"
+OUTLINE_MODIFIER_NAME = "ToonOutlineGN"
+OUTLINE_MATERIAL_NAME = "Toon_Outline"
 
 
 def get_outline_base_name(target_collection):
@@ -39,6 +41,16 @@ def get_outline_target_name(outline_obj):
 
 def get_outline_object_name(target_collection):
     return f"{get_outline_base_name(target_collection)}_Outline"
+
+
+def get_outline_mesh_name(target):
+    name = target.name if hasattr(target, "name") else str(target)
+    return f"{name}_Outline_Mesh"
+
+
+def get_outline_node_group_name(target):
+    name = target.name if hasattr(target, "name") else str(target)
+    return f"GN_Outline_{name}"
 
 
 def get_root_object(obj):
@@ -121,6 +133,32 @@ def collection_contains_object(collection, obj):
     return any(candidate == obj for candidate in collection.all_objects)
 
 
+def view_layer_contains_object(view_layer, obj):
+    return any(candidate == obj for candidate in view_layer.objects)
+
+
+def view_layer_contains_collection(view_layer, collection):
+    def visit(layer_collection, parent_visible=True):
+        is_visible = (
+            parent_visible
+            and not getattr(layer_collection, "exclude", False)
+            and not getattr(layer_collection, "hide_viewport", False)
+            and not getattr(layer_collection.collection, "hide_viewport", False)
+        )
+        if layer_collection.collection == collection and is_visible:
+            return True
+        return any(visit(child, is_visible) for child in layer_collection.children)
+
+    return visit(view_layer.layer_collection)
+
+
+def ensure_collection_in_view_layer(collection, scene_collection, view_layer):
+    if view_layer_contains_collection(view_layer, collection):
+        return
+    link_collection_once(scene_collection, collection)
+    view_layer.update()
+
+
 def find_outline_collection_for_object(obj, preferred_collection=None):
     if not obj:
         return None
@@ -153,7 +191,7 @@ def find_outline_collection_for_object(obj, preferred_collection=None):
 
 
 def find_outline_modifier(outline_obj):
-    mod = outline_obj.modifiers.get("ToonOutlineGN")
+    mod = outline_obj.modifiers.get(OUTLINE_MODIFIER_NAME)
     if mod and mod.type == 'NODES' and mod.node_group:
         return mod
     for candidate in outline_obj.modifiers:
@@ -267,7 +305,8 @@ def create_root_outline_collections(root_obj, parent_collection, view_layer):
     if not container_collection:
         container_collection = bpy.data.collections.new(container_name)
     link_collection_once(model_collection, container_collection)
-    unlink_collection_child(parent_collection, container_collection)
+    if parent_collection != model_collection:
+        unlink_collection_child(parent_collection, container_collection)
 
     source_name = get_outline_source_collection_name(root_obj)
     old_collection = bpy.data.collections.get(source_name)
@@ -299,6 +338,16 @@ def remove_outline_container_if_empty(container_name):
         return False
     bpy.data.collections.remove(container_collection)
     return True
+
+
+def remove_unused_outline_data_blocks(root_name):
+    mesh = bpy.data.meshes.get(get_outline_mesh_name(root_name))
+    if mesh and mesh.users == 0:
+        bpy.data.meshes.remove(mesh)
+
+    node_group = bpy.data.node_groups.get(get_outline_node_group_name(root_name))
+    if node_group and node_group.users == 0:
+        bpy.data.node_groups.remove(node_group)
 
 
 def resolve_outline_target_collection(context, selected_objects):
@@ -356,6 +405,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         if bpy.data.objects.get(outline_name):
             self.report({'WARNING'}, "このルートオブジェクトのアウトラインは既に存在します。Refresh Outlineを使用してください。")
             return {'CANCELLED'}
+        remove_unused_outline_data_blocks(root_obj.name)
 
         source_collection, source_count = create_root_outline_collections(
             root_obj,
@@ -368,7 +418,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
             return {'CANCELLED'}
 
         # 1. アウトライン用メッシュとオブジェクトの作成
-        mesh_name = f"{root_obj.name}_Outline_Mesh"
+        mesh_name = get_outline_mesh_name(root_obj)
         obj_name = outline_name
         
         # メッシュデータ作成（空）
@@ -379,6 +429,9 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         container_collection = bpy.data.collections.get(get_outline_container_collection_name(root_obj))
         if container_collection:
             container_collection.objects.link(obj)
+            model_collection = bpy.data.collections.get(get_model_collection_name(root_obj))
+            if model_collection:
+                ensure_collection_in_view_layer(model_collection, context.scene.collection, context.view_layer)
         else:
             parent_collection.objects.link(obj)
         source_collection[OUTLINE_OBJECT_PROPERTY] = obj.name
@@ -386,7 +439,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         obj[OUTLINE_ROOT_PROPERTY] = root_obj.name
         
         # 2. マテリアルの作成・設定
-        mat_name = "Toon_Outline"
+        mat_name = OUTLINE_MATERIAL_NAME
         mat = bpy.data.materials.get(mat_name)
         if mat is None:
             mat = bpy.data.materials.new(name=mat_name)
@@ -407,18 +460,26 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         obj.hide_select = True
         
         # 4. ジオメトリノードの設定
-        mod = obj.modifiers.new(name="ToonOutlineGN", type='NODES')
-        node_group = self._create_geometry_node_group(f"GN_Outline_{root_obj.name}")
+        mod = obj.modifiers.new(name=OUTLINE_MODIFIER_NAME, type='NODES')
+        node_group = self._create_geometry_node_group(get_outline_node_group_name(root_obj))
         mod.node_group = node_group
         
-        set_modifier_input(mod, 'Collection', source_collection)
+        if not set_modifier_input(mod, 'Collection', source_collection):
+            self.report({'WARNING'}, "アウトラインのCollection入力を設定できませんでした。")
+            bpy.data.objects.remove(obj, do_unlink=True)
+            remove_outline_source_collection(source_collection.name)
+            remove_outline_container_if_empty(get_outline_container_collection_name(root_obj))
+            return {'CANCELLED'}
         set_modifier_input(mod, 'Value', 0.002)
         set_modifier_input(mod, 'Weight', 0.5)
 
+        context.view_layer.update()
+
         # オブジェクトを選択状態にする
         bpy.ops.object.select_all(action='DESELECT')
-        obj.select_set(True)
-        context.view_layer.objects.active = obj
+        if view_layer_contains_object(context.view_layer, obj):
+            obj.select_set(True)
+            context.view_layer.objects.active = obj
         
         self.report({'INFO'}, f"ルートオブジェクト '{root_obj.name}' のアウトラインを作成しました。({source_count} meshes)")
         return {'FINISHED'}
@@ -464,9 +525,9 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
 
     def _create_geometry_node_group(self, name):
         """ジオメトリノードグループを作成"""
-        # 既に存在する場合はリセットして再作成するか、既存を返す
-        if name in bpy.data.node_groups:
-            return bpy.data.node_groups[name]
+        old_group = bpy.data.node_groups.get(name)
+        if old_group and old_group.users == 0:
+            bpy.data.node_groups.remove(old_group)
             
         group = bpy.data.node_groups.new(name, 'GeometryNodeTree')
         
@@ -519,7 +580,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         # Set Material
         set_mat = nodes.new('GeometryNodeSetMaterial')
         set_mat.location = (200, 100)
-        mat = bpy.data.materials.get("Toon_Outline")
+        mat = bpy.data.materials.get(OUTLINE_MATERIAL_NAME)
         if mat:
             set_mat.inputs['Material'].default_value = mat
         
@@ -709,9 +770,11 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
 
         # クリーンアップ対象のリソースを特定
         node_groups_to_check = set()
+        meshes_to_check = set()
         materials_to_check = set()
         source_collections_to_remove = set()
         container_collections_to_remove = set()
+        root_names_to_check = set()
         
         for obj in objects_to_delete:
             source_name = obj.get(OUTLINE_SOURCE_PROPERTY)
@@ -723,11 +786,17 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
             root_name = obj.get(OUTLINE_ROOT_PROPERTY)
             if root_name:
                 container_collections_to_remove.add(get_outline_container_collection_name(root_name))
+                root_names_to_check.add(root_name)
+            elif obj.name.endswith("_Outline"):
+                root_names_to_check.add(obj.name.removesuffix("_Outline"))
 
             # Geometry Nodeの取得
             for mod in obj.modifiers:
                 if mod.type == 'NODES' and mod.node_group:
                     node_groups_to_check.add(mod.node_group)
+
+            if obj.data and obj.data.users <= 1:
+                meshes_to_check.add(obj.data)
             
             # Materialの取得
             for mat_slot in obj.material_slots:
@@ -737,6 +806,12 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
         # オブジェクトの完全削除
         for obj in objects_to_delete:
             bpy.data.objects.remove(obj, do_unlink=True)
+
+        remove_count_mesh = 0
+        for mesh in meshes_to_check:
+            if mesh.users == 0:
+                bpy.data.meshes.remove(mesh)
+                remove_count_mesh += 1
 
         remove_count_src = 0
         for collection_name in source_collections_to_remove:
@@ -759,9 +834,12 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
         remove_count_mat = 0
         for mat in materials_to_check:
             # 安全のため、特定の名前のマテリアルのみをクリーンアップ
-            if mat.name == "Toon_Outline" and mat.users == 0:
+            if mat.name == OUTLINE_MATERIAL_NAME and mat.users == 0:
                 bpy.data.materials.remove(mat)
                 remove_count_mat += 1
 
-        self.report({'INFO'}, f"アウトラインを削除しました。(Cleanup: Container={remove_count_container}, Src={remove_count_src}, NG={remove_count_ng}, Mat={remove_count_mat})")
+        for root_name in root_names_to_check:
+            remove_unused_outline_data_blocks(root_name)
+
+        self.report({'INFO'}, f"アウトラインを削除しました。(Cleanup: Container={remove_count_container}, Src={remove_count_src}, Mesh={remove_count_mesh}, NG={remove_count_ng}, Mat={remove_count_mat})")
         return {'FINISHED'}
