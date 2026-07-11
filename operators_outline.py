@@ -90,23 +90,33 @@ def find_parent_collection(target_collection, scene_collection):
 def link_collection_once(parent_collection, child_collection):
     if parent_collection == child_collection:
         return
-    if child_collection.name not in parent_collection.children:
+    if not any(collection == child_collection for collection in parent_collection.children):
         parent_collection.children.link(child_collection)
 
 
 def unlink_collection_child(parent_collection, child_collection):
     if not parent_collection or parent_collection == child_collection:
         return
-    if child_collection.name not in parent_collection.children:
+    if not any(collection == child_collection for collection in parent_collection.children):
         return
     parent_collection.children.unlink(child_collection)
 
 
+def get_or_create_collection(name):
+    collection = bpy.data.collections.get(name)
+    if collection:
+        return collection
+    return bpy.data.collections.new(name)
+
+
+def clear_collection_objects(collection):
+    for obj in list(collection.objects):
+        collection.objects.unlink(obj)
+
+
 def ensure_root_model_collection(root_obj, parent_collection):
     model_name = get_model_collection_name(root_obj)
-    model_collection = bpy.data.collections.get(model_name)
-    if not model_collection:
-        model_collection = bpy.data.collections.new(model_name)
+    model_collection = get_or_create_collection(model_name)
     link_collection_once(parent_collection, model_collection)
 
     for obj in collect_root_hierarchy_objects(root_obj):
@@ -135,28 +145,6 @@ def collection_contains_object(collection, obj):
 
 def view_layer_contains_object(view_layer, obj):
     return any(candidate == obj for candidate in view_layer.objects)
-
-
-def view_layer_contains_collection(view_layer, collection):
-    def visit(layer_collection, parent_visible=True):
-        is_visible = (
-            parent_visible
-            and not getattr(layer_collection, "exclude", False)
-            and not getattr(layer_collection, "hide_viewport", False)
-            and not getattr(layer_collection.collection, "hide_viewport", False)
-        )
-        if layer_collection.collection == collection and is_visible:
-            return True
-        return any(visit(child, is_visible) for child in layer_collection.children)
-
-    return visit(view_layer.layer_collection)
-
-
-def ensure_collection_in_view_layer(collection, scene_collection, view_layer):
-    if view_layer_contains_collection(view_layer, collection):
-        return
-    link_collection_once(scene_collection, collection)
-    view_layer.update()
 
 
 def find_outline_collection_for_object(obj, preferred_collection=None):
@@ -282,12 +270,9 @@ def create_filtered_outline_collection(target_collection, parent_collection, vie
         return None, 0
 
     source_name = get_outline_source_collection_name(target_collection)
-    old_collection = bpy.data.collections.get(source_name)
-    if old_collection:
-        bpy.data.collections.remove(old_collection)
-
-    source_collection = bpy.data.collections.new(source_name)
-    parent_collection.children.link(source_collection)
+    source_collection = get_or_create_collection(source_name)
+    clear_collection_objects(source_collection)
+    link_collection_once(parent_collection, source_collection)
 
     linked_count = link_outline_source_objects(source_collection, source_objects)
 
@@ -301,22 +286,17 @@ def create_root_outline_collections(root_obj, parent_collection, view_layer):
 
     model_collection = ensure_root_model_collection(root_obj, parent_collection)
     container_name = get_outline_container_collection_name(root_obj)
-    container_collection = bpy.data.collections.get(container_name)
-    if not container_collection:
-        container_collection = bpy.data.collections.new(container_name)
+    container_collection = get_or_create_collection(container_name)
     link_collection_once(model_collection, container_collection)
     if parent_collection != model_collection:
         unlink_collection_child(parent_collection, container_collection)
 
     source_name = get_outline_source_collection_name(root_obj)
-    old_collection = bpy.data.collections.get(source_name)
-    if old_collection:
-        bpy.data.collections.remove(old_collection)
-
-    source_collection = bpy.data.collections.new(source_name)
+    source_collection = get_or_create_collection(source_name)
+    clear_collection_objects(source_collection)
     source_collection[OUTLINE_ROOT_PROPERTY] = root_obj.name
     source_collection[OUTLINE_OBJECT_PROPERTY] = get_outline_object_name(source_collection)
-    container_collection.children.link(source_collection)
+    link_collection_once(container_collection, source_collection)
 
     linked_count = link_outline_source_objects(source_collection, source_objects)
     return source_collection, linked_count
@@ -429,9 +409,6 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         container_collection = bpy.data.collections.get(get_outline_container_collection_name(root_obj))
         if container_collection:
             container_collection.objects.link(obj)
-            model_collection = bpy.data.collections.get(get_model_collection_name(root_obj))
-            if model_collection:
-                ensure_collection_in_view_layer(model_collection, context.scene.collection, context.view_layer)
         else:
             parent_collection.objects.link(obj)
         source_collection[OUTLINE_OBJECT_PROPERTY] = obj.name
