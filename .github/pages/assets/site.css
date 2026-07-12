@@ -347,6 +347,12 @@ code {
   margin-bottom: 1.6rem;
 }
 
+.section-lede {
+  max-width: 760px;
+  color: var(--soft);
+  font-size: 1.08rem;
+}
+
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -355,6 +361,7 @@ code {
 
 .feature-card,
 .screenshot-card,
+.look-card,
 .install-steps,
 .install-panel,
 .requirements dl {
@@ -403,6 +410,38 @@ code {
   border-width: 0 0 1px;
   border-radius: 0;
   box-shadow: none;
+}
+
+.cycles-section {
+  position: relative;
+}
+
+.cycles-look-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.look-card {
+  overflow: hidden;
+}
+
+.look-card .image-shell {
+  min-height: 250px;
+}
+
+.look-card h3,
+.look-card p {
+  margin-inline: 1.2rem;
+}
+
+.look-card h3 {
+  margin-top: 1.1rem;
+}
+
+.look-card p {
+  margin-bottom: 1.2rem;
+  color: var(--muted);
 }
 
 .install-layout {
@@ -489,7 +528,8 @@ code {
   }
 
   .proof-strip,
-  .feature-grid {
+  .feature-grid,
+  .cycles-look-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -510,7 +550,8 @@ code {
 
   .proof-strip,
   .feature-grid,
-  .showcase-grid {
+  .showcase-grid,
+  .cycles-look-grid {
     grid-template-columns: 1fr;
   }
 
