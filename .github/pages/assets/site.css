@@ -535,6 +535,16 @@ code {
   font-weight: 700;
 }
 
+.asset-credits a {
+  color: var(--soft);
+  text-decoration-color: rgba(88, 217, 247, 0.55);
+  text-underline-offset: 0.18em;
+}
+
+.asset-credits a:hover {
+  color: var(--text);
+}
+
 .site-footer {
   justify-content: space-between;
   gap: 1rem;
