@@ -13,6 +13,7 @@ CYCLES_TOONER_MMD_DIFFUSE_MULTIPLY = "CyclesTooner_MMDDiffuseMultiply"
 CYCLES_TOONER_MTOON_BASE_TEX = "CyclesTooner_MToonBaseTex"
 CYCLES_TOONER_MTOON_BASE_MULTIPLY = "CyclesTooner_MToonBaseMultiply"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
+OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
 DEFAULT_TOON_SMOOTH = 0.2
 
 
@@ -46,20 +47,24 @@ def iter_object_materials(objects):
 
         for slot in obj.material_slots:
             mat = slot.material
-            if mat and mat.name != OUTLINE_MATERIAL_NAME and mat.name not in seen:
+            if mat and not is_outline_material(mat) and mat.name not in seen:
                 seen.add(mat.name)
                 yield mat
 
 
+def is_outline_material(mat):
+    return bool(mat and (mat.get(OUTLINE_MATERIAL_PROPERTY) or mat.name == OUTLINE_MATERIAL_NAME))
+
+
 def update_material_opacity_property(self, context):
-    if self.name == OUTLINE_MATERIAL_NAME:
+    if is_outline_material(self):
         return
     opacity = clamp_opacity(getattr(self, "cyclestooner_opacity", 1.0))
     set_material_opacity(self, opacity)
 
 
 def update_material_smooth_property(self, context):
-    if self.name == OUTLINE_MATERIAL_NAME:
+    if is_outline_material(self):
         return
     smooth = clamp_smooth(getattr(self, "cyclestooner_smooth", DEFAULT_TOON_SMOOTH))
     set_material_smooth(self, smooth)

@@ -8,6 +8,7 @@ OUTLINE_SOURCE_PROPERTY = "cyclestooner_outline_source_collection"
 OUTLINE_OBJECT_PROPERTY = "cyclestooner_outline_object"
 OUTLINE_MODIFIER_NAME = "ToonOutlineGN"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
+OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
 
 
 def get_outline_base_name(target_collection):
@@ -51,6 +52,15 @@ def get_outline_mesh_name(target):
 def get_outline_node_group_name(target):
     name = target.name if hasattr(target, "name") else str(target)
     return f"GN_Outline_{name}"
+
+
+def get_outline_material_name(target):
+    name = target.name if hasattr(target, "name") else str(target)
+    return f"{name}_Outline_Material"
+
+
+def is_outline_material(mat):
+    return bool(mat and (mat.get(OUTLINE_MATERIAL_PROPERTY) or mat.name == OUTLINE_MATERIAL_NAME))
 
 
 def get_root_object(obj):
@@ -416,12 +426,11 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         obj[OUTLINE_ROOT_PROPERTY] = root_obj.name
         
         # 2. マテリアルの作成・設定
-        mat_name = OUTLINE_MATERIAL_NAME
-        mat = bpy.data.materials.get(mat_name)
-        if mat is None:
-            mat = bpy.data.materials.new(name=mat_name)
-            mat.use_nodes = True
-            self._setup_outline_material(mat)
+        mat_name = get_outline_material_name(root_obj)
+        mat = bpy.data.materials.new(name=mat_name)
+        mat[OUTLINE_MATERIAL_PROPERTY] = True
+        mat.use_nodes = True
+        self._setup_outline_material(mat)
         
         # マテリアルをオブジェクトに追加
         if obj.data.materials:
@@ -438,12 +447,14 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         
         # 4. ジオメトリノードの設定
         mod = obj.modifiers.new(name=OUTLINE_MODIFIER_NAME, type='NODES')
-        node_group = self._create_geometry_node_group(get_outline_node_group_name(root_obj))
+        node_group = self._create_geometry_node_group(get_outline_node_group_name(root_obj), mat)
         mod.node_group = node_group
         
         if not set_modifier_input(mod, 'Collection', source_collection):
             self.report({'WARNING'}, "アウトラインのCollection入力を設定できませんでした。")
             bpy.data.objects.remove(obj, do_unlink=True)
+            if mat.users == 0 and is_outline_material(mat):
+                bpy.data.materials.remove(mat)
             remove_outline_source_collection(source_collection.name)
             remove_outline_container_if_empty(get_outline_container_collection_name(root_obj))
             return {'CANCELLED'}
@@ -500,7 +511,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         links.new(emis.outputs['Emission'], mix.inputs[2])
         links.new(mix.outputs['Shader'], output.inputs['Surface'])
 
-    def _create_geometry_node_group(self, name):
+    def _create_geometry_node_group(self, name, mat):
         """ジオメトリノードグループを作成"""
         old_group = bpy.data.node_groups.get(name)
         if old_group and old_group.users == 0:
@@ -557,7 +568,6 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         # Set Material
         set_mat = nodes.new('GeometryNodeSetMaterial')
         set_mat.location = (200, 100)
-        mat = bpy.data.materials.get(OUTLINE_MATERIAL_NAME)
         if mat:
             set_mat.inputs['Material'].default_value = mat
         
@@ -810,8 +820,7 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
                 
         remove_count_mat = 0
         for mat in materials_to_check:
-            # 安全のため、特定の名前のマテリアルのみをクリーンアップ
-            if mat.name == OUTLINE_MATERIAL_NAME and mat.users == 0:
+            if is_outline_material(mat) and mat.users == 0:
                 bpy.data.materials.remove(mat)
                 remove_count_mat += 1
 

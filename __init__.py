@@ -6,7 +6,7 @@ bl_info = {
     # Version format: (major, minor, dev). Increment dev for uncommitted changes,
     # then increment minor and reset dev to 0 when committing a completed change.
     # Keep in sync with "version" in blender_manifest.toml (used by Blender 4.2+ extensions).
-    "version": (1, 18, 0),
+    "version": (1, 19, 0),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > Tool",
     "description": "Convert Principled BSDF to Toon BSDF",

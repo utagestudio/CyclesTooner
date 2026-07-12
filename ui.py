@@ -1,5 +1,13 @@
 import bpy
 
+OUTLINE_MATERIAL_NAME = "Toon_Outline"
+OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
+
+
+def is_outline_material(mat):
+    return bool(mat and (mat.get(OUTLINE_MATERIAL_PROPERTY) or mat.name == OUTLINE_MATERIAL_NAME))
+
+
 class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
     """
     3Dビューポートのサイドバーに追加されるパネルの定義
@@ -46,7 +54,7 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
         active_mat = context.object.active_material if context.object else None
         if (
             active_mat
-            and active_mat.name != "Toon_Outline"
+            and not is_outline_material(active_mat)
             and active_mat.use_nodes
             and active_mat.node_tree
             and active_mat.node_tree.nodes.get("CyclesTooner_Opacity")
