@@ -157,6 +157,18 @@ h3 {
   line-height: 1.25;
 }
 
+:lang(ja) h1,
+:lang(ja) h2,
+:lang(ja) h3,
+:lang(ja) .eyebrow,
+:lang(ja) .hero-lede,
+:lang(ja) .section-lede {
+  line-break: strict;
+  overflow-wrap: normal;
+  text-wrap: balance;
+  word-break: auto-phrase;
+}
+
 .hero-lede {
   max-width: 650px;
   color: var(--soft);
