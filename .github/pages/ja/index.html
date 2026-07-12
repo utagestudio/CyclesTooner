@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン</title>
+  <meta name="description" content="Principled BSDF、MMDShaderDev、VRM MToonマテリアルをToon BSDFへ変換し、Cycles向けのGeometry Nodesアウトラインを生成するBlenderアドオンです。">
+  <link rel="canonical" href="https://utagestudio.github.io/CyclesTooner/ja/">
+  <link rel="alternate" hreflang="en" href="https://utagestudio.github.io/CyclesTooner/">
+  <link rel="alternate" hreflang="ja" href="https://utagestudio.github.io/CyclesTooner/ja/">
+  <link rel="alternate" hreflang="x-default" href="https://utagestudio.github.io/CyclesTooner/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://utagestudio.github.io/CyclesTooner/ja/">
+  <meta property="og:title" content="CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン">
+  <meta property="og:description" content="Toon BSDF変換、MMD/VRM素材対応、Geometry Nodesアウトライン生成をまとめたBlenderアドオンです。">
+  <meta property="og:site_name" content="CyclesTooner">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン">
+  <meta name="twitter:description" content="Cyclesでトゥーンレンダリングを行うためのBlenderアドオン。Toon BSDF変換とアウトライン生成に対応します。">
+  <link rel="stylesheet" href="../assets/site.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "CyclesTooner",
+    "applicationCategory": "DesignApplication",
+    "operatingSystem": "Windows, macOS, Linux",
+    "softwareRequirements": "Blender 4.2以降は拡張機能リポジトリから導入可能。アドオンとしてはBlender 3.0以降に対応。",
+    "description": "CyclesToonerは、Principled BSDF、MMDShaderDev、VRM MToonマテリアルをToon BSDFへ変換し、Cycles向けの背面法アウトラインを生成するBlenderアドオンです。",
+    "url": "https://utagestudio.github.io/CyclesTooner/ja/",
+    "downloadUrl": "https://utagestudio.github.io/CyclesTooner/index.json",
+    "license": "https://www.gnu.org/licenses/gpl-3.0.ja.html",
+    "author": {
+      "@type": "Organization",
+      "name": "utagestudio"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="../" aria-label="CyclesTooner ホーム">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>CyclesTooner</span>
+    </a>
+    <nav class="top-nav" aria-label="主要ナビゲーション">
+      <a href="#features">機能</a>
+      <a href="#install">導入</a>
+      <a href="https://github.com/utagestudio/CyclesTooner">GitHub</a>
+      <a class="language-switch" href="../" lang="en">English</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Blender Cycles向けトゥーンシェーダー補助アドオン</p>
+        <h1>マテリアルを作り直さず、Cyclesでトゥーン表現へ。</h1>
+        <p class="hero-lede">
+          Principled BSDF、MMDShaderDev、VRM MToonをToon BSDFへ変換し、
+          Geometry Nodesによる背面法アウトラインもまとめて扱えます。
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#install">拡張機能リポジトリを追加</a>
+          <a class="button secondary" href="https://github.com/utagestudio/CyclesTooner">GitHubを見る</a>
+        </div>
+        <div class="repo-url" aria-label="Blender拡張機能リポジトリURL">
+          <span>Repository URL</span>
+          <code>https://utagestudio.github.io/CyclesTooner/index.json</code>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="CyclesToonerのBlender画面プレビュー">
+        <div class="viewport-frame missing-image">
+          <div class="viewport-toolbar">
+            <span></span><span></span><span></span>
+          </div>
+          <picture>
+            <source srcset="../assets/material-converter.png" type="image/png">
+            <img src="../assets/material-converter.png" alt="Blender上のCyclesToonerマテリアル変換パネル" onload="this.closest('.viewport-frame').classList.remove('missing-image');" onerror="this.remove();">
+          </picture>
+          <div class="screenshot-placeholder">
+            <span>スクリーンショット枠</span>
+            <strong>Material Converter Panel</strong>
+            <small>assets/material-converter.png に差し替え</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="proof-strip" aria-label="主な機能">
+      <div><strong>Toon BSDF</strong><span>Cycles向けマテリアル変換</span></div>
+      <div><strong>MMD / VRM</strong><span>主要なインポート素材に対応</span></div>
+      <div><strong>Geometry Nodes</strong><span>背面法アウトライン生成</span></div>
+      <div><strong>Blender Extensions</strong><span>リポジトリから導入・更新</span></div>
+    </section>
+
+    <section id="features" class="section">
+      <div class="section-heading">
+        <p class="eyebrow">キャラクター制作とセルルック向け</p>
+        <h2>読み込んだ素材を、Cyclesのトゥーン表現へ素早く寄せる。</h2>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <h3>Toon BSDFへ変換</h3>
+          <p>
+            Principled BSDFをToon BSDFへ置き換え、対応できる範囲でBase Color、
+            Normal接続、テクスチャAlpha、マテリアル透明度を引き継ぎます。
+          </p>
+          <ul>
+            <li>Principled BSDFからToon BSDFへ変換</li>
+            <li>MMDShaderDev / mmd_shaderを直接変換</li>
+            <li>VRM MToonを直接変換</li>
+          </ul>
+        </article>
+        <article class="feature-card">
+          <h3>Cycles向けアウトライン生成</h3>
+          <p>
+            選択オブジェクトの最上位親を基準に、Geometry Nodesで背面法アウトラインを生成します。
+            非表示メッシュは対象から除外し、管理用コレクションも整理します。
+          </p>
+          <ul>
+            <li>オブジェクト基準のアウトライン対象</li>
+            <li>頂点ウェイトによる太さ制御</li>
+            <li>更新・削除ツールを搭載</li>
+          </ul>
+        </article>
+        <article class="feature-card">
+          <h3>Opacity / Smoothを一括調整</h3>
+          <p>
+            選択オブジェクトと子階層のToon化済みマテリアルに、OpacityとToon Smoothをまとめて適用できます。
+            アクティブマテリアルは個別調整にも対応します。
+          </p>
+          <ul>
+            <li>一括Opacityスライダー</li>
+            <li>一括Smoothスライダー</li>
+            <li>マテリアル単位の調整</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="showcase-grid" aria-label="スクリーンショット紹介">
+      <div class="screenshot-card">
+        <div class="image-shell missing-image">
+          <img src="../assets/outline-generator.png" alt="Blenderで生成されたCyclesToonerアウトラインのプレビュー" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+          <div class="screenshot-placeholder">
+            <span>スクリーンショット枠</span>
+            <strong>Outline Generator</strong>
+            <small>assets/outline-generator.png に差し替え</small>
+          </div>
+        </div>
+        <h3>Cyclesで扱いやすいアウトライン</h3>
+        <p>Cyclesレンダラーで綺麗に表示しやすい、背面法のアウトラインメッシュを生成します。</p>
+      </div>
+      <div class="screenshot-card">
+        <div class="image-shell missing-image">
+          <img src="../assets/extension-install.png" alt="Blender Get Extensionsに表示されたCyclesTooner" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+          <div class="screenshot-placeholder">
+            <span>スクリーンショット枠</span>
+            <strong>Blender Extensions Install</strong>
+            <small>assets/extension-install.png に差し替え</small>
+          </div>
+        </div>
+        <h3>拡張機能リポジトリから導入</h3>
+        <p>リポジトリURLを一度追加すれば、BlenderのGet Extensionsから更新を検出できます。</p>
+      </div>
+    </section>
+
+    <section id="install" class="section install-section">
+      <div class="section-heading">
+        <p class="eyebrow">Blender 4.2以降</p>
+        <h2>Extension Repositoryからインストール。</h2>
+      </div>
+      <div class="install-layout">
+        <div class="install-steps">
+          <ol>
+            <li>Blenderで <strong>編集</strong> &gt; <strong>プリファレンス</strong> &gt; <strong>エクステンションを入手</strong> を開きます。</li>
+            <li><strong>リポジトリ</strong> から <strong>リモートリポジトリを追加</strong> を選びます。</li>
+            <li>CyclesToonerのリポジトリURLを貼り付けます。</li>
+            <li>更新チェックを有効にし、一覧から <strong>CyclesTooner</strong> をインストールします。</li>
+          </ol>
+        </div>
+        <div class="install-panel">
+          <span>Extension repository</span>
+          <code>https://utagestudio.github.io/CyclesTooner/index.json</code>
+          <a class="button primary" href="../index.json">index.jsonを開く</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section requirements">
+      <div>
+        <p class="eyebrow">動作環境</p>
+        <h2>Blenderのトゥーンレンダリング制作向け。</h2>
+      </div>
+      <dl>
+        <div>
+          <dt>Blender</dt>
+          <dd>Blender 5.0推奨 / 3.0以上</dd>
+        </div>
+        <div>
+          <dt>Renderer</dt>
+          <dd>特にアウトライン機能はCycles推奨</dd>
+        </div>
+        <div>
+          <dt>License</dt>
+          <dd><a href="https://github.com/utagestudio/CyclesTooner/blob/main/LICENSE">GPL-3.0-or-later</a></dd>
+        </div>
+        <div>
+          <dt>Documentation</dt>
+          <dd><a href="https://github.com/utagestudio/CyclesTooner/blob/main/README.md">日本語README</a> / <a href="https://github.com/utagestudio/CyclesTooner/blob/main/README_en.md" lang="en">English README</a></dd>
+        </div>
+      </dl>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>CyclesTooner by utagestudio</span>
+    <a href="https://github.com/utagestudio/CyclesTooner">GitHub</a>
+    <a href="../" lang="en">English</a>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CyclesTooner - Blender Toon Shader Assistant for Cycles</title>
+  <meta name="description" content="Convert Principled BSDF, MMDShaderDev, and VRM MToon materials to Toon BSDF, then generate clean Geometry Nodes outlines for Cycles toon rendering in Blender.">
+  <link rel="canonical" href="https://utagestudio.github.io/CyclesTooner/">
+  <link rel="alternate" hreflang="en" href="https://utagestudio.github.io/CyclesTooner/">
+  <link rel="alternate" hreflang="ja" href="https://utagestudio.github.io/CyclesTooner/ja/">
+  <link rel="alternate" hreflang="x-default" href="https://utagestudio.github.io/CyclesTooner/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://utagestudio.github.io/CyclesTooner/">
+  <meta property="og:title" content="CyclesTooner - Blender Toon Shader Assistant for Cycles">
+  <meta property="og:description" content="Convert Blender materials to Toon BSDF and generate clean Cycles outlines with Geometry Nodes.">
+  <meta property="og:site_name" content="CyclesTooner">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CyclesTooner - Blender Toon Shader Assistant for Cycles">
+  <meta name="twitter:description" content="A Blender add-on for Cycles toon rendering, Toon BSDF conversion, MMD/VRM material support, and Geometry Nodes outlines.">
+  <link rel="stylesheet" href="assets/site.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "CyclesTooner",
+    "applicationCategory": "DesignApplication",
+    "operatingSystem": "Windows, macOS, Linux",
+    "softwareRequirements": "Blender 4.2 or later for extension repository installation; Blender 3.0 or later for add-on use.",
+    "description": "CyclesTooner is a Blender add-on that converts Principled BSDF, MMDShaderDev, and VRM MToon materials to Toon BSDF and generates inverted-hull outlines for Cycles rendering.",
+    "url": "https://utagestudio.github.io/CyclesTooner/",
+    "downloadUrl": "https://utagestudio.github.io/CyclesTooner/index.json",
+    "license": "https://www.gnu.org/licenses/gpl-3.0.en.html",
+    "author": {
+      "@type": "Organization",
+      "name": "utagestudio"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="CyclesTooner home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>CyclesTooner</span>
+    </a>
+    <nav class="top-nav" aria-label="Primary navigation">
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/utagestudio/CyclesTooner">GitHub</a>
+      <a class="language-switch" href="ja/" lang="ja">日本語</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Blender toon shader assistant for Cycles</p>
+        <h1>Cycles toon rendering, without rebuilding every material.</h1>
+        <p class="hero-lede">
+          Convert Principled BSDF, MMDShaderDev, and VRM MToon materials to Toon BSDF,
+          then add clean inverted-hull outlines powered by Geometry Nodes.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#install">Add Extension Repository</a>
+          <a class="button secondary" href="https://github.com/utagestudio/CyclesTooner">View on GitHub</a>
+        </div>
+        <div class="repo-url" aria-label="Blender extension repository URL">
+          <span>Repository URL</span>
+          <code>https://utagestudio.github.io/CyclesTooner/index.json</code>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="CyclesTooner Blender interface preview">
+        <div class="viewport-frame missing-image">
+          <div class="viewport-toolbar">
+            <span></span><span></span><span></span>
+          </div>
+          <picture>
+            <source srcset="assets/material-converter.png" type="image/png">
+            <img src="assets/material-converter.png" alt="CyclesTooner material converter panel in Blender" onload="this.closest('.viewport-frame').classList.remove('missing-image');" onerror="this.remove();">
+          </picture>
+          <div class="screenshot-placeholder">
+            <span>Screenshot slot</span>
+            <strong>Material Converter Panel</strong>
+            <small>Replace with assets/material-converter.png</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="proof-strip" aria-label="Key capabilities">
+      <div><strong>Toon BSDF</strong><span>Cycles-ready material conversion</span></div>
+      <div><strong>MMD / VRM</strong><span>Direct shader path support</span></div>
+      <div><strong>Geometry Nodes</strong><span>Inverted-hull outline generation</span></div>
+      <div><strong>Blender Extensions</strong><span>Install and update from repository</span></div>
+    </section>
+
+    <section id="features" class="section">
+      <div class="section-heading">
+        <p class="eyebrow">Designed for character and cel-look workflows</p>
+        <h2>Move from imported materials to Cycles toon shading faster.</h2>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <h3>Convert materials to Toon BSDF</h3>
+          <p>
+            Replace Principled BSDF with Toon BSDF while preserving available base color,
+            normal connections, texture alpha, and material opacity where supported.
+          </p>
+          <ul>
+            <li>Principled BSDF to Toon BSDF</li>
+            <li>MMDShaderDev / mmd_shader conversion</li>
+            <li>VRM MToon conversion</li>
+          </ul>
+        </article>
+        <article class="feature-card">
+          <h3>Generate clean Cycles outlines</h3>
+          <p>
+            Build inverted-hull outline objects from the selected model root using Geometry Nodes,
+            excluding hidden meshes and keeping source collections organized.
+          </p>
+          <ul>
+            <li>Object-driven outline targets</li>
+            <li>Vertex weight thickness control</li>
+            <li>Refresh and remove outline tools</li>
+          </ul>
+        </article>
+        <article class="feature-card">
+          <h3>Tune opacity and smoothness in bulk</h3>
+          <p>
+            Apply opacity and Toon Smooth values across selected objects and child hierarchies,
+            with per-material controls when the active material was converted by CyclesTooner.
+          </p>
+          <ul>
+            <li>Batch opacity slider</li>
+            <li>Batch Smooth slider</li>
+            <li>Per-material adjustment</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="showcase-grid" aria-label="Screenshot showcase">
+      <div class="screenshot-card">
+        <div class="image-shell missing-image">
+          <img src="assets/outline-generator.png" alt="CyclesTooner generated outline preview in Blender" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+          <div class="screenshot-placeholder">
+            <span>Screenshot slot</span>
+            <strong>Outline Generator</strong>
+            <small>Replace with assets/outline-generator.png</small>
+          </div>
+        </div>
+        <h3>Outlines made for Cycles</h3>
+        <p>Use an inverted-hull mesh setup that renders cleanly with the Cycles renderer.</p>
+      </div>
+      <div class="screenshot-card">
+        <div class="image-shell missing-image">
+          <img src="assets/extension-install.png" alt="CyclesTooner listed in Blender Get Extensions" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+          <div class="screenshot-placeholder">
+            <span>Screenshot slot</span>
+            <strong>Blender Extensions Install</strong>
+            <small>Replace with assets/extension-install.png</small>
+          </div>
+        </div>
+        <h3>Install from a remote repository</h3>
+        <p>Add the repository URL once, then let Blender detect updates from Get Extensions.</p>
+      </div>
+    </section>
+
+    <section id="install" class="section install-section">
+      <div class="section-heading">
+        <p class="eyebrow">Blender 4.2+</p>
+        <h2>Install from the Extension Repository.</h2>
+      </div>
+      <div class="install-layout">
+        <div class="install-steps">
+          <ol>
+            <li>Open Blender and go to <strong>Edit</strong> &gt; <strong>Preferences</strong> &gt; <strong>Get Extensions</strong>.</li>
+            <li>Choose <strong>Repositories</strong> &gt; <strong>Add Remote Repository</strong>.</li>
+            <li>Paste the CyclesTooner repository URL.</li>
+            <li>Enable update checks and install <strong>CyclesTooner</strong> from the extension list.</li>
+          </ol>
+        </div>
+        <div class="install-panel">
+          <span>Extension repository</span>
+          <code>https://utagestudio.github.io/CyclesTooner/index.json</code>
+          <a class="button primary" href="index.json">Open index.json</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section requirements">
+      <div>
+        <p class="eyebrow">Requirements</p>
+        <h2>Built for Blender toon rendering workflows.</h2>
+      </div>
+      <dl>
+        <div>
+          <dt>Blender</dt>
+          <dd>Blender 5.0 recommended / 3.0+</dd>
+        </div>
+        <div>
+          <dt>Renderer</dt>
+          <dd>Cycles recommended, especially for outlines</dd>
+        </div>
+        <div>
+          <dt>License</dt>
+          <dd><a href="https://github.com/utagestudio/CyclesTooner/blob/main/LICENSE">GPL-3.0-or-later</a></dd>
+        </div>
+        <div>
+          <dt>Documentation</dt>
+          <dd><a href="https://github.com/utagestudio/CyclesTooner/blob/main/README_en.md">English README</a> / <a href="https://github.com/utagestudio/CyclesTooner/blob/main/README.md" lang="ja">日本語README</a></dd>
+        </div>
+      </dl>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>CyclesTooner by utagestudio</span>
+    <a href="https://github.com/utagestudio/CyclesTooner">GitHub</a>
+    <a href="ja/" lang="ja">日本語</a>
+  </footer>
+</body>
+</html>

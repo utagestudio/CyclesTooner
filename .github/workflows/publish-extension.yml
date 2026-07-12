@@ -60,6 +60,9 @@ jobs:
       - name: Generate repository index
         run: ~/blender/blender --command extension server-generate --repo-dir dist --html
 
+      - name: Add custom landing pages
+        run: cp -R .github/pages/. dist/
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
