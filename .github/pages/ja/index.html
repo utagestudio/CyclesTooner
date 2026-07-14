@@ -70,18 +70,17 @@
         </div>
       </div>
       <div class="hero-visual" aria-label="CyclesToonerのBlender画面プレビュー">
-        <div class="viewport-frame missing-image">
+        <div class="viewport-frame image-loading">
           <div class="viewport-toolbar">
             <span></span><span></span><span></span>
           </div>
           <picture>
             <source srcset="../assets/material-converter.png" type="image/png">
-            <img src="../assets/material-converter.png" alt="Blender上のCyclesToonerマテリアル変換パネル" onload="this.closest('.viewport-frame').classList.remove('missing-image');" onerror="this.remove();">
+            <img src="../assets/material-converter.png" alt="Blender上のCyclesToonerマテリアル変換パネル" onload="this.closest('.viewport-frame').classList.remove('image-loading');" onerror="this.closest('.viewport-frame').classList.add('image-error'); this.remove();">
           </picture>
           <div class="screenshot-placeholder">
-            <span>スクリーンショット枠</span>
+            <span>プレビューを表示できません</span>
             <strong>Material Converter Panel</strong>
-            <small>assets/material-converter.png に差し替え</small>
           </div>
         </div>
       </div>
@@ -141,24 +140,22 @@
 
     <section class="showcase-grid" aria-label="スクリーンショット紹介">
       <div class="screenshot-card">
-        <div class="image-shell missing-image">
-          <img src="../assets/outline-generator.png" alt="Blenderで生成されたCyclesToonerアウトラインのプレビュー" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+        <div class="image-shell image-loading">
+          <img src="../assets/outline-generator.png" alt="Blenderで生成されたCyclesToonerアウトラインのプレビュー" onload="this.parentElement.classList.remove('image-loading');" onerror="this.parentElement.classList.add('image-error'); this.remove();">
           <div class="screenshot-placeholder">
-            <span>スクリーンショット枠</span>
+            <span>プレビューを表示できません</span>
             <strong>Outline Generator</strong>
-            <small>assets/outline-generator.png に差し替え</small>
           </div>
         </div>
         <h3>Cyclesで扱いやすいアウトライン</h3>
         <p>Cyclesレンダラーできれいに表示しやすい、背面法のアウトラインメッシュを生成します。</p>
       </div>
       <div class="screenshot-card">
-        <div class="image-shell missing-image">
-          <img src="../assets/extension-install.png" alt="Blender Get Extensionsに表示されたCyclesTooner" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+        <div class="image-shell image-loading">
+          <img src="../assets/extension-install.png" alt="Blender Get Extensionsに表示されたCyclesTooner" onload="this.parentElement.classList.remove('image-loading');" onerror="this.parentElement.classList.add('image-error'); this.remove();">
           <div class="screenshot-placeholder">
-            <span>スクリーンショット枠</span>
+            <span>プレビューを表示できません</span>
             <strong>Blender Extensions Install</strong>
-            <small>assets/extension-install.png に差し替え</small>
           </div>
         </div>
         <h3>拡張機能リポジトリから導入</h3>
@@ -177,36 +174,33 @@
       </div>
       <div class="cycles-look-grid">
         <article class="look-card">
-          <div class="image-shell missing-image">
-            <img src="../assets/cycles-water.png" alt="Cyclesでレンダリングした水面表現とトゥーンキャラクター" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+          <div class="image-shell image-loading">
+            <img src="../assets/cycles-water.png" alt="Cyclesでレンダリングした水面表現とトゥーンキャラクター" onload="this.parentElement.classList.remove('image-loading');" onerror="this.parentElement.classList.add('image-error'); this.remove();">
             <div class="screenshot-placeholder">
-              <span>画像枠</span>
+              <span>プレビューを表示できません</span>
               <strong>Water Surface</strong>
-              <small>assets/cycles-water.png に差し替え</small>
             </div>
           </div>
           <h3>水面表現</h3>
           <p>反射、透明感、水面の揺らぎを表現しながら、キャラクターはトゥーン調のままなじませます。</p>
         </article>
         <article class="look-card">
-          <div class="image-shell missing-image">
-            <img src="../assets/cycles-fisheye.png" alt="Cyclesの魚眼レンズ表現とトゥーンキャラクター" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+          <div class="image-shell image-loading">
+            <img src="../assets/cycles-fisheye.png" alt="Cyclesの魚眼レンズ表現とトゥーンキャラクター" onload="this.parentElement.classList.remove('image-loading');" onerror="this.parentElement.classList.add('image-error'); this.remove();">
             <div class="screenshot-placeholder">
-              <span>画像枠</span>
+              <span>プレビューを表示できません</span>
               <strong>Fisheye Lens</strong>
-              <small>assets/cycles-fisheye.png に差し替え</small>
             </div>
           </div>
           <h3>魚眼・広角表現</h3>
           <p>魚眼や広角のカメラ表現でも、トゥーンモデルを背景やエフェクトとなじませて見せられます。</p>
         </article>
         <article class="look-card">
-          <div class="image-shell missing-image">
-            <img src="../assets/cycles-volumetric.png" alt="Cyclesのボリュームライトと霧の中にいるトゥーンキャラクター" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+          <div class="image-shell image-loading">
+            <img src="../assets/cycles-volumetric.png" alt="Cyclesのボリュームライトと霧の中にいるトゥーンキャラクター" onload="this.parentElement.classList.remove('image-loading');" onerror="this.parentElement.classList.add('image-error'); this.remove();">
             <div class="screenshot-placeholder">
-              <span>画像枠</span>
+              <span>プレビューを表示できません</span>
               <strong>Volumetric Light</strong>
-              <small>assets/cycles-volumetric.png に差し替え</small>
             </div>
           </div>
           <h3>ボリュームライト</h3>

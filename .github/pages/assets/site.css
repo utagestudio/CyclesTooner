@@ -303,7 +303,7 @@ code {
   inset: 0;
 }
 
-.missing-image .screenshot-placeholder {
+.image-error .screenshot-placeholder {
   display: grid;
 }
 
@@ -317,10 +317,6 @@ code {
 .screenshot-placeholder strong {
   font-size: clamp(1.35rem, 4vw, 2.4rem);
   line-height: 1.1;
-}
-
-.screenshot-placeholder small {
-  color: var(--muted);
 }
 
 .proof-strip {

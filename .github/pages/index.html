@@ -70,18 +70,17 @@
         </div>
       </div>
       <div class="hero-visual" aria-label="CyclesTooner Blender interface preview">
-        <div class="viewport-frame missing-image">
+        <div class="viewport-frame image-loading">
           <div class="viewport-toolbar">
             <span></span><span></span><span></span>
           </div>
           <picture>
             <source srcset="assets/material-converter.png" type="image/png">
-            <img src="assets/material-converter.png" alt="CyclesTooner material converter panel in Blender" onload="this.closest('.viewport-frame').classList.remove('missing-image');" onerror="this.remove();">
+            <img src="assets/material-converter.png" alt="CyclesTooner material converter panel in Blender" onload="this.closest('.viewport-frame').classList.remove('image-loading');" onerror="this.closest('.viewport-frame').classList.add('image-error'); this.remove();">
           </picture>
           <div class="screenshot-placeholder">
-            <span>Screenshot slot</span>
+            <span>Preview unavailable</span>
             <strong>Material Converter Panel</strong>
-            <small>Replace with assets/material-converter.png</small>
           </div>
         </div>
       </div>
@@ -141,24 +140,22 @@
 
     <section class="showcase-grid" aria-label="Screenshot showcase">
       <div class="screenshot-card">
-        <div class="image-shell missing-image">
-          <img src="assets/outline-generator.png" alt="CyclesTooner generated outline preview in Blender" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+        <div class="image-shell image-loading">
+          <img src="assets/outline-generator.png" alt="CyclesTooner generated outline preview in Blender" onload="this.parentElement.classList.remove('image-loading');" onerror="this.parentElement.classList.add('image-error'); this.remove();">
           <div class="screenshot-placeholder">
-            <span>Screenshot slot</span>
+            <span>Preview unavailable</span>
             <strong>Outline Generator</strong>
-            <small>Replace with assets/outline-generator.png</small>
           </div>
         </div>
         <h3>Outlines made for Cycles</h3>
         <p>Use an inverted-hull mesh setup that renders cleanly with the Cycles renderer.</p>
       </div>
       <div class="screenshot-card">
-        <div class="image-shell missing-image">
-          <img src="assets/extension-install.png" alt="CyclesTooner listed in Blender Get Extensions" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+        <div class="image-shell image-loading">
+          <img src="assets/extension-install.png" alt="CyclesTooner listed in Blender Get Extensions" onload="this.parentElement.classList.remove('image-loading');" onerror="this.parentElement.classList.add('image-error'); this.remove();">
           <div class="screenshot-placeholder">
-            <span>Screenshot slot</span>
+            <span>Preview unavailable</span>
             <strong>Blender Extensions Install</strong>
-            <small>Replace with assets/extension-install.png</small>
           </div>
         </div>
         <h3>Install from a remote repository</h3>
@@ -177,36 +174,33 @@
       </div>
       <div class="cycles-look-grid">
         <article class="look-card">
-          <div class="image-shell missing-image">
-            <img src="assets/cycles-water.png" alt="Toon character beside reflective water rendered in Cycles" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+          <div class="image-shell image-loading">
+            <img src="assets/cycles-water.png" alt="Toon character beside reflective water rendered in Cycles" onload="this.parentElement.classList.remove('image-loading');" onerror="this.parentElement.classList.add('image-error'); this.remove();">
             <div class="screenshot-placeholder">
-              <span>Image slot</span>
+              <span>Preview unavailable</span>
               <strong>Water Surface</strong>
-              <small>Replace with assets/cycles-water.png</small>
             </div>
           </div>
           <h3>Water Surface</h3>
           <p>Blend reflections, transparency, and surface shimmer with a clean toon character style.</p>
         </article>
         <article class="look-card">
-          <div class="image-shell missing-image">
-            <img src="assets/cycles-fisheye.png" alt="Toon character rendered with a fisheye lens effect in Cycles" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+          <div class="image-shell image-loading">
+            <img src="assets/cycles-fisheye.png" alt="Toon character rendered with a fisheye lens effect in Cycles" onload="this.parentElement.classList.remove('image-loading');" onerror="this.parentElement.classList.add('image-error'); this.remove();">
             <div class="screenshot-placeholder">
-              <span>Image slot</span>
+              <span>Preview unavailable</span>
               <strong>Fisheye Lens</strong>
-              <small>Replace with assets/cycles-fisheye.png</small>
             </div>
           </div>
           <h3>Fisheye Lens</h3>
           <p>Use stylized wide-angle camera work while keeping toon characters integrated with the scene.</p>
         </article>
         <article class="look-card">
-          <div class="image-shell missing-image">
-            <img src="assets/cycles-volumetric.png" alt="Toon character in volumetric light and fog rendered in Cycles" onload="this.parentElement.classList.remove('missing-image');" onerror="this.remove();">
+          <div class="image-shell image-loading">
+            <img src="assets/cycles-volumetric.png" alt="Toon character in volumetric light and fog rendered in Cycles" onload="this.parentElement.classList.remove('image-loading');" onerror="this.parentElement.classList.add('image-error'); this.remove();">
             <div class="screenshot-placeholder">
-              <span>Image slot</span>
+              <span>Preview unavailable</span>
               <strong>Volumetric Light</strong>
-              <small>Replace with assets/cycles-volumetric.png</small>
             </div>
           </div>
           <h3>Volumetric Light</h3>
