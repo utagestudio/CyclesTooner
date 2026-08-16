@@ -216,8 +216,18 @@ def set_modifier_input(mod, name, value):
     identifier = get_node_group_input_identifier(mod.node_group, name)
     if not identifier:
         return False
-    mod[identifier] = value
-    return True
+    if hasattr(mod, "properties") and hasattr(mod.properties, "inputs"):
+        try:
+            input_property = getattr(mod.properties.inputs, identifier)
+            input_property.value = value
+            return True
+        except (AttributeError, TypeError):
+            pass
+    try:
+        mod[identifier] = value
+        return True
+    except TypeError:
+        return False
 
 
 def is_outline_excluded_object(obj, view_layer):
