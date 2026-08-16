@@ -230,43 +230,30 @@ def set_modifier_input(mod, name, value):
         return False
 
 
-def is_outline_excluded_object(obj, view_layer):
+def is_outline_excluded_object(obj):
     if obj.type != 'MESH':
         return True
     if obj.name.endswith("_Outline"):
         return True
-    try:
-        if obj.hide_get(view_layer=view_layer):
-            return True
-    except TypeError:
-        if obj.hide_get():
-            return True
-    if obj.hide_viewport:
+    if obj.hide_render:
         return True
-    if hasattr(obj, "visible_get"):
-        try:
-            if not obj.visible_get(view_layer=view_layer):
-                return True
-        except TypeError:
-            if not obj.visible_get():
-                return True
     return False
 
 
-def collect_visible_outline_objects(target_collection, view_layer):
+def collect_renderable_outline_objects(target_collection):
     objects = []
     for obj in target_collection.all_objects:
-        if is_outline_excluded_object(obj, view_layer):
+        if is_outline_excluded_object(obj):
             continue
         objects.append(obj)
     return objects
 
 
-def collect_visible_root_outline_objects(root_obj, view_layer):
+def collect_renderable_root_outline_objects(root_obj):
     objects = []
 
     def visit(obj):
-        if not is_outline_excluded_object(obj, view_layer):
+        if not is_outline_excluded_object(obj):
             objects.append(obj)
         for child in obj.children:
             visit(child)
@@ -284,8 +271,8 @@ def link_outline_source_objects(source_collection, source_objects):
     return linked_count
 
 
-def create_filtered_outline_collection(target_collection, parent_collection, view_layer):
-    source_objects = collect_visible_outline_objects(target_collection, view_layer)
+def create_filtered_outline_collection(target_collection, parent_collection):
+    source_objects = collect_renderable_outline_objects(target_collection)
     if not source_objects:
         return None, 0
 
@@ -299,8 +286,8 @@ def create_filtered_outline_collection(target_collection, parent_collection, vie
     return source_collection, linked_count
 
 
-def create_root_outline_collections(root_obj, parent_collection, view_layer):
-    source_objects = collect_visible_root_outline_objects(root_obj, view_layer)
+def create_root_outline_collections(root_obj, parent_collection):
+    source_objects = collect_renderable_root_outline_objects(root_obj)
     if not source_objects:
         return None, 0
 
@@ -410,11 +397,10 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         source_collection, source_count = create_root_outline_collections(
             root_obj,
             parent_collection,
-            context.view_layer,
         )
 
         if source_count == 0:
-            self.report({'WARNING'}, "アウトライン対象の表示メッシュが見つかりませんでした。")
+            self.report({'WARNING'}, "アウトライン対象のレンダー対象メッシュが見つかりませんでした。")
             return {'CANCELLED'}
 
         # 1. アウトライン用メッシュとオブジェクトの作成
@@ -687,12 +673,12 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
         root_name = target_collection.get(OUTLINE_ROOT_PROPERTY)
         root_obj = bpy.data.objects.get(root_name) if root_name else None
         source_objects = (
-            collect_visible_root_outline_objects(root_obj, context.view_layer)
+            collect_renderable_root_outline_objects(root_obj)
             if root_obj
-            else collect_visible_outline_objects(target_collection, context.view_layer)
+            else collect_renderable_outline_objects(target_collection)
         )
         if not source_objects:
-            self.report({'WARNING'}, "アウトライン対象の表示メッシュが見つかりませんでした。既存の対象は維持しました。")
+            self.report({'WARNING'}, "アウトライン対象のレンダー対象メッシュが見つかりませんでした。既存の対象は維持しました。")
             return {'CANCELLED'}
 
         if root_obj:
@@ -700,17 +686,15 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
             source_collection, source_count = create_root_outline_collections(
                 root_obj,
                 parent_collection,
-                context.view_layer,
             )
         else:
             parent_collection = find_parent_collection(target_collection, context.scene.collection)
             source_collection, source_count = create_filtered_outline_collection(
                 target_collection,
                 parent_collection,
-                context.view_layer,
             )
         if not source_collection:
-            self.report({'WARNING'}, "アウトライン対象の表示メッシュが見つかりませんでした。既存の対象は維持しました。")
+            self.report({'WARNING'}, "アウトライン対象のレンダー対象メッシュが見つかりませんでした。既存の対象は維持しました。")
             return {'CANCELLED'}
         if root_obj:
             source_collection[OUTLINE_OBJECT_PROPERTY] = outline_obj.name
