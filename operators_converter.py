@@ -155,6 +155,18 @@ def _set_material_blend_settings(mat, opacity):
         mat.show_transparent_back = True
 
 
+def ensure_cycles_material_output_target(output_node):
+    if not output_node or not hasattr(output_node, "target"):
+        return
+    try:
+        output_node.target = 'ALL'
+    except (AttributeError, TypeError, ValueError):
+        try:
+            output_node.target = 'CYCLES'
+        except (AttributeError, TypeError, ValueError):
+            pass
+
+
 def find_output_node(nodes):
     """マテリアル出力ノードを探すヘルパーメソッド"""
     output_node = None
@@ -167,6 +179,7 @@ def find_output_node(nodes):
             if node.type == 'OUTPUT_MATERIAL':
                 output_node = node
                 break
+    ensure_cycles_material_output_target(output_node)
     return output_node
 
 
@@ -177,6 +190,7 @@ def ensure_material_output_node(nodes, location=(400, 0)):
 
     output_node = nodes.new(type='ShaderNodeOutputMaterial')
     output_node.location = location
+    ensure_cycles_material_output_target(output_node)
     return output_node
 
 
