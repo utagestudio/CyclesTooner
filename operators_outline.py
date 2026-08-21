@@ -9,6 +9,9 @@ OUTLINE_OBJECT_PROPERTY = "cyclestooner_outline_object"
 OUTLINE_MODIFIER_NAME = "ToonOutlineGN"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
+OUTLINE_EMISSION_NODE_NAME = "CyclesTooner_Outline_Emission"
+DEFAULT_OUTLINE_COLOR = (0.098, 0.035, 0.023, 1.0)
+DEFAULT_OUTLINE_THICKNESS = 0.002
 
 
 def get_outline_base_name(target_collection):
@@ -61,6 +64,25 @@ def get_outline_material_name(target):
 
 def is_outline_material(mat):
     return bool(mat and (mat.get(OUTLINE_MATERIAL_PROPERTY) or mat.name == OUTLINE_MATERIAL_NAME))
+
+
+def find_outline_emission_node(mat):
+    if not mat or not mat.use_nodes or not mat.node_tree:
+        return None
+    node = mat.node_tree.nodes.get(OUTLINE_EMISSION_NODE_NAME)
+    if node and node.type == 'EMISSION':
+        return node
+    return next((candidate for candidate in mat.node_tree.nodes if candidate.type == 'EMISSION'), None)
+
+
+def set_outline_material_color(mat, color):
+    emission = find_outline_emission_node(mat)
+    color_input = emission.inputs.get('Color') if emission else None
+    if not color_input:
+        return False
+    color_input.default_value = (*color[:3], 1.0)
+    mat.diffuse_color = (*color[:3], 1.0)
+    return True
 
 
 def get_root_object(obj):
@@ -228,6 +250,42 @@ def set_modifier_input(mod, name, value):
         return True
     except TypeError:
         return False
+
+
+def rename_node_group_input(group, old_name, new_name):
+    if not group:
+        return False
+    if get_node_group_input_identifier(group, new_name):
+        return True
+    if hasattr(group, 'interface'):
+        for item in group.interface.items_tree:
+            if item.name == old_name and getattr(item, 'in_out', None) == 'INPUT':
+                item.name = new_name
+                return True
+    elif hasattr(group, 'inputs'):
+        item = group.inputs.get(old_name)
+        if item:
+            item.name = new_name
+            return True
+    return False
+
+
+def set_outline_thickness(mod, thickness):
+    if not mod or not mod.node_group:
+        return False
+    rename_node_group_input(mod.node_group, 'Value', 'Thickness')
+    updated = set_modifier_input(mod, 'Thickness', thickness)
+    if not updated:
+        updated = set_modifier_input(mod, 'Value', thickness)
+    if not updated:
+        return False
+
+    outline_obj = mod.id_data
+    mod.node_group.update_tag()
+    outline_obj.update_tag()
+    if getattr(outline_obj, 'data', None):
+        outline_obj.data.update()
+    return True
 
 
 def is_outline_excluded_object(obj):
@@ -426,7 +484,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         mat = bpy.data.materials.new(name=mat_name)
         mat[OUTLINE_MATERIAL_PROPERTY] = True
         mat.use_nodes = True
-        self._setup_outline_material(mat)
+        self._setup_outline_material(mat, context.scene.cyclestooner_outline_color)
         
         # マテリアルをオブジェクトに追加
         if obj.data.materials:
@@ -454,21 +512,21 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
             remove_outline_source_collection(source_collection.name)
             remove_outline_container_if_empty(get_outline_container_collection_name(root_obj))
             return {'CANCELLED'}
-        set_modifier_input(mod, 'Value', 0.002)
+        set_outline_thickness(mod, context.scene.cyclestooner_outline_thickness)
         set_modifier_input(mod, 'Weight', 0.5)
 
         context.view_layer.update()
 
-        # オブジェクトを選択状態にする
+        # 選択不可のアウトラインではなく、引き続き操作できるモデルルートを選択する
         bpy.ops.object.select_all(action='DESELECT')
-        if view_layer_contains_object(context.view_layer, obj):
-            obj.select_set(True)
-            context.view_layer.objects.active = obj
+        if view_layer_contains_object(context.view_layer, root_obj):
+            root_obj.select_set(True)
+            context.view_layer.objects.active = root_obj
         
         self.report({'INFO'}, f"ルートオブジェクト '{root_obj.name}' のアウトラインを作成しました。({source_count} meshes)")
         return {'FINISHED'}
 
-    def _setup_outline_material(self, mat):
+    def _setup_outline_material(self, mat, color=DEFAULT_OUTLINE_COLOR):
         """アウトライン用マテリアル（背面法用）のノード構築"""
         tree = mat.node_tree
         nodes = tree.nodes
@@ -493,13 +551,12 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         
         # Emission (裏面は発光＝アウトライン色)
         emis = nodes.new('ShaderNodeEmission')
+        emis.name = OUTLINE_EMISSION_NODE_NAME
+        emis.label = "CyclesTooner Outline Color"
         emis.location = (-300, -200)
-        try:
-            emis.inputs['Color'].default_value = (0.098, 0.035, 0.023, 1.0) # #190906
-        except:
-             # Fallback if indices are used
-             pass
+        emis.inputs['Color'].default_value = (*color[:3], 1.0)
         emis.inputs['Strength'].default_value = 1.0
+        mat.diffuse_color = (*color[:3], 1.0)
         
         # 接続
         links.new(geo.outputs['Backfacing'], mix.inputs['Fac'])
@@ -523,9 +580,9 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         socket_weight = group.interface.new_socket(name="Weight", in_out='INPUT', socket_type='NodeSocketFloat')
         socket_weight.default_value = 0.5
         
-        # Value Input
-        socket_value = group.interface.new_socket(name="Value", in_out='INPUT', socket_type='NodeSocketFloat')
-        socket_value.default_value = 0.002
+        # Thickness Input
+        socket_thickness = group.interface.new_socket(name="Thickness", in_out='INPUT', socket_type='NodeSocketFloat')
+        socket_thickness.default_value = DEFAULT_OUTLINE_THICKNESS
         
         # Geometry Output
         group.interface.new_socket(name="Geometry", in_out='OUTPUT', socket_type='NodeSocketGeometry')
@@ -572,7 +629,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         normal = nodes.new('GeometryNodeInputNormal')
         normal.location = (-400, -300)
         
-        # Multiply (Weight * Value)
+        # Multiply (Weight * Thickness)
         math_mul = nodes.new('ShaderNodeMath') 
         math_mul.operation = 'MULTIPLY'
         math_mul.location = (-400, -500)
@@ -601,7 +658,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         # Input Node Outputs
         socket_in_col = get_socket(input_node, 'Collection')
         socket_in_weight = get_socket(input_node, 'Weight')
-        socket_in_value = get_socket(input_node, 'Value')
+        socket_in_thickness = get_socket(input_node, 'Thickness')
         
         # Connect Collection Info
         if socket_in_col:
@@ -614,11 +671,11 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         links.new(realize.outputs['Geometry'], set_pos.inputs['Geometry'])
         
         # Offset Calculation
-        if socket_in_weight and socket_in_value:
+        if socket_in_weight and socket_in_thickness:
             links.new(socket_in_weight, math_mul.inputs[0])
-            links.new(socket_in_value, math_mul.inputs[1])
+            links.new(socket_in_thickness, math_mul.inputs[1])
         
-        # Normal * (Weight * Value)
+        # Normal * (Weight * Thickness)
         links.new(normal.outputs['Normal'], vec_mul.inputs[0])
         links.new(math_mul.outputs['Value'], vec_mul.inputs[1])
         
@@ -636,6 +693,80 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         links.new(set_mat.outputs['Geometry'], socket_out_geo)
         
         return group
+
+
+class OBJECT_OT_SetOutlineColor(bpy.types.Operator):
+    """選択中のモデルに対応するアウトライン色を変更します。"""
+    bl_idname = "object.set_toon_outline_color"
+    bl_label = "Apply Outline Color"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    color: bpy.props.FloatVectorProperty(
+        name="Outline Color",
+        subtype='COLOR',
+        size=4,
+        min=0.0,
+        max=1.0,
+        default=DEFAULT_OUTLINE_COLOR,
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        target_collection = resolve_outline_target_collection(context, list(context.selected_objects))
+        outline_obj = find_outline_object(target_collection) if target_collection else None
+        if not outline_obj:
+            self.report({'WARNING'}, "選択中のモデルに対応するアウトラインが見つかりませんでした。")
+            return {'CANCELLED'}
+
+        updated_count = sum(
+            1 for mat in outline_obj.data.materials
+            if is_outline_material(mat) and set_outline_material_color(mat, self.color)
+        )
+        if updated_count == 0:
+            self.report({'WARNING'}, "アウトライン用マテリアルが見つかりませんでした。")
+            return {'CANCELLED'}
+
+        self.report({'INFO'}, "アウトライン色を変更しました。")
+        return {'FINISHED'}
+
+
+class OBJECT_OT_SetOutlineThickness(bpy.types.Operator):
+    """選択中のモデルに対応するアウトラインの太さを変更します。"""
+    bl_idname = "object.set_toon_outline_thickness"
+    bl_label = "Apply Outline Thickness"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    thickness: bpy.props.FloatProperty(
+        name="Outline Thickness",
+        description="Base outline thickness in Blender units",
+        subtype='DISTANCE',
+        min=0.0,
+        soft_max=0.1,
+        precision=4,
+        default=DEFAULT_OUTLINE_THICKNESS,
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        target_collection = resolve_outline_target_collection(context, list(context.selected_objects))
+        outline_obj = find_outline_object(target_collection) if target_collection else None
+        mod = find_outline_modifier(outline_obj) if outline_obj else None
+        if not mod:
+            self.report({'WARNING'}, "選択中のモデルに対応するアウトラインが見つかりませんでした。")
+            return {'CANCELLED'}
+        if not set_outline_thickness(mod, self.thickness):
+            self.report({'WARNING'}, "アウトラインのThickness入力を更新できませんでした。")
+            return {'CANCELLED'}
+        context.view_layer.update()
+
+        self.report({'INFO'}, "アウトラインの太さを変更しました。")
+        return {'FINISHED'}
 
 
 class OBJECT_OT_RefreshOutline(bpy.types.Operator):
