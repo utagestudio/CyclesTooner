@@ -104,6 +104,11 @@ def collect_root_hierarchy_objects(root_obj):
     return objects
 
 
+def is_disabled_by_object_collections(obj):
+    collections = list(obj.users_collection)
+    return bool(collections) and all(collection.hide_viewport for collection in collections)
+
+
 def find_object_parent_collection(obj, preferred_collection, scene_collection):
     if preferred_collection and obj.name in preferred_collection.objects:
         return preferred_collection
@@ -134,6 +139,16 @@ def unlink_collection_child(parent_collection, child_collection):
     parent_collection.children.unlink(child_collection)
 
 
+def find_collection_parents(target_collection, scene_collection):
+    parents = []
+    if any(collection == target_collection for collection in scene_collection.children):
+        parents.append(scene_collection)
+    for collection in bpy.data.collections:
+        if any(child == target_collection for child in collection.children):
+            parents.append(collection)
+    return parents
+
+
 def get_or_create_collection(name):
     collection = bpy.data.collections.get(name)
     if collection:
@@ -151,11 +166,37 @@ def ensure_root_model_collection(root_obj, parent_collection):
     model_collection = get_or_create_collection(model_name)
     link_collection_once(parent_collection, model_collection)
 
-    for obj in collect_root_hierarchy_objects(root_obj):
-        if obj.name not in model_collection.objects:
+    hierarchy_objects = collect_root_hierarchy_objects(root_obj)
+    # Keep collections that provide global viewport hiding intact. Linking their
+    # objects directly to the visible model collection would make rig helpers
+    # appear, even though their original collection has its monitor disabled.
+    disabled_collections = {
+        collection
+        for obj in hierarchy_objects
+        if is_disabled_by_object_collections(obj)
+        for collection in obj.users_collection
+        if collection.hide_viewport
+    }
+
+    for collection in disabled_collections:
+        link_collection_once(model_collection, collection)
+        for collection_parent in find_collection_parents(collection, bpy.context.scene.collection):
+            if collection_parent != model_collection:
+                unlink_collection_child(collection_parent, collection)
+
+    for obj in hierarchy_objects:
+        preserved_collections = {
+            collection for collection in obj.users_collection
+            if collection in disabled_collections
+        }
+        has_visible_collection = any(
+            not collection.hide_viewport
+            for collection in obj.users_collection
+        )
+        if (not preserved_collections or has_visible_collection) and obj.name not in model_collection.objects:
             model_collection.objects.link(obj)
         for collection in list(obj.users_collection):
-            if collection == model_collection:
+            if collection == model_collection or collection in preserved_collections:
                 continue
             collection.objects.unlink(obj)
 
@@ -294,6 +335,8 @@ def is_outline_excluded_object(obj):
     if obj.name.endswith("_Outline"):
         return True
     if obj.hide_render:
+        return True
+    if is_disabled_by_object_collections(obj):
         return True
     return False
 
