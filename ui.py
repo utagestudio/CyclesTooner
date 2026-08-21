@@ -78,3 +78,8 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
         # オペレーター実行ボタンを配置 (アウトライン削除)
         row = column.row()
         row.operator("object.remove_toon_outline", text="Remove Outline")
+
+        column.prop(context.scene, "cyclestooner_outline_color", text="Outline Color")
+        row = column.row()
+        op = row.operator("object.set_toon_outline_color", text="Apply Outline Color")
+        op.color = context.scene.cyclestooner_outline_color
