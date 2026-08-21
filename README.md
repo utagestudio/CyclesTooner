@@ -1,7 +1,5 @@
 # CyclesTooner - Blender Toon Shader Assistant
 
-開発時のバージョニング、コミット、リリース運用については [VERSIONING.md](VERSIONING.md) を参照してください。
-
 CyclesToonerは、Principled BSDF、MMD（mmd_shader）、VRM（MToon）といったシェーダーを、Cyclesで扱える Toon BSDF に簡易変換し、トゥーンレンダリング（セルルック）表現を効率的に行うためのBlenderアドオンです。  
 あわせて、Cyclesレンダラーでも綺麗に表示できる「背面法」によるアウトライン自動生成機能も備えています。
 
@@ -39,7 +37,7 @@ Cyclesレンダラーでのトゥーン表現に最適な「背面法」を用�
     *   アウトライン用マテリアルはアウトラインごとに作成されるため、モデルごとにアウトライン色を個別に変更できます。
     *   **太さの調整**:
         *   頂点グループ（Vertex Group）のウェイト値で太さを制御できます（デフォルト: 0.5）。
-        *   基本の太さ係数はモディファイア設定 (`Value`) で一括調整可能です。
+        *   基本の太さはツールパネルの **Outline Thickness**、またはモディファイア設定 (`Thickness`) で調整できます。
     *   ビューポートでの選択不可（Selectable OFF）、CyclesのRay Visibility（Diffuse/Shadow OFF）設定も自動で行います。
 *   **Remove Outline**:
     *   作成したアウトラインメッシュを削除します。
@@ -99,12 +97,17 @@ VRM Add-on for Blender で読み込まれた `MToon` マテリアルは、**Conv
     *   `～_Collection` の中に `～_Outline_Collection` が生成されます。
     *   `～_Outline_Collection` の中に `～_Outline` オブジェクトと、非表示メッシュを除外するための `～_Outline_Source` コレクションが作成されます。
 3.  モデルパーツの表示・非表示を切り替えた場合は、対象パーツまたは生成済みアウトラインを選択して **Refresh Outline** ボタンでアウトライン対象を更新します。
-4.  アウトラインの太さを頂点ウェイトで調整したい場合は、Modifiers の `ToonOutlineGN` の `Weight` にある「Input Attribute Toggle」をクリックし、ウェイト情報のある頂点ウェイト名を記載してください。
-5.  削除したい場合は、生成されたアウトラインオブジェクト、または元のコレクションを選択して **Remove Outline** ボタンを押します。
+4.  アウトライン色は **Outline Color** を選んで **Apply Outline Color**、基本の太さは **Outline Thickness** を設定して **Apply Outline Thickness** を押すと変更できます。
+5.  アウトラインの太さを頂点ウェイトで調整したい場合は、Modifiers の `ToonOutlineGN` の `Weight` にある「Input Attribute Toggle」をクリックし、ウェイト情報のある頂点ウェイト名を記載してください。
+6.  削除したい場合は、生成されたアウトラインオブジェクト、または元のコレクションを選択して **Remove Outline** ボタンを押します。
 
 ## 動作環境
 *   Blender 5.0 (推奨) / 3.0以上
 *   推奨レンダラー: **Cycles** (アウトライン機能はCyclesの仕様に最適化されています)
+
+## 開発について
+
+開発時のバージョニング、コミット、リリース運用については [VERSIONING.md](VERSIONING.md) を参照してください。
 
 ## LICENSE
 [GPL-3.0-or-later](LICENSE)

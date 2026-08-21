@@ -1,7 +1,5 @@
 # CyclesTooner - Blender Toon Shader Assistant
 
-See [VERSIONING.md](VERSIONING.md) for the development versioning, commit, and release policy.
-
 CyclesTooner is a Blender add-on that streamlines toon (cel-shaded) rendering by simply converting Principled BSDF, MMD (mmd_shader), and VRM (MToon) shaders into a Toon BSDF usable in Cycles.  
 It also includes automatic outline generation using the "inverted hull" (backfacing) method, which renders cleanly in the Cycles renderer.
 
@@ -38,7 +36,7 @@ Generates outline meshes using the "inverted hull" method via Geometry Nodes, id
     *   Hidden mesh objects are excluded from the outline source.
     *   **Thickness Control**:
         *   Control thickness per vertex using Vertex Weights (Default input: "Weight" set to 0.5).
-        *   Adjust global thickness multiplier via the Modifier settings (`Value`).
+        *   Adjust the base thickness from **Outline Thickness** in the tool panel or the Modifier setting (`Thickness`).
     *   Automatically disables viewport selection (Selectable: OFF) and Cycles Ray Visibility (Diffuse/Shadow: OFF).
 *   **Remove Outline**:
     *   Deletes the generated outline mesh.
@@ -98,12 +96,17 @@ CyclesTooner preserves base texture color/alpha and MToon Base Color where possi
     *   A collection named `~_Outline_Collection` is created inside `~_Collection`.
     *   The generated `~_Outline` object and internal `~_Outline_Source` collection are created inside `~_Outline_Collection`.
 3.  If you show or hide model parts, select a target part or the generated outline and click **Refresh Outline** to update the outline source.
-4.  If you want to adjust the outline thickness using vertex weights, click the "Input Attribute Toggle" on the `Weight` input of the `ToonOutlineGN` modifier, and enter the name of the vertex group containing the weight information.
-5.  To remove it, select either the outline object or the original collection and click **Remove Outline**.
+4.  To change the outline color, choose **Outline Color** and click **Apply Outline Color**. To change its base thickness, set **Outline Thickness** and click **Apply Outline Thickness**.
+5.  To adjust the outline thickness using vertex weights, click the "Input Attribute Toggle" on the `Weight` input of the `ToonOutlineGN` modifier, and enter the name of the vertex group containing the weight information.
+6.  To remove it, select either the outline object or the original collection and click **Remove Outline**.
 
 ## Requirements
 *   Blender 5.0 (Recommended) / 3.0+
 *   Recommended Renderer: **Cycles** (The outline feature is optimized for Cycles)
+
+## Development
+
+See [VERSIONING.md](VERSIONING.md) for the versioning, commit, and release workflow.
 
 ## License
 [GPL-3.0-or-later](LICENSE)
