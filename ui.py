@@ -83,3 +83,8 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
         row = column.row()
         op = row.operator("object.set_toon_outline_color", text="Apply Outline Color")
         op.color = context.scene.cyclestooner_outline_color
+
+        column.prop(context.scene, "cyclestooner_outline_thickness", text="Outline Thickness")
+        row = column.row()
+        op = row.operator("object.set_toon_outline_thickness", text="Apply Outline Thickness")
+        op.thickness = context.scene.cyclestooner_outline_thickness

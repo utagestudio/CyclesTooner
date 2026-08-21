@@ -2,7 +2,7 @@
 # Version target and development identifier. The manifest stores the complete
 # SemVer string; Blender's bl_info accepts only the integer core tuple.
 ADDON_VERSION = (1, 23, 0)
-ADDON_VERSION_PRERELEASE = "dev.1"
+ADDON_VERSION_PRERELEASE = "dev.2"
 ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 if ADDON_VERSION_PRERELEASE:
     ADDON_VERSION_STRING = f"{ADDON_VERSION_STRING}-{ADDON_VERSION_PRERELEASE}"
@@ -55,6 +55,7 @@ classes = (
     operators_converter.OBJECT_OT_SetToonOpacity,
     operators_converter.OBJECT_OT_SetToonSmooth,
     operators_outline.OBJECT_OT_SetOutlineColor,
+    operators_outline.OBJECT_OT_SetOutlineThickness,
     operators_outline.OBJECT_OT_AddOutline,
     operators_outline.OBJECT_OT_RefreshOutline,
     operators_outline.OBJECT_OT_RemoveOutline,
@@ -93,6 +94,15 @@ def register():
         max=1.0,
         default=operators_outline.DEFAULT_OUTLINE_COLOR,
     )
+    bpy.types.Scene.cyclestooner_outline_thickness = bpy.props.FloatProperty(
+        name="Outline Thickness",
+        description="Base outline thickness in Blender units",
+        subtype='DISTANCE',
+        min=0.0,
+        soft_max=0.1,
+        precision=4,
+        default=operators_outline.DEFAULT_OUTLINE_THICKNESS,
+    )
     bpy.types.Material.cyclestooner_opacity = bpy.props.FloatProperty(
         name="Opacity",
         description="Opacity for this CyclesTooner material",
@@ -126,6 +136,8 @@ def unregister():
         del bpy.types.Scene.cyclestooner_batch_smooth
     if hasattr(bpy.types.Scene, "cyclestooner_outline_color"):
         del bpy.types.Scene.cyclestooner_outline_color
+    if hasattr(bpy.types.Scene, "cyclestooner_outline_thickness"):
+        del bpy.types.Scene.cyclestooner_outline_thickness
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
