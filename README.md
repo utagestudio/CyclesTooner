@@ -12,7 +12,7 @@ CyclesToonerは、Principled BSDF、MMD（mmd_shader）、VRM（MToon）とい�
     *   `Principled BSDF` を `Toon BSDF` (Size: 0.8 / Smooth: 0.2) に置き換えます。
     *   MMD Tools の `MMDShaderDev` / `mmd_shader` 構成も直接 `Toon BSDF` に変換できます。
     *   VRM Add-on for Blender の `MToon` 構成も直接 `Toon BSDF` に変換できます。
-    *   `Base Color` や `Normal` の接続は維持されます。
+    *   `Base Color` は、接続ノードがある場合は接続を維持し、未接続の場合はソケットに設定された色を引き継ぎます。`Normal` の接続も維持されます。
     *   透明度調整用のノードを自動で追加します（Mix Shader + Transparent BSDF）。
     *   `Alpha` に接続がある場合、Alpha入力とOpacity設定の両方を反映します。
     *   実行時、レンダリングエンジンが EEVEE の場合は自動的に **Cycles** に切り替わります。
@@ -36,8 +36,11 @@ Cyclesレンダラーでのトゥーン表現に最適な「背面法」を用�
     *   非表示のメッシュオブジェクトはアウトライン対象から除外されます。
     *   アウトライン用マテリアルはアウトラインごとに作成されるため、モデルごとにアウトライン色を個別に変更できます。
     *   **太さの調整**:
-        *   頂点グループ（Vertex Group）のウェイト値で太さを制御できます（デフォルト: 0.5）。
+        *   各対象メッシュに頂点グループ `CT_Outline` を自動作成し、全頂点の初期ウェイトを `0.5` に設定します。
+        *   `CT_Outline` が既に存在する場合、そのウェイトは変更されません。
+        *   Geometry Nodesの `Weight` 入力は、自動的に `CT_Outline` 属性を使用します。
         *   基本の太さはツールパネルの **Outline Thickness**、またはモディファイア設定 (`Thickness`) で調整できます。
+    *   内部用の `～_Outline_Source` コレクションは、アクティブなView Layerから自動的に除外されます。
     *   ビューポートでの選択不可（Selectable OFF）、CyclesのRay Visibility（Diffuse/Shadow OFF）設定も自動で行います。
 *   **Remove Outline**:
     *   作成したアウトラインメッシュを削除します。
@@ -61,7 +64,7 @@ Cyclesレンダラーでのトゥーン表現に最適な「背面法」を用�
 5.  拡張機能一覧に表示された **CyclesTooner** の `インストール (Install)` を押します。
 6.  以降、新しいバージョンが公開されるとBlender起動時に検出され、`Get Extensions` 画面から `アップデート (Update)` できます。
 
-### ZIPファイルからインストール（Blender 4.1以前）
+### ZIPファイルから手動インストール
 
 1.  このリポジトリのファイルをZIP形式でダウンロードするか、フォルダごと用意します。
 2.  Blenderを開き、`編集 (Edit)` > `プリファレンス (Preferences)` > `アドオン (Add-ons)` を開きます。
@@ -96,13 +99,14 @@ VRM Add-on for Blender で読み込まれた `MToon` マテリアルは、**Conv
     *   ルートと同じ階層に `～_Collection` が生成され、その中にルート配下の全オブジェクトが移動します。
     *   `～_Collection` の中に `～_Outline_Collection` が生成されます。
     *   `～_Outline_Collection` の中に `～_Outline` オブジェクトと、非表示メッシュを除外するための `～_Outline_Source` コレクションが作成されます。
+    *   `～_Outline_Source` は、アクティブなView Layerから自動的に除外されます。
 3.  モデルパーツの表示・非表示を切り替えた場合は、対象パーツまたは生成済みアウトラインを選択して **Refresh Outline** ボタンでアウトライン対象を更新します。
 4.  アウトライン色は **Outline Color** を選んで **Apply Outline Color**、基本の太さは **Outline Thickness** を設定して **Apply Outline Thickness** を押すと変更できます。
-5.  アウトラインの太さを頂点ウェイトで調整したい場合は、Modifiers の `ToonOutlineGN` の `Weight` にある「Input Attribute Toggle」をクリックし、ウェイト情報のある頂点ウェイト名を記載してください。
+5.  各対象メッシュには、全頂点の初期ウェイトを `0.5` とした頂点グループ `CT_Outline` が自動作成されます。`ToonOutlineGN` の `Weight` 入力にもこの属性が自動設定されるため、頂点ウェイトを編集するとアウトラインの太さを頂点ごとに調整できます。既存の `CT_Outline` のウェイトは変更されません。
 6.  削除したい場合は、生成されたアウトラインオブジェクト、または元のコレクションを選択して **Remove Outline** ボタンを押します。
 
 ## 動作環境
-*   Blender 5.0 (推奨) / 3.0以上
+*   Blender 5.0 (推奨) / 4.2以上
 *   推奨レンダラー: **Cycles** (アウトライン機能はCyclesの仕様に最適化されています)
 
 ## 開発について
