@@ -58,8 +58,10 @@ Before committing or amending, complete these steps in order:
 ## Material Conversion Rules
 
 - Toon BSDF `Smooth` default is `0.2`.
+- Principled BSDF conversion should preserve a linked `Base Color` source. When `Base Color` is unlinked, copy its configured socket color to the Toon BSDF.
 - Opacity control is unified through the CyclesTooner opacity flow; do not create a separate MMD/MToon alpha flow.
 - Direct MMDShaderDev and MToon conversion should preserve available base color, texture color/alpha, normal links, and material alpha as far as the current converter supports.
+- Do not classify an ordinary Principled BSDF material as MToon solely because the VRM add-on attached disabled MToon extension data to it.
 - MToon conversion must ensure a `Material Output` exists after conversion, because VRM shader groups may hide output internally.
 - Conversion cleanup should remove unused source shader groups and disconnected nodes created only for the old shader path.
 
@@ -80,6 +82,10 @@ Root_Collection
 
 - Every object under the root hierarchy should be moved into `Root_Collection`; do not leave child objects in the original generic collection.
 - `Root_Outline_Source` should link only render-visible mesh objects used by Geometry Nodes. Render-hidden meshes, non-mesh objects, and generated outline objects must not be outline sources.
+- After `Add Outline`, exclude `Root_Outline_Source` from the active View Layer while keeping Geometry Nodes outline evaluation working.
+- `Add Outline` should configure the Geometry Nodes `Weight` input to use the `CT_Outline` attribute.
+- For every outline source mesh, `Add Outline` should create a `CT_Outline` vertex group with all vertices initialized to weight `0.5` when the group does not exist.
+- If an outline source mesh already has a `CT_Outline` vertex group, preserve the group and all of its existing weights unchanged.
 - `Refresh Outline` must require an actual selected model part or generated outline. Do not refresh from `context.collection` when nothing relevant is selected.
 - `Refresh Outline` should rebuild the source collection from the current root hierarchy while preserving the existing outline object, material, node group, and modifier values.
 - If no render-visible mesh source is found during refresh, cancel and keep the existing source collection intact.
