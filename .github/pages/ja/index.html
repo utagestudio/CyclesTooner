@@ -25,7 +25,7 @@
     "name": "CyclesTooner",
     "applicationCategory": "DesignApplication",
     "operatingSystem": "Windows, macOS, Linux",
-    "softwareRequirements": "Blender 4.2以降は拡張機能リポジトリから導入可能。アドオンとしてはBlender 3.0以降に対応。",
+    "softwareRequirements": "Blender 4.2以降。",
     "description": "CyclesToonerは、Principled BSDF、MMDShaderDev、VRM MToonマテリアルをToon BSDFへ変換し、Cycles向けの背面法アウトラインを生成するBlenderアドオンです。",
     "url": "https://utagestudio.github.io/CyclesTooner/ja/",
     "downloadUrl": "https://utagestudio.github.io/CyclesTooner/index.json",
@@ -102,7 +102,7 @@
         <article class="feature-card">
           <h3>Toon BSDFへ変換</h3>
           <p>
-            Principled BSDFをToon BSDFへ置き換え、対応できる範囲でBase Color、
+            Principled BSDFをToon BSDFへ置き換え、接続またはソケットに設定されたBase Color、
             Normal接続、テクスチャAlpha、マテリアル透明度を引き継ぎます。
           </p>
           <ul>
@@ -115,11 +115,11 @@
           <h3>Cycles向けアウトライン生成</h3>
           <p>
             選択オブジェクトの最上位親を基準に、Geometry Nodesで背面法アウトラインを生成します。
-            非表示メッシュは対象から除外し、管理用コレクションも整理します。
+            非表示メッシュは対象から除外し、内部用SourceコレクションもView Layerから除外します。
           </p>
           <ul>
             <li>オブジェクト基準のアウトライン対象</li>
-            <li>頂点ウェイトによる太さ制御</li>
+            <li>CT_Outlineの自動作成と頂点ごとの太さ制御</li>
             <li>更新・削除ツールを搭載</li>
           </ul>
         </article>
@@ -239,7 +239,7 @@
       <dl>
         <div>
           <dt>Blender</dt>
-          <dd>Blender 5.0推奨 / 3.0以上</dd>
+          <dd>Blender 5.0推奨 / 4.2以上</dd>
         </div>
         <div>
           <dt>Renderer</dt>

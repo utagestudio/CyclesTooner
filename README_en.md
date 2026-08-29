@@ -12,7 +12,7 @@ Automatically converts materials for selected objects (and all their children re
     *   Replaces `Principled BSDF` with `Toon BSDF` (Size: 0.8 / Smooth: 0.2).
     *   Directly converts MMD Tools `MMDShaderDev` / `mmd_shader` materials to `Toon BSDF`.
     *   Directly converts VRM Add-on for Blender `MToon` materials to `Toon BSDF`.
-    *   Preserves `Base Color` and `Normal` connections.
+    *   Preserves a linked `Base Color` source, or copies the socket color when it is unlinked. `Normal` connections are also preserved.
     *   Automatically adds opacity control nodes (Mix Shader + Transparent BSDF).
     *   If there is an `Alpha` connection, both the Alpha input and Opacity setting are applied.
     *   Automatically switches the render engine to **Cycles** if EEVEE is currently selected.
@@ -35,8 +35,11 @@ Generates outline meshes using the "inverted hull" method via Geometry Nodes, id
     *   Uses **Geometry Nodes** to slightly extrude the model along its normals and display backfaces.
     *   Hidden mesh objects are excluded from the outline source.
     *   **Thickness Control**:
-        *   Control thickness per vertex using Vertex Weights (Default input: "Weight" set to 0.5).
+        *   Automatically creates a `CT_Outline` vertex group on each source mesh with every vertex initialized to `0.5`.
+        *   Preserves all weights when a `CT_Outline` vertex group already exists.
+        *   Automatically configures the Geometry Nodes `Weight` input to use the `CT_Outline` attribute.
         *   Adjust the base thickness from **Outline Thickness** in the tool panel or the Modifier setting (`Thickness`).
+    *   Automatically excludes the internal `~_Outline_Source` collection from the active View Layer.
     *   Automatically disables viewport selection (Selectable: OFF) and Cycles Ray Visibility (Diffuse/Shadow: OFF).
 *   **Remove Outline**:
     *   Deletes the generated outline mesh.
@@ -60,7 +63,7 @@ Registering the remote repository lets Blender detect updates on startup so you 
 5.  Find **CyclesTooner** in the extension list and click `Install`.
 6.  From now on, new releases are detected when Blender starts, and you can update from the `Get Extensions` page.
 
-### From a ZIP file (Blender 4.1 and earlier)
+### Manual installation from a ZIP file
 
 1.  Download this repository as a ZIP file.
 2.  Open Blender and go to `Edit` > `Preferences` > `Add-ons`.
@@ -95,13 +98,14 @@ CyclesTooner preserves base texture color/alpha and MToon Base Color where possi
     *   A collection named `~_Collection` is created beside the root, and every object under the root is moved into it.
     *   A collection named `~_Outline_Collection` is created inside `~_Collection`.
     *   The generated `~_Outline` object and internal `~_Outline_Source` collection are created inside `~_Outline_Collection`.
+    *   The internal `~_Outline_Source` collection is automatically excluded from the active View Layer.
 3.  If you show or hide model parts, select a target part or the generated outline and click **Refresh Outline** to update the outline source.
 4.  To change the outline color, choose **Outline Color** and click **Apply Outline Color**. To change its base thickness, set **Outline Thickness** and click **Apply Outline Thickness**.
-5.  To adjust the outline thickness using vertex weights, click the "Input Attribute Toggle" on the `Weight` input of the `ToonOutlineGN` modifier, and enter the name of the vertex group containing the weight information.
+5.  Each source mesh automatically receives a `CT_Outline` vertex group with every vertex initialized to `0.5`. The `ToonOutlineGN` modifier is configured to use this attribute, so edit its vertex weights to control thickness per vertex. Existing `CT_Outline` weights are preserved.
 6.  To remove it, select either the outline object or the original collection and click **Remove Outline**.
 
 ## Requirements
-*   Blender 5.0 (Recommended) / 3.0+
+*   Blender 5.0 (Recommended) / 4.2+
 *   Recommended Renderer: **Cycles** (The outline feature is optimized for Cycles)
 
 ## Development
