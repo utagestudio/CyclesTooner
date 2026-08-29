@@ -1,8 +1,8 @@
 
 # Version target and development identifier. The manifest stores the complete
 # SemVer string; Blender's bl_info accepts only the integer core tuple.
-ADDON_VERSION = (1, 23, 1)
-ADDON_VERSION_PRERELEASE = ""
+ADDON_VERSION = (1, 23, 2)
+ADDON_VERSION_PRERELEASE = "dev.1"
 ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 if ADDON_VERSION_PRERELEASE:
     ADDON_VERSION_STRING = f"{ADDON_VERSION_STRING}-{ADDON_VERSION_PRERELEASE}"
