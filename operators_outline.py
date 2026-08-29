@@ -12,6 +12,8 @@ OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
 OUTLINE_EMISSION_NODE_NAME = "CyclesTooner_Outline_Emission"
 DEFAULT_OUTLINE_COLOR = (0.098, 0.035, 0.023, 1.0)
 DEFAULT_OUTLINE_THICKNESS = 0.002
+OUTLINE_WEIGHT_ATTRIBUTE = "CT_Outline"
+DEFAULT_OUTLINE_WEIGHT = 0.5
 
 
 def get_outline_base_name(target_collection):
@@ -293,6 +295,43 @@ def set_modifier_input(mod, name, value):
         return False
 
 
+def set_modifier_attribute_input(mod, name, attribute_name):
+    if not mod or not mod.node_group:
+        return False
+    identifier = get_node_group_input_identifier(mod.node_group, name)
+    if not identifier:
+        return False
+
+    if hasattr(mod, "properties") and hasattr(mod.properties, "inputs"):
+        try:
+            input_property = getattr(mod.properties.inputs, identifier)
+            input_property.type = 'ATTRIBUTE'
+            input_property.attribute_name = attribute_name
+            return True
+        except (AttributeError, TypeError, ValueError):
+            pass
+
+    try:
+        mod[f"{identifier}_use_attribute"] = True
+        mod[f"{identifier}_attribute_name"] = attribute_name
+        return True
+    except (TypeError, RuntimeError):
+        return False
+
+
+def ensure_outline_weight_vertex_group(obj):
+    if not obj or obj.type != 'MESH':
+        return False
+    if obj.vertex_groups.get(OUTLINE_WEIGHT_ATTRIBUTE):
+        return False
+
+    vertex_group = obj.vertex_groups.new(name=OUTLINE_WEIGHT_ATTRIBUTE)
+    vertex_indices = [vertex.index for vertex in obj.data.vertices]
+    if vertex_indices:
+        vertex_group.add(vertex_indices, DEFAULT_OUTLINE_WEIGHT, 'REPLACE')
+    return True
+
+
 def rename_node_group_input(group, old_name, new_name):
     if not group:
         return False
@@ -556,7 +595,10 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
             remove_outline_container_if_empty(get_outline_container_collection_name(root_obj))
             return {'CANCELLED'}
         set_outline_thickness(mod, context.scene.cyclestooner_outline_thickness)
-        set_modifier_input(mod, 'Weight', 0.5)
+        set_modifier_input(mod, 'Weight', DEFAULT_OUTLINE_WEIGHT)
+        set_modifier_attribute_input(mod, 'Weight', OUTLINE_WEIGHT_ATTRIBUTE)
+        for source_obj in source_collection.objects:
+            ensure_outline_weight_vertex_group(source_obj)
 
         context.view_layer.update()
 
@@ -621,7 +663,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         
         # Weight Input
         socket_weight = group.interface.new_socket(name="Weight", in_out='INPUT', socket_type='NodeSocketFloat')
-        socket_weight.default_value = 0.5
+        socket_weight.default_value = DEFAULT_OUTLINE_WEIGHT
         
         # Thickness Input
         socket_thickness = group.interface.new_socket(name="Thickness", in_out='INPUT', socket_type='NodeSocketFloat')
