@@ -1,8 +1,8 @@
 
 # Version target and development identifier. The manifest stores the complete
 # SemVer string; Blender's bl_info accepts only the integer core tuple.
-ADDON_VERSION = (1, 23, 2)
-ADDON_VERSION_PRERELEASE = ""
+ADDON_VERSION = (1, 23, 3)
+ADDON_VERSION_PRERELEASE = "dev.1"
 ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 if ADDON_VERSION_PRERELEASE:
     ADDON_VERSION_STRING = f"{ADDON_VERSION_STRING}-{ADDON_VERSION_PRERELEASE}"
@@ -14,7 +14,7 @@ bl_info = {
     # Keep the core version synchronized with ADDON_VERSION_STRING and
     # blender_manifest.toml. See VERSIONING.md for the release workflow.
     "version": ADDON_VERSION,
-    "blender": (3, 0, 0),
+    "blender": (4, 2, 0),
     "location": "View3D > Sidebar > Tool",
     "description": "Convert Principled BSDF to Toon BSDF",
     "category": "Material",
