@@ -222,6 +222,24 @@ def view_layer_contains_object(view_layer, obj):
     return any(candidate == obj for candidate in view_layer.objects)
 
 
+def find_layer_collection(layer_collection, target_collection):
+    if layer_collection.collection == target_collection:
+        return layer_collection
+    for child in layer_collection.children:
+        found = find_layer_collection(child, target_collection)
+        if found:
+            return found
+    return None
+
+
+def exclude_collection_from_view_layer(view_layer, collection):
+    layer_collection = find_layer_collection(view_layer.layer_collection, collection)
+    if not layer_collection:
+        return False
+    layer_collection.exclude = True
+    return True
+
+
 def find_outline_collection_for_object(obj, preferred_collection=None):
     if not obj:
         return None
@@ -600,6 +618,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         for source_obj in source_collection.objects:
             ensure_outline_weight_vertex_group(source_obj)
 
+        exclude_collection_from_view_layer(context.view_layer, source_collection)
         context.view_layer.update()
 
         # 選択不可のアウトラインではなく、引き続き操作できるモデルルートを選択する
