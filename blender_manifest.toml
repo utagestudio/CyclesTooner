@@ -2,7 +2,7 @@ schema_version = "1.0.0"
 
 id = "cycles_tooner"
 # Keep in sync with ADDON_VERSION_STRING in __init__.py
-version = "1.23.2"
+version = "1.23.3"
 name = "CyclesTooner"
 tagline = "Convert Principled BSDF to Toon BSDF"
 maintainer = "utagestudio"
