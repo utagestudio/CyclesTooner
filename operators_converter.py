@@ -352,10 +352,10 @@ def get_mtoon_extension(mat):
 
     for attr in ("mtoon1", "mtoon0", "mtoon"):
         mtoon = getattr(extension, attr, None)
-        if mtoon:
+        if mtoon and getattr(mtoon, "enabled", True):
             return mtoon
 
-    return extension
+    return None
 
 
 def get_mtoon_shader_node(nodes):
@@ -793,6 +793,18 @@ def _replace_input_link(links, input_socket, output_socket):
     links.new(output_socket, input_socket)
 
 
+def transfer_color_input(links, source_input, target_input):
+    """Transfer a linked color source or copy an unlinked socket color."""
+    if source_input is None or target_input is None:
+        return
+
+    if source_input.is_linked:
+        links.new(source_input.links[0].from_socket, target_input)
+    else:
+        # Materialize the RNA array before the source node is removed.
+        target_input.default_value = tuple(source_input.default_value)
+
+
 class OBJECT_OT_ToonConverter(bpy.types.Operator):
     """
     Principled BSDF を Toon BSDF に再帰的に変換するオペレーター
@@ -901,12 +913,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         
         # --- Base Color (Color) の移行 ---
         base_color_input = principled_node.inputs.get('Base Color')
-        if base_color_input:
-            if base_color_input.is_linked:
-                source = base_color_input.links[0].from_socket
-                links.new(source, toon_node.inputs['Color'])
-            else:
-                toon_node.inputs['Color'].default_value = base_color_input.default_value
+        transfer_color_input(links, base_color_input, toon_node.inputs.get('Color'))
         
         # --- Normal の移行 ---
         normal_input = principled_node.inputs.get('Normal')

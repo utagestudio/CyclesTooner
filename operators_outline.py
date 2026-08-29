@@ -12,6 +12,8 @@ OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
 OUTLINE_EMISSION_NODE_NAME = "CyclesTooner_Outline_Emission"
 DEFAULT_OUTLINE_COLOR = (0.098, 0.035, 0.023, 1.0)
 DEFAULT_OUTLINE_THICKNESS = 0.002
+OUTLINE_WEIGHT_ATTRIBUTE = "CT_Outline"
+DEFAULT_OUTLINE_WEIGHT = 0.5
 
 
 def get_outline_base_name(target_collection):
@@ -220,6 +222,24 @@ def view_layer_contains_object(view_layer, obj):
     return any(candidate == obj for candidate in view_layer.objects)
 
 
+def find_layer_collection(layer_collection, target_collection):
+    if layer_collection.collection == target_collection:
+        return layer_collection
+    for child in layer_collection.children:
+        found = find_layer_collection(child, target_collection)
+        if found:
+            return found
+    return None
+
+
+def exclude_collection_from_view_layer(view_layer, collection):
+    layer_collection = find_layer_collection(view_layer.layer_collection, collection)
+    if not layer_collection:
+        return False
+    layer_collection.exclude = True
+    return True
+
+
 def find_outline_collection_for_object(obj, preferred_collection=None):
     if not obj:
         return None
@@ -291,6 +311,43 @@ def set_modifier_input(mod, name, value):
         return True
     except TypeError:
         return False
+
+
+def set_modifier_attribute_input(mod, name, attribute_name):
+    if not mod or not mod.node_group:
+        return False
+    identifier = get_node_group_input_identifier(mod.node_group, name)
+    if not identifier:
+        return False
+
+    if hasattr(mod, "properties") and hasattr(mod.properties, "inputs"):
+        try:
+            input_property = getattr(mod.properties.inputs, identifier)
+            input_property.type = 'ATTRIBUTE'
+            input_property.attribute_name = attribute_name
+            return True
+        except (AttributeError, TypeError, ValueError):
+            pass
+
+    try:
+        mod[f"{identifier}_use_attribute"] = True
+        mod[f"{identifier}_attribute_name"] = attribute_name
+        return True
+    except (TypeError, RuntimeError):
+        return False
+
+
+def ensure_outline_weight_vertex_group(obj):
+    if not obj or obj.type != 'MESH':
+        return False
+    if obj.vertex_groups.get(OUTLINE_WEIGHT_ATTRIBUTE):
+        return False
+
+    vertex_group = obj.vertex_groups.new(name=OUTLINE_WEIGHT_ATTRIBUTE)
+    vertex_indices = [vertex.index for vertex in obj.data.vertices]
+    if vertex_indices:
+        vertex_group.add(vertex_indices, DEFAULT_OUTLINE_WEIGHT, 'REPLACE')
+    return True
 
 
 def rename_node_group_input(group, old_name, new_name):
@@ -556,8 +613,12 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
             remove_outline_container_if_empty(get_outline_container_collection_name(root_obj))
             return {'CANCELLED'}
         set_outline_thickness(mod, context.scene.cyclestooner_outline_thickness)
-        set_modifier_input(mod, 'Weight', 0.5)
+        set_modifier_input(mod, 'Weight', DEFAULT_OUTLINE_WEIGHT)
+        set_modifier_attribute_input(mod, 'Weight', OUTLINE_WEIGHT_ATTRIBUTE)
+        for source_obj in source_collection.objects:
+            ensure_outline_weight_vertex_group(source_obj)
 
+        exclude_collection_from_view_layer(context.view_layer, source_collection)
         context.view_layer.update()
 
         # 選択不可のアウトラインではなく、引き続き操作できるモデルルートを選択する
@@ -621,7 +682,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         
         # Weight Input
         socket_weight = group.interface.new_socket(name="Weight", in_out='INPUT', socket_type='NodeSocketFloat')
-        socket_weight.default_value = 0.5
+        socket_weight.default_value = DEFAULT_OUTLINE_WEIGHT
         
         # Thickness Input
         socket_thickness = group.interface.new_socket(name="Thickness", in_out='INPUT', socket_type='NodeSocketFloat')
