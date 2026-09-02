@@ -59,10 +59,12 @@ Before committing or amending, complete these steps in order:
 
 - Toon BSDF `Smooth` default is `0.2`.
 - Principled BSDF conversion should preserve a linked `Base Color` source. When `Base Color` is unlinked, copy its configured socket color to the Toon BSDF.
-- Opacity control is unified through the CyclesTooner opacity flow; do not create a separate MMD/MToon alpha flow.
-- Direct MMDShaderDev and MToon conversion should preserve available base color, texture color/alpha, normal links, and material alpha as far as the current converter supports.
+- Opacity control is unified through the CyclesTooner opacity flow; do not create a separate MMD/MToon/VRToon alpha flow.
+- Direct MMDShaderDev, MToon, and VRToon conversion should preserve available base color, texture color/alpha, normal links, and material alpha as far as the current converter supports.
 - Do not classify an ordinary Principled BSDF material as MToon solely because the VRM add-on attached disabled MToon extension data to it.
 - MToon conversion must ensure a `Material Output` exists after conversion, because VRM shader groups may hide output internally.
+- Classify VRToon only when a shader group whose node-tree name starts with `VRToon` is connected to the active Material Output. Do not classify an unused group elsewhere in the material as the source shader.
+- VRToon `Alpha` and `Material Alpha` must be combined through the shared CyclesTooner opacity flow.
 - Conversion cleanup should remove unused source shader groups and disconnected nodes created only for the old shader path.
 
 ## Outline Rules
@@ -86,6 +88,10 @@ Root_Collection
 - `Add Outline` should configure the Geometry Nodes `Weight` input to use the `CT_Outline` attribute.
 - For every outline source mesh, `Add Outline` should create a `CT_Outline` vertex group with all vertices initialized to weight `0.5` when the group does not exist.
 - If an outline source mesh already has a `CT_Outline` vertex group, preserve the group and all of its existing weights unchanged.
+- During Convert, prepare each recognized VRToon `vrt_outline` setup without creating a CyclesTooner outline: preserve an existing `CT_Outline`, otherwise set it from `vrt_outline_thick * vrt_outline_mask`, and store the median source Solidify Thickness on the model root.
+- Treat a missing VRToon weight group differently from a missing vertex assignment: use `0.5` when `vrt_outline_thick` is absent, use `1.0` when `vrt_outline_mask` is absent, and use `0.0` for an unassigned vertex in a group that exists.
+- Remove a VRToon outline modifier and its `vrt_outline_mat` slots only after its `CT_Outline` preparation succeeds. Recognize the modifier using its `vrt_outline` name, `SOLIDIFY` type, `vrt_outline*` vertex group, and flipped normals; do not remove modifiers based on name alone.
+- Convert must not create the CyclesTooner outline. `Add Outline` should use the prepared root Thickness when present and the prepared `CT_Outline` weights when they exist.
 - `Refresh Outline` must require an actual selected model part or generated outline. Do not refresh from `context.collection` when nothing relevant is selected.
 - `Refresh Outline` should rebuild the source collection from the current root hierarchy while preserving the existing outline object, material, node group, and modifier values.
 - If no render-visible mesh source is found during refresh, cancel and keep the existing source collection intact.

@@ -1,6 +1,6 @@
 # CyclesTooner - Blender Toon Shader Assistant
 
-CyclesTooner is a Blender add-on that streamlines toon (cel-shaded) rendering by simply converting Principled BSDF, MMD (mmd_shader), and VRM (MToon) shaders into a Toon BSDF usable in Cycles.  
+CyclesTooner is a Blender add-on that streamlines toon (cel-shaded) rendering by converting Principled BSDF, MMD (mmd_shader), VRM (MToon), and VRToon shaders into a Toon BSDF usable in Cycles.
 It also includes automatic outline generation using the "inverted hull" (backfacing) method, which renders cleanly in the Cycles renderer.
 
 ## Features
@@ -12,6 +12,8 @@ Automatically converts materials for selected objects (and all their children re
     *   Replaces `Principled BSDF` with `Toon BSDF` (Size: 0.8 / Smooth: 0.2).
     *   Directly converts MMD Tools `MMDShaderDev` / `mmd_shader` materials to `Toon BSDF`.
     *   Directly converts VRM Add-on for Blender `MToon` materials to `Toon BSDF`.
+    *   Directly converts output-connected `VRToon*` shader groups from VRToon Shader Manager.
+    *   When a VRToon outline is present, stores its per-vertex weights in `CT_Outline` and its base Thickness on the model root before removing the legacy Solidify setup and outline materials. No new outline is created until you click **Add Outline**.
     *   Preserves a linked `Base Color` source, or copies the socket color when it is unlinked. `Normal` connections are also preserved.
     *   Automatically adds opacity control nodes (Mix Shader + Transparent BSDF).
     *   If there is an `Alpha` connection, both the Alpha input and Opacity setting are applied.
@@ -91,6 +93,13 @@ Materials loaded by VRM Add-on for Blender with `MToon` can be converted directl
 
 CyclesTooner preserves base texture color/alpha and MToon Base Color where possible. MToon Alpha is folded into the initial **Opacity** value. The conversion removes `MToon` nodes, so **Revert** restores a simplified `Principled BSDF` material rather than the original MToon node setup. Exact MToon Shade Color, MatCap, Rim, Emission, and Outline effects are not preserved.
 
+#### Direct VRToon Conversion
+Shader groups whose names start with `VRToon` from [VRToon Shader Manager](https://kafuji.github.io/Sakura-Creative-Suite/en/addons/VRToon_Shader_Manager/) can be converted directly when connected to an active Material Output.
+
+CyclesTooner preserves the `Base Color` value or connection, the `Normal` connection, and `Alpha` plus `Material Alpha` where possible. VRToon-specific shading, specular, rim, AO, and mask effects are not reproduced exactly.
+
+When a `vrt_outline` setup is present, **Convert** stores `vrt_outline_thick × vrt_outline_mask` as `CT_Outline` and saves the Solidify Thickness on the model root. Only after that preparation succeeds does it remove the old `vrt_outline` Solidify modifier and `vrt_outline_mat` material slots. The outline is therefore intentionally absent immediately after conversion. Select an object in the model and click **Add Outline** to create the CyclesTooner outline from the saved weights and Thickness. Existing `CT_Outline` weights are never overwritten.
+
 ### Creating Outlines
 1.  Select an object inside the model you want to outline.
 2.  Click the **Add Outline** button.
@@ -102,6 +111,7 @@ CyclesTooner preserves base texture color/alpha and MToon Base Color where possi
 3.  If you show or hide model parts, select a target part or the generated outline and click **Refresh Outline** to update the outline source.
 4.  To change the outline color, choose **Outline Color** and click **Apply Outline Color**. To change its base thickness, set **Outline Thickness** and click **Apply Outline Thickness**.
 5.  Each source mesh automatically receives a `CT_Outline` vertex group with every vertex initialized to `0.5`. The `ToonOutlineGN` modifier is configured to use this attribute, so edit its vertex weights to control thickness per vertex. Existing `CT_Outline` weights are preserved.
+    *   For converted VRToon models, the prepared `CT_Outline` weights and saved Thickness are used instead.
 6.  To remove it, select either the outline object or the original collection and click **Remove Outline**.
 
 ## Requirements

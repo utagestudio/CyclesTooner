@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CyclesTooner - Blender Toon Shader Assistant for Cycles</title>
-  <meta name="description" content="Convert Principled BSDF, MMDShaderDev, and VRM MToon materials to Toon BSDF, then generate clean Geometry Nodes outlines for Cycles toon rendering in Blender.">
+  <meta name="description" content="Convert Principled BSDF, MMDShaderDev, VRM MToon, and VRToon materials to Toon BSDF, then generate clean Geometry Nodes outlines for Cycles toon rendering in Blender.">
   <link rel="canonical" href="https://utagestudio.github.io/CyclesTooner/">
   <link rel="alternate" hreflang="en" href="https://utagestudio.github.io/CyclesTooner/">
   <link rel="alternate" hreflang="ja" href="https://utagestudio.github.io/CyclesTooner/ja/">
@@ -12,11 +12,11 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://utagestudio.github.io/CyclesTooner/">
   <meta property="og:title" content="CyclesTooner - Blender Toon Shader Assistant for Cycles">
-  <meta property="og:description" content="Convert Blender materials to Toon BSDF and generate clean Cycles outlines with Geometry Nodes.">
+  <meta property="og:description" content="Convert Principled, MMD, MToon, and VRToon materials to Toon BSDF and generate clean Cycles outlines with Geometry Nodes.">
   <meta property="og:site_name" content="CyclesTooner">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CyclesTooner - Blender Toon Shader Assistant for Cycles">
-  <meta name="twitter:description" content="A Blender add-on for Cycles toon rendering, Toon BSDF conversion, MMD/VRM material support, and Geometry Nodes outlines.">
+  <meta name="twitter:description" content="A Blender add-on for Cycles toon rendering, Toon BSDF conversion, MMD/VRM/VRToon material support, and Geometry Nodes outlines.">
   <link rel="stylesheet" href="assets/site.css">
   <script type="application/ld+json">
   {
@@ -26,7 +26,7 @@
     "applicationCategory": "DesignApplication",
     "operatingSystem": "Windows, macOS, Linux",
     "softwareRequirements": "Blender 4.2 or later.",
-    "description": "CyclesTooner is a Blender add-on that converts Principled BSDF, MMDShaderDev, and VRM MToon materials to Toon BSDF and generates inverted-hull outlines for Cycles rendering.",
+    "description": "CyclesTooner converts Principled BSDF, MMDShaderDev, VRM MToon, and VRToon materials to Toon BSDF and generates inverted-hull outlines for Cycles rendering.",
     "url": "https://utagestudio.github.io/CyclesTooner/",
     "downloadUrl": "https://utagestudio.github.io/CyclesTooner/index.json",
     "license": "https://www.gnu.org/licenses/gpl-3.0.en.html",
@@ -57,7 +57,7 @@
         <p class="eyebrow">Blender toon shader assistant for Cycles</p>
         <h1>Cycles toon rendering, without rebuilding every material.</h1>
         <p class="hero-lede">
-          Convert Principled BSDF, MMDShaderDev, and VRM MToon materials to Toon BSDF,
+          Convert Principled BSDF, MMDShaderDev, VRM MToon, and VRToon materials to Toon BSDF,
           then add clean inverted-hull outlines powered by Geometry Nodes.
         </p>
         <div class="hero-actions">
@@ -88,7 +88,7 @@
 
     <section class="proof-strip" aria-label="Key capabilities">
       <div><strong>Toon BSDF</strong><span>Cycles-ready material conversion</span></div>
-      <div><strong>MMD / VRM</strong><span>Direct shader path support</span></div>
+      <div><strong>MMD / VRM / VRToon</strong><span>Direct shader path support</span></div>
       <div><strong>Geometry Nodes</strong><span>Inverted-hull outline generation</span></div>
       <div><strong>Blender Extensions</strong><span>Install and update from repository</span></div>
     </section>
@@ -103,12 +103,14 @@
           <h3>Convert materials to Toon BSDF</h3>
           <p>
             Replace Principled BSDF with Toon BSDF while preserving linked or socket-set base color,
-            normal connections, texture alpha, and material opacity where supported.
+            normal connections, texture alpha, and material opacity where supported. VRToon conversion
+            prepares its outline weights and Thickness for a later Add Outline operation.
           </p>
           <ul>
             <li>Principled BSDF to Toon BSDF</li>
             <li>MMDShaderDev / mmd_shader conversion</li>
             <li>VRM MToon conversion</li>
+            <li>VRToon conversion with outline weight preparation</li>
           </ul>
         </article>
         <article class="feature-card">
@@ -116,10 +118,12 @@
           <p>
             Build inverted-hull outline objects from the selected model root using Geometry Nodes,
             excluding hidden meshes and keeping internal source collections out of the active View Layer.
+            Converted VRToon models reuse the weights and Thickness prepared during conversion.
           </p>
           <ul>
             <li>Object-driven outline targets</li>
             <li>Automatic CT_Outline weights for per-vertex thickness</li>
+            <li>Reuse prepared VRToon weights and Thickness</li>
             <li>Refresh and remove outline tools</li>
           </ul>
         </article>
@@ -168,7 +172,7 @@
         <p class="eyebrow">Cycles-native looks</p>
         <h2 id="cycles-looks-title">Bring toon characters into Cycles-rich scenes.</h2>
         <p class="section-lede">
-          Preserve the toon look of MMD and VRM-style characters while combining them
+          Preserve the toon look of MMD, VRM, and VRToon-style characters while combining them
           with Cycles lighting, lenses, reflections, and atmosphere.
         </p>
       </div>
@@ -254,6 +258,19 @@
           <dd><a href="https://github.com/utagestudio/CyclesTooner/blob/main/README_en.md" target="_blank" rel="noopener noreferrer">English README</a> / <a href="https://github.com/utagestudio/CyclesTooner/blob/main/README.md" lang="ja" target="_blank" rel="noopener noreferrer">日本語README</a></dd>
         </div>
       </dl>
+    </section>
+
+    <section class="asset-credits" aria-labelledby="supported-tools-title">
+      <h2 id="supported-tools-title">Supported Tools</h2>
+      <p>
+        CyclesTooner can convert materials created or imported with the following third-party tools.
+        These tools are independent projects and are not bundled with CyclesTooner.
+      </p>
+      <ul>
+        <li><span>MMD Tools:</span> <code>MMDShaderDev</code> / <code>mmd_shader</code> materials from <a href="https://extensions.blender.org/add-ons/mmd-tools/" target="_blank" rel="noopener noreferrer">MMD Tools on Blender Extensions</a>.</li>
+        <li><span>VRM:</span> <code>MToon</code> materials from <a href="https://vrm-addon-for-blender.info/en-us/" target="_blank" rel="noopener noreferrer">VRM Add-on for Blender</a>.</li>
+        <li><span>VRToon:</span> <code>VRToon*</code> shader groups from <a href="https://kafuji.github.io/Sakura-Creative-Suite/en/addons/VRToon_Shader_Manager/" target="_blank" rel="noopener noreferrer">VRToon Shader Manager</a>.</li>
+      </ul>
     </section>
 
     <section class="asset-credits" aria-labelledby="asset-credits-title">

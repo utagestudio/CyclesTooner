@@ -1,6 +1,6 @@
 # CyclesTooner - Blender Toon Shader Assistant
 
-CyclesToonerは、Principled BSDF、MMD（mmd_shader）、VRM（MToon）といったシェーダーを、Cyclesで扱える Toon BSDF に簡易変換し、トゥーンレンダリング（セルルック）表現を効率的に行うためのBlenderアドオンです。  
+CyclesToonerは、Principled BSDF、MMD（mmd_shader）、VRM（MToon）、VRToonといったシェーダーを、Cyclesで扱える Toon BSDF に簡易変換し、トゥーンレンダリング（セルルック）表現を効率的に行うためのBlenderアドオンです。
 あわせて、Cyclesレンダラーでも綺麗に表示できる「背面法」によるアウトライン自動生成機能も備えています。
 
 ## 機能概要
@@ -12,6 +12,8 @@ CyclesToonerは、Principled BSDF、MMD（mmd_shader）、VRM（MToon）とい�
     *   `Principled BSDF` を `Toon BSDF` (Size: 0.8 / Smooth: 0.2) に置き換えます。
     *   MMD Tools の `MMDShaderDev` / `mmd_shader` 構成も直接 `Toon BSDF` に変換できます。
     *   VRM Add-on for Blender の `MToon` 構成も直接 `Toon BSDF` に変換できます。
+    *   VRToon Shader Manager の出力接続済み `VRToon*` シェーダーグループも直接変換できます。
+    *   VRToonアウトラインがある場合、頂点ごとの太さを `CT_Outline` へ、基準Thicknessをモデルルートへ退避してから旧Solidifyとアウトライン材を削除します。アウトライン自体は **Add Outline** を押すまで作成されません。
     *   `Base Color` は、接続ノードがある場合は接続を維持し、未接続の場合はソケットに設定された色を引き継ぎます。`Normal` の接続も維持されます。
     *   透明度調整用のノードを自動で追加します（Mix Shader + Transparent BSDF）。
     *   `Alpha` に接続がある場合、Alpha入力とOpacity設定の両方を反映します。
@@ -92,6 +94,13 @@ VRM Add-on for Blender で読み込まれた `MToon` マテリアルは、**Conv
 
 ベーステクスチャの画像色とAlpha、MToonのBase Colorを可能な範囲で引き継ぎます。MToonのAlphaはCyclesToonerの **Opacity** 初期値として統合されます。変換時に `MToon` 用ノードは削除されるため、**Revert** は簡易的な `Principled BSDF` への復元になり、元のMToon構成は復元しません。Shade Color、MatCap、Rim、Emission、OutlineなどのMToon固有表現の完全再現は対象外です。
 
+#### VRToon からの直接変換
+[VRToon Shader Manager](https://kafuji.github.io/Sakura-Creative-Suite/ja/addons/VRToon_Shader_Manager/) の `VRToon` で始まるシェーダーグループが有効なMaterial Outputへ接続されている場合、**Convert** ボタンで直接 CyclesTooner 形式へ変換できます。
+
+`Base Color` の値または接続、`Normal` の接続、`Alpha` と `Material Alpha` を可能な範囲で引き継ぎます。VRToon固有の陰影、スペキュラー、リム、AO、マスクなどの完全再現は対象外です。
+
+VRToonの `vrt_outline` アウトラインがある場合、**Convert** は `vrt_outline_thick × vrt_outline_mask` を `CT_Outline` として保存し、SolidifyのThicknessもモデルルートへ退避します。退避に成功してから旧 `vrt_outline` Solidifyと `vrt_outline_mat` マテリアルスロットを削除するため、Convert直後はアウトラインが表示されません。続けてモデル内のオブジェクトを選択し、**Add Outline** を押すと、保存したウェイトとThicknessを使ってCyclesToonerアウトラインを作成できます。既存の `CT_Outline` は上書きされません。
+
 ### アウトラインの作成
 1.  アウトラインを作成したいモデル内のオブジェクトを選択します。
 2.  **Add Outline** ボタンを押します。
@@ -103,6 +112,7 @@ VRM Add-on for Blender で読み込まれた `MToon` マテリアルは、**Conv
 3.  モデルパーツの表示・非表示を切り替えた場合は、対象パーツまたは生成済みアウトラインを選択して **Refresh Outline** ボタンでアウトライン対象を更新します。
 4.  アウトライン色は **Outline Color** を選んで **Apply Outline Color**、基本の太さは **Outline Thickness** を設定して **Apply Outline Thickness** を押すと変更できます。
 5.  各対象メッシュには、全頂点の初期ウェイトを `0.5` とした頂点グループ `CT_Outline` が自動作成されます。`ToonOutlineGN` の `Weight` 入力にもこの属性が自動設定されるため、頂点ウェイトを編集するとアウトラインの太さを頂点ごとに調整できます。既存の `CT_Outline` のウェイトは変更されません。
+    *   VRToonから変換済みの場合は、Convert時に退避した `CT_Outline` とThicknessが使用されます。
 6.  削除したい場合は、生成されたアウトラインオブジェクト、または元のコレクションを選択して **Remove Outline** ボタンを押します。
 
 ## 動作環境
