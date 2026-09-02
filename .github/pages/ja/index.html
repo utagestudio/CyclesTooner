@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン</title>
-  <meta name="description" content="Principled BSDF、MMDShaderDev、VRM MToonマテリアルをToon BSDFへ変換し、Cycles向けのGeometry Nodesアウトラインを生成するBlenderアドオンです。">
+  <meta name="description" content="Principled BSDF、MMDShaderDev、VRM MToon、VRToonマテリアルをToon BSDFへ変換し、Cycles向けのGeometry Nodesアウトラインを生成するBlenderアドオンです。">
   <link rel="canonical" href="https://utagestudio.github.io/CyclesTooner/ja/">
   <link rel="alternate" hreflang="en" href="https://utagestudio.github.io/CyclesTooner/">
   <link rel="alternate" hreflang="ja" href="https://utagestudio.github.io/CyclesTooner/ja/">
@@ -12,11 +12,11 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://utagestudio.github.io/CyclesTooner/ja/">
   <meta property="og:title" content="CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン">
-  <meta property="og:description" content="Toon BSDF変換、MMD/VRM素材対応、Geometry Nodesアウトライン生成をまとめたBlenderアドオンです。">
+  <meta property="og:description" content="Toon BSDF変換、MMD/VRM/VRToon素材対応、Geometry Nodesアウトライン生成をまとめたBlenderアドオンです。">
   <meta property="og:site_name" content="CyclesTooner">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン">
-  <meta name="twitter:description" content="Cyclesでトゥーンレンダリングを行うためのBlenderアドオン。Toon BSDF変換とアウトライン生成に対応します。">
+  <meta name="twitter:description" content="Cycles向けのToon BSDF変換、MMD/VRM/VRToon素材対応、Geometry Nodesアウトライン生成をまとめたBlenderアドオンです。">
   <link rel="stylesheet" href="../assets/site.css">
   <script type="application/ld+json">
   {
@@ -26,7 +26,7 @@
     "applicationCategory": "DesignApplication",
     "operatingSystem": "Windows, macOS, Linux",
     "softwareRequirements": "Blender 4.2以降。",
-    "description": "CyclesToonerは、Principled BSDF、MMDShaderDev、VRM MToonマテリアルをToon BSDFへ変換し、Cycles向けの背面法アウトラインを生成するBlenderアドオンです。",
+    "description": "CyclesToonerは、Principled BSDF、MMDShaderDev、VRM MToon、VRToonマテリアルをToon BSDFへ変換し、Cycles向けの背面法アウトラインを生成するBlenderアドオンです。",
     "url": "https://utagestudio.github.io/CyclesTooner/ja/",
     "downloadUrl": "https://utagestudio.github.io/CyclesTooner/index.json",
     "license": "https://www.gnu.org/licenses/gpl-3.0.ja.html",
@@ -57,7 +57,7 @@
         <p class="eyebrow">BlenderのCycles向けトゥーンシェーダー補助アドオン</p>
         <h1>マテリアルを作り直さず、Cyclesでトゥーン表現へ。</h1>
         <p class="hero-lede">
-          Principled BSDF、MMDShaderDev、VRM MToonをToon BSDFへ変換し、
+          Principled BSDF、MMDShaderDev、VRM MToon、VRToonをToon BSDFへ変換し、
           Geometry Nodesによる背面法アウトラインもまとめて扱えます。
         </p>
         <div class="hero-actions">
@@ -88,7 +88,7 @@
 
     <section class="proof-strip" aria-label="主な機能">
       <div><strong>Toon BSDF</strong><span>Cycles向けマテリアル変換</span></div>
-      <div><strong>MMD / VRM</strong><span>主要なインポート素材に対応</span></div>
+      <div><strong>MMD / VRM / VRToon</strong><span>主要なインポート素材に対応</span></div>
       <div><strong>Geometry Nodes</strong><span>背面法アウトライン生成</span></div>
       <div><strong>Blender Extensions</strong><span>リポジトリから導入・更新</span></div>
     </section>
@@ -103,12 +103,14 @@
           <h3>Toon BSDFへ変換</h3>
           <p>
             Principled BSDFをToon BSDFへ置き換え、接続またはソケットに設定されたBase Color、
-            Normal接続、テクスチャAlpha、マテリアル透明度を引き継ぎます。
+            Normal接続、テクスチャAlpha、マテリアル透明度を引き継ぎます。VRToon変換時は、
+            後からAdd Outlineで使うウェイトとThicknessも退避します。
           </p>
           <ul>
             <li>Principled BSDFからToon BSDFへ変換</li>
             <li>MMDShaderDev / mmd_shaderを直接変換</li>
             <li>VRM MToonを直接変換</li>
+            <li>VRToon変換時にアウトライン情報を退避</li>
           </ul>
         </article>
         <article class="feature-card">
@@ -116,10 +118,12 @@
           <p>
             選択オブジェクトの最上位親を基準に、Geometry Nodesで背面法アウトラインを生成します。
             非表示メッシュは対象から除外し、内部用SourceコレクションもView Layerから除外します。
+            VRToonから変換したモデルでは、Convert時に退避したウェイトとThicknessを再利用します。
           </p>
           <ul>
             <li>オブジェクト基準のアウトライン対象</li>
             <li>CT_Outlineの自動作成と頂点ごとの太さ制御</li>
+            <li>退避したVRToonウェイトとThicknessを再利用</li>
             <li>更新・削除ツールを搭載</li>
           </ul>
         </article>
@@ -168,7 +172,7 @@
         <p class="eyebrow">Cyclesだからできる表現</p>
         <h2 id="cycles-looks-title">トゥーンモデルを、Cyclesらしい画作りの中へ。</h2>
         <p class="section-lede">
-          MMD/VRM系トゥーンモデルの見た目を保ったまま、水面の反射、魚眼レンズ、
+          MMD/VRM/VRToon系トゥーンモデルの見た目を保ったまま、水面の反射、魚眼レンズ、
           ボリュームライトなどのCycles表現と組み合わせられます。
         </p>
       </div>
