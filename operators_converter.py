@@ -12,6 +12,7 @@ CYCLES_TOONER_MMD_BASE_TEX = "CyclesTooner_MMDBaseTex"
 CYCLES_TOONER_MMD_DIFFUSE_MULTIPLY = "CyclesTooner_MMDDiffuseMultiply"
 CYCLES_TOONER_MTOON_BASE_TEX = "CyclesTooner_MToonBaseTex"
 CYCLES_TOONER_MTOON_BASE_MULTIPLY = "CyclesTooner_MToonBaseMultiply"
+CYCLES_TOONER_VRTOON_ALPHA_MULTIPLY = "CyclesTooner_VRToonAlphaMultiply"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
 DEFAULT_TOON_SMOOTH = 0.2
@@ -367,6 +368,49 @@ def get_mtoon_shader_node(nodes):
         if node_name_contains(node, ("mtoon",)):
             return node
     return None
+
+
+def is_vrtoon_shader_node(node):
+    return bool(
+        node
+        and node.type == 'GROUP'
+        and node.node_tree
+        and node.node_tree.name.startswith("VRToon")
+        and any(output.type == 'SHADER' for output in node.outputs)
+    )
+
+
+def get_vrtoon_input(node, name):
+    return node.inputs.get(name) if is_vrtoon_shader_node(node) else None
+
+
+def get_vrtoon_opacity_source(mat, vrtoon_node):
+    """Return the linked alpha source and constant opacity factor."""
+    alpha_input = get_vrtoon_input(vrtoon_node, "Alpha")
+    material_alpha_input = get_vrtoon_input(vrtoon_node, "Material Alpha")
+    alpha_value = clamp_opacity(alpha_input.default_value) if alpha_input else 1.0
+    material_alpha_value = clamp_opacity(material_alpha_input.default_value) if material_alpha_input else 1.0
+    alpha_source = alpha_input.links[0].from_socket if alpha_input and alpha_input.is_linked else None
+    material_alpha_source = (
+        material_alpha_input.links[0].from_socket
+        if material_alpha_input and material_alpha_input.is_linked
+        else None
+    )
+
+    if alpha_source and material_alpha_source:
+        multiply = mat.node_tree.nodes.new(type='ShaderNodeMath')
+        multiply.name = CYCLES_TOONER_VRTOON_ALPHA_MULTIPLY
+        multiply.label = "CyclesTooner VRToon Alpha"
+        multiply.operation = 'MULTIPLY'
+        multiply.location = (vrtoon_node.location.x + 100, vrtoon_node.location.y - 360)
+        mat.node_tree.links.new(alpha_source, multiply.inputs[0])
+        mat.node_tree.links.new(material_alpha_source, multiply.inputs[1])
+        return multiply.outputs[0], 1.0
+    if alpha_source:
+        return alpha_source, material_alpha_value
+    if material_alpha_source:
+        return material_alpha_source, alpha_value
+    return None, alpha_value * material_alpha_value
 
 
 def is_mtoon_shader_material(mat, root_node=None):
@@ -900,6 +944,9 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         if is_mtoon_shader_material(mat, principled_node):
             return self.process_mtoon_material(mat, output_node)
 
+        if is_vrtoon_shader_node(principled_node):
+            return self.process_vrtoon_material(mat, output_node, principled_node)
+
         if principled_node.type != 'BSDF_PRINCIPLED':
             return False
             
@@ -995,6 +1042,36 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         repair_cycles_tooner_output(mat)
         remove_unreachable_nodes_from_output(mat)
 
+        return True
+
+    def process_vrtoon_material(self, mat, output_node, vrtoon_node):
+        tree = mat.node_tree
+        nodes = tree.nodes
+
+        toon_node = nodes.new(type='ShaderNodeBsdfToon')
+        toon_node.location = (vrtoon_node.location.x, vrtoon_node.location.y - 200)
+        output_node.location = (toon_node.location.x + 760, toon_node.location.y + 20)
+        toon_node.inputs['Size'].default_value = 0.8
+        apply_toon_smooth(mat, toon_node, get_material_smooth(mat))
+
+        transfer_color_input(
+            tree.links,
+            get_vrtoon_input(vrtoon_node, "Base Color"),
+            toon_node.inputs.get('Color'),
+        )
+
+        normal_input = get_vrtoon_input(vrtoon_node, "Normal")
+        if normal_input and normal_input.is_linked:
+            tree.links.new(normal_input.links[0].from_socket, toon_node.inputs['Normal'])
+
+        alpha_source, alpha_value = get_vrtoon_opacity_source(mat, vrtoon_node)
+        opacity = get_source_opacity(mat, alpha_value)
+        setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=alpha_source, opacity=opacity)
+
+        mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "VRToon"
+        nodes.remove(vrtoon_node)
+        repair_cycles_tooner_output(mat)
+        remove_unreachable_nodes_from_output(mat)
         return True
 
 

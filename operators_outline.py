@@ -1,4 +1,5 @@
 import bpy
+import statistics
 
 OUTLINE_SOURCE_SUFFIX = "_Outline_Source"
 OUTLINE_CONTAINER_SUFFIX = "_Outline_Collection"
@@ -14,6 +15,10 @@ DEFAULT_OUTLINE_COLOR = (0.098, 0.035, 0.023, 1.0)
 DEFAULT_OUTLINE_THICKNESS = 0.002
 OUTLINE_WEIGHT_ATTRIBUTE = "CT_Outline"
 DEFAULT_OUTLINE_WEIGHT = 0.5
+VRTOON_OUTLINE_MODIFIER_NAME = "vrt_outline"
+VRTOON_OUTLINE_THICK_GROUP = "vrt_outline_thick"
+VRTOON_OUTLINE_MASK_GROUP = "vrt_outline_mask"
+VRTOON_OUTLINE_MATERIAL_PROPERTY = "vrt_outline_mat"
 
 
 def get_outline_base_name(target_collection):
@@ -350,6 +355,60 @@ def ensure_outline_weight_vertex_group(obj):
     return True
 
 
+def find_vrtoon_outline_modifier(obj):
+    if not obj or obj.type != 'MESH':
+        return None
+    modifier = obj.modifiers.get(VRTOON_OUTLINE_MODIFIER_NAME)
+    if not modifier or modifier.type != 'SOLIDIFY':
+        return None
+    if not modifier.vertex_group.startswith("vrt_outline") or not modifier.use_flip_normals:
+        return None
+    return modifier
+
+
+def get_vertex_group_weight(vertex_group, vertex_index, fallback):
+    if not vertex_group:
+        return fallback
+    try:
+        return vertex_group.weight(vertex_index)
+    except RuntimeError:
+        return 0.0
+
+
+def migrate_vrtoon_outline_weights(obj):
+    if not obj or obj.type != 'MESH' or obj.vertex_groups.get(OUTLINE_WEIGHT_ATTRIBUTE):
+        return False
+    thick_group = obj.vertex_groups.get(VRTOON_OUTLINE_THICK_GROUP)
+    mask_group = obj.vertex_groups.get(VRTOON_OUTLINE_MASK_GROUP)
+    if not thick_group and not mask_group:
+        return False
+
+    target_group = obj.vertex_groups.new(name=OUTLINE_WEIGHT_ATTRIBUTE)
+    for vertex in obj.data.vertices:
+        thick = get_vertex_group_weight(thick_group, vertex.index, DEFAULT_OUTLINE_WEIGHT)
+        mask = get_vertex_group_weight(mask_group, vertex.index, 1.0)
+        target_group.add([vertex.index], max(0.0, min(1.0, thick * mask)), 'REPLACE')
+    return True
+
+
+def remove_vrtoon_outline(obj):
+    modifier = find_vrtoon_outline_modifier(obj)
+    if not modifier:
+        return False
+    obj.modifiers.remove(modifier)
+
+    materials_to_check = []
+    for index in reversed(range(len(obj.data.materials))):
+        material = obj.data.materials[index]
+        if material and material.get(VRTOON_OUTLINE_MATERIAL_PROPERTY):
+            materials_to_check.append(material)
+            obj.data.materials.pop(index=index)
+    for material in materials_to_check:
+        if material.users == 0:
+            bpy.data.materials.remove(material)
+    return True
+
+
 def rename_node_group_input(group, old_name, new_name):
     if not group:
         return False
@@ -615,8 +674,26 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         set_outline_thickness(mod, context.scene.cyclestooner_outline_thickness)
         set_modifier_input(mod, 'Weight', DEFAULT_OUTLINE_WEIGHT)
         set_modifier_attribute_input(mod, 'Weight', OUTLINE_WEIGHT_ATTRIBUTE)
+        vrtoon_thicknesses = []
+        migrated_count = 0
         for source_obj in source_collection.objects:
-            ensure_outline_weight_vertex_group(source_obj)
+            vrtoon_modifier = find_vrtoon_outline_modifier(source_obj)
+            if vrtoon_modifier:
+                vrtoon_thicknesses.append(abs(vrtoon_modifier.thickness))
+            if migrate_vrtoon_outline_weights(source_obj):
+                migrated_count += 1
+            else:
+                ensure_outline_weight_vertex_group(source_obj)
+
+        if vrtoon_thicknesses:
+            migrated_thickness = statistics.median(vrtoon_thicknesses)
+            set_outline_thickness(mod, migrated_thickness)
+            context.scene.cyclestooner_outline_thickness = migrated_thickness
+
+        removed_count = 0
+        for source_obj in source_collection.objects:
+            if remove_vrtoon_outline(source_obj):
+                removed_count += 1
 
         exclude_collection_from_view_layer(context.view_layer, source_collection)
         context.view_layer.update()
@@ -627,7 +704,8 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
             root_obj.select_set(True)
             context.view_layer.objects.active = root_obj
         
-        self.report({'INFO'}, f"ルートオブジェクト '{root_obj.name}' のアウトラインを作成しました。({source_count} meshes)")
+        migration = f", VRToon移行 {migrated_count}/{removed_count}" if migrated_count or removed_count else ""
+        self.report({'INFO'}, f"ルートオブジェクト '{root_obj.name}' のアウトラインを作成しました。({source_count} meshes{migration})")
         return {'FINISHED'}
 
     def _setup_outline_material(self, mat, color=DEFAULT_OUTLINE_COLOR):
