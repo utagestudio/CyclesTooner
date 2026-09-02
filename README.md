@@ -95,7 +95,7 @@ VRM Add-on for Blender で読み込まれた `MToon` マテリアルは、**Conv
 ベーステクスチャの画像色とAlpha、MToonのBase Colorを可能な範囲で引き継ぎます。MToonのAlphaはCyclesToonerの **Opacity** 初期値として統合されます。変換時に `MToon` 用ノードは削除されるため、**Revert** は簡易的な `Principled BSDF` への復元になり、元のMToon構成は復元しません。Shade Color、MatCap、Rim、Emission、OutlineなどのMToon固有表現の完全再現は対象外です。
 
 #### VRToon からの直接変換
-[VRToon Shader Manager](https://kafuji.github.io/Sakura-Creative-Suite/en/addons/VRToon_Shader_Manager/) の `VRToon` で始まるシェーダーグループが有効なMaterial Outputへ接続されている場合、**Convert** ボタンで直接 CyclesTooner 形式へ変換できます。
+[VRToon Shader Manager](https://kafuji.github.io/Sakura-Creative-Suite/ja/addons/VRToon_Shader_Manager/) の `VRToon` で始まるシェーダーグループが有効なMaterial Outputへ接続されている場合、**Convert** ボタンで直接 CyclesTooner 形式へ変換できます。
 
 `Base Color` の値または接続、`Normal` の接続、`Alpha` と `Material Alpha` を可能な範囲で引き継ぎます。VRToon固有の陰影、スペキュラー、リム、AO、マスクなどの完全再現は対象外です。
 
