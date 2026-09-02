@@ -13,9 +13,7 @@ CYCLES_TOONER_MMD_DIFFUSE_MULTIPLY = "CyclesTooner_MMDDiffuseMultiply"
 CYCLES_TOONER_MTOON_BASE_TEX = "CyclesTooner_MToonBaseTex"
 CYCLES_TOONER_MTOON_BASE_MULTIPLY = "CyclesTooner_MToonBaseMultiply"
 CYCLES_TOONER_VRTOON_ALPHA_MULTIPLY = "CyclesTooner_VRToonAlphaMultiply"
-CYCLES_TOONER_VRTOON_OUTLINE_PROP = "cyclestooner_vrtoon_outline_converted"
 VRTOON_OUTLINE_MATERIAL_PROP = "vrt_outline_mat"
-VRTOON_OUTLINE_COLOR_ATTRIBUTE = "vrt_outline_col"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
 DEFAULT_TOON_SMOOTH = 0.2
@@ -414,66 +412,6 @@ def get_vrtoon_opacity_source(mat, vrtoon_node):
     if material_alpha_source:
         return material_alpha_source, alpha_value
     return None, alpha_value * material_alpha_value
-
-
-def convert_vrtoon_outline_material(mat):
-    if not mat or not mat.get(VRTOON_OUTLINE_MATERIAL_PROP):
-        return False
-    if mat.get(CYCLES_TOONER_VRTOON_OUTLINE_PROP):
-        return False
-
-    layer_name = VRTOON_OUTLINE_COLOR_ATTRIBUTE
-    if mat.use_nodes and mat.node_tree:
-        old_color_node = next((node for node in mat.node_tree.nodes if node.type == 'VERTEX_COLOR'), None)
-        if old_color_node and old_color_node.layer_name:
-            layer_name = old_color_node.layer_name
-
-    mat.use_nodes = True
-    tree = mat.node_tree
-    nodes = tree.nodes
-    links = tree.links
-    nodes.clear()
-
-    color_node = nodes.new(type='ShaderNodeVertexColor')
-    color_node.name = "CyclesTooner_VRToonOutlineColor"
-    color_node.label = "VRToon Outline Color"
-    color_node.layer_name = layer_name
-    color_node.location = (-620, 80)
-
-    emission_node = nodes.new(type='ShaderNodeEmission')
-    emission_node.name = "CyclesTooner_VRToonOutlineEmission"
-    emission_node.label = "CyclesTooner VRToon Outline"
-    emission_node.location = (-360, 80)
-    links.new(color_node.outputs['Color'], emission_node.inputs['Color'])
-
-    transparent_node = nodes.new(type='ShaderNodeBsdfTransparent')
-    transparent_node.location = (-360, -140)
-
-    alpha_mix = nodes.new(type='ShaderNodeMixShader')
-    alpha_mix.name = "CyclesTooner_VRToonOutlineAlpha"
-    alpha_mix.location = (-80, 60)
-    links.new(color_node.outputs['Alpha'], alpha_mix.inputs['Fac'])
-    links.new(transparent_node.outputs['BSDF'], alpha_mix.inputs[1])
-    links.new(emission_node.outputs['Emission'], alpha_mix.inputs[2])
-
-    light_path = nodes.new(type='ShaderNodeLightPath')
-    light_path.location = (-80, -220)
-    shadow_transparent = nodes.new(type='ShaderNodeBsdfTransparent')
-    shadow_transparent.location = (160, -180)
-    shadow_mix = nodes.new(type='ShaderNodeMixShader')
-    shadow_mix.name = "CyclesTooner_VRToonOutlineShadow"
-    shadow_mix.location = (400, 60)
-    links.new(light_path.outputs['Is Shadow Ray'], shadow_mix.inputs['Fac'])
-    links.new(alpha_mix.outputs['Shader'], shadow_mix.inputs[1])
-    links.new(shadow_transparent.outputs['BSDF'], shadow_mix.inputs[2])
-
-    output_node = nodes.new(type='ShaderNodeOutputMaterial')
-    output_node.location = (680, 60)
-    ensure_cycles_material_output_target(output_node)
-    links.new(shadow_mix.outputs['Shader'], output_node.inputs['Surface'])
-
-    mat[CYCLES_TOONER_VRTOON_OUTLINE_PROP] = True
-    return True
 
 
 def is_mtoon_shader_material(mat, root_node=None):
@@ -946,9 +884,16 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         for mat in iter_object_materials(objects_to_process):
             if self.process_material(mat):
                 processed_count += 1
+
+        if __package__:
+            from . import operators_outline
+        else:
+            import operators_outline
+        prepared_count = operators_outline.prepare_vrtoon_outlines(objects_to_process)
         
         # 処理結果を情報エリアに報告
-        self.report({'INFO'}, f"{len(objects_to_process)} 個のオブジェクトのマテリアルを Toon 化しました。")
+        suffix = f" VRToonアウトライン情報を{prepared_count}個退避しました。Add Outlineで再作成できます。" if prepared_count else ""
+        self.report({'INFO'}, f"{len(objects_to_process)} 個のオブジェクトのマテリアルを Toon 化しました。{suffix}")
         return {'FINISHED'}
 
     def process_material(self, mat):
@@ -956,7 +901,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         1つのマテリアル内のノードを操作し、Principled BSDF を Toon BSDF に置換します。
         """
         if mat.get(VRTOON_OUTLINE_MATERIAL_PROP):
-            return convert_vrtoon_outline_material(mat)
+            return False
 
         # ノードを使用していないマテリアルは対象外
         if not mat.use_nodes or not mat.node_tree:

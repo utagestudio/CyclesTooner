@@ -19,6 +19,7 @@ VRTOON_OUTLINE_MODIFIER_NAME = "vrt_outline"
 VRTOON_OUTLINE_THICK_GROUP = "vrt_outline_thick"
 VRTOON_OUTLINE_MASK_GROUP = "vrt_outline_mask"
 VRTOON_OUTLINE_MATERIAL_PROPERTY = "vrt_outline_mat"
+PREPARED_OUTLINE_THICKNESS_PROPERTY = "cyclestooner_prepared_outline_thickness"
 
 
 def get_outline_base_name(target_collection):
@@ -409,6 +410,33 @@ def remove_vrtoon_outline(obj):
     return True
 
 
+def prepare_vrtoon_outlines(objects):
+    prepared_by_root = {}
+    prepared_count = 0
+
+    for obj in objects:
+        modifier = find_vrtoon_outline_modifier(obj)
+        if not modifier:
+            continue
+
+        has_weight = bool(obj.vertex_groups.get(OUTLINE_WEIGHT_ATTRIBUTE))
+        if not has_weight:
+            has_weight = migrate_vrtoon_outline_weights(obj)
+        if not has_weight:
+            continue
+
+        root_obj = get_root_object(obj)
+        prepared_by_root.setdefault(root_obj, []).append(abs(modifier.thickness))
+        if remove_vrtoon_outline(obj):
+            prepared_count += 1
+
+    for root_obj, thicknesses in prepared_by_root.items():
+        if thicknesses:
+            root_obj[PREPARED_OUTLINE_THICKNESS_PROPERTY] = statistics.median(thicknesses)
+
+    return prepared_count
+
+
 def rename_node_group_input(group, old_name, new_name):
     if not group:
         return False
@@ -685,7 +713,12 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
             else:
                 ensure_outline_weight_vertex_group(source_obj)
 
-        if vrtoon_thicknesses:
+        prepared_thickness = root_obj.get(PREPARED_OUTLINE_THICKNESS_PROPERTY)
+        if prepared_thickness is not None:
+            migrated_thickness = float(prepared_thickness)
+            set_outline_thickness(mod, migrated_thickness)
+            context.scene.cyclestooner_outline_thickness = migrated_thickness
+        elif vrtoon_thicknesses:
             migrated_thickness = statistics.median(vrtoon_thicknesses)
             set_outline_thickness(mod, migrated_thickness)
             context.scene.cyclestooner_outline_thickness = migrated_thickness
