@@ -1036,6 +1036,10 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         if color_source:
             tree.links.new(color_source, toon_node.inputs['Color'])
 
+        normal_source = get_linked_input_source(mmd_shader_node, ("Normal", "Normal Map"))
+        if normal_source:
+            tree.links.new(normal_source, toon_node.inputs['Normal'])
+
         texture_alpha_socket = get_texture_alpha_socket(base_texture_node)
         opacity = get_source_opacity(mat, alpha_value)
         setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=texture_alpha_socket, opacity=opacity)
