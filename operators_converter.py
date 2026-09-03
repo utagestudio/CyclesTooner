@@ -826,6 +826,25 @@ def remove_empty_frames(nodes):
             remove_count += 1
 
 
+def remove_dangling_reroutes(nodes):
+    remove_count = 0
+    while True:
+        dangling_reroutes = [
+            node
+            for node in nodes
+            if node.type == 'REROUTE'
+            and (
+                not any(input_socket.is_linked for input_socket in node.inputs)
+                or not any(output_socket.is_linked for output_socket in node.outputs)
+            )
+        ]
+        if not dangling_reroutes:
+            return remove_count
+        for reroute in dangling_reroutes:
+            nodes.remove(reroute)
+            remove_count += 1
+
+
 def layout_reachable_nodes(output_node):
     depths = {output_node.name: 0}
 
@@ -883,6 +902,7 @@ def organize_converted_material_nodes(mat):
         return
 
     reachable_nodes = layout_reachable_nodes(output_node)
+    remove_dangling_reroutes(nodes)
     remove_empty_frames(nodes)
     archive_unreachable_nodes_from_output(mat)
     remove_empty_frames(nodes)
