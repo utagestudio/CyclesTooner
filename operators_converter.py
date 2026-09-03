@@ -13,6 +13,7 @@ CYCLES_TOONER_MMD_DIFFUSE_MULTIPLY = "CyclesTooner_MMDDiffuseMultiply"
 CYCLES_TOONER_MTOON_BASE_TEX = "CyclesTooner_MToonBaseTex"
 CYCLES_TOONER_MTOON_BASE_MULTIPLY = "CyclesTooner_MToonBaseMultiply"
 CYCLES_TOONER_VRTOON_ALPHA_MULTIPLY = "CyclesTooner_VRToonAlphaMultiply"
+CYCLES_TOONER_PRESERVED_NODES_FRAME = "CyclesTooner_PreservedNodes"
 VRTOON_OUTLINE_MATERIAL_PROP = "vrt_outline_mat"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
@@ -500,6 +501,29 @@ def get_mtoon_base_texture_node(mat, mtoon_extension):
     return best_node
 
 
+def get_linked_input_source(node, socket_names):
+    if not node:
+        return None
+
+    for socket_name in socket_names:
+        input_socket = node.inputs.get(socket_name)
+        if input_socket and input_socket.is_linked:
+            return input_socket.links[0].from_socket
+
+    return None
+
+
+def get_mtoon_normal_source(mat, output_node, mtoon_node):
+    surface_input = output_node.inputs.get('Surface') if output_node else None
+    root_node = surface_input.links[0].from_node if surface_input and surface_input.is_linked else None
+    source = get_linked_input_source(root_node, ("Normal", "Normal Map"))
+    if source:
+        return source
+
+    output_group = mat.node_tree.nodes.get("Mtoon1Material.Mtoon1Output")
+    return get_linked_input_source(output_group or mtoon_node, ("Normal", "Normal Map"))
+
+
 def build_mtoon_color_source(mat, toon_node, base_color, texture_node):
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
@@ -527,18 +551,26 @@ def build_mtoon_color_source(mat, toon_node, base_color, texture_node):
     return None
 
 
-def collect_mtoon_shader_nodes_to_remove(nodes):
+def collect_mtoon_shader_nodes_to_remove(nodes, protected_node_names=()):
     nodes_to_remove = []
-    keep_names = {CYCLES_TOONER_MTOON_BASE_TEX}
+    keep_names = {
+        CYCLES_TOONER_MTOON_BASE_TEX,
+        CYCLES_TOONER_MTOON_BASE_MULTIPLY,
+    }
 
     for node in nodes:
-        if node.name in keep_names:
+        if node.name in keep_names or node.name in protected_node_names:
             continue
-        if node.type == 'GROUP' and node_name_contains(node, ("mtoon",)):
+        node_name = node.name.lower()
+        node_label = node.label.lower()
+        node_tree_name = node.node_tree.name.lower() if node.type == 'GROUP' and node.node_tree else ""
+        if node_name.startswith(("mtoon", "vrmtoon")):
             nodes_to_remove.append(node)
         elif node.type == 'GROUP' and node_socket_names_contain(node, ("lit color texture", "shade color texture", "shading shift texture")):
             nodes_to_remove.append(node)
-        elif node_name_contains(node, ("mtoon", "vrmtoon")):
+        elif node.type == 'GROUP' and node_tree_name.startswith(("mtoon", "vrm add-on mtoon")):
+            nodes_to_remove.append(node)
+        elif node.type == 'FRAME' and node_label.startswith("mtoon"):
             nodes_to_remove.append(node)
 
     return nodes_to_remove
@@ -643,12 +675,12 @@ def get_source_opacity(mat, alpha_value):
     return alpha_value
 
 
-def collect_mmd_shader_nodes_to_remove(nodes):
+def collect_mmd_shader_nodes_to_remove(nodes, protected_node_names=()):
     nodes_to_remove = []
     keep_names = {CYCLES_TOONER_MMD_BASE_TEX, "mmd_base_tex"}
 
     for node in nodes:
-        if node.name in keep_names:
+        if node.name in keep_names or node.name in protected_node_names:
             continue
         if node.name.startswith("mmd_"):
             nodes_to_remove.append(node)
@@ -741,14 +773,13 @@ def collect_reachable_nodes_from_output(output_node):
             visit_socket_input(input_socket)
 
     reachable.add(output_node.name)
-    surface_input = output_node.inputs.get('Surface')
-    if surface_input:
-        visit_socket_input(surface_input)
+    for input_socket in output_node.inputs:
+        visit_socket_input(input_socket)
 
     return reachable
 
 
-def remove_unreachable_nodes_from_output(mat):
+def archive_unreachable_nodes_from_output(mat):
     if not mat.use_nodes or not mat.node_tree:
         return 0
 
@@ -758,15 +789,138 @@ def remove_unreachable_nodes_from_output(mat):
         return 0
 
     reachable = collect_reachable_nodes_from_output(output_node)
-    nodes_to_remove = [node for node in nodes if node.name not in reachable]
-    remove_count = 0
+    preserved_frame = nodes.get(CYCLES_TOONER_PRESERVED_NODES_FRAME)
+    nodes_to_archive = [
+        node
+        for node in nodes
+        if node.name not in reachable
+        and node != preserved_frame
+        and node.parent is None
+    ]
+    if not nodes_to_archive:
+        return 0
 
-    for node in nodes_to_remove:
-        if nodes.get(node.name) == node:
-            nodes.remove(node)
+    if not preserved_frame or preserved_frame.type != 'FRAME':
+        preserved_frame = nodes.new(type='NodeFrame')
+        preserved_frame.name = CYCLES_TOONER_PRESERVED_NODES_FRAME
+        preserved_frame.label = "CyclesTooner Preserved Nodes"
+
+    for node in nodes_to_archive:
+        node.parent = preserved_frame
+
+    return len(nodes_to_archive)
+
+
+def remove_empty_frames(nodes):
+    remove_count = 0
+    while True:
+        empty_frames = [
+            node
+            for node in nodes
+            if node.type == 'FRAME' and not any(child.parent == node for child in nodes)
+        ]
+        if not empty_frames:
+            return remove_count
+        for frame in empty_frames:
+            nodes.remove(frame)
             remove_count += 1
 
-    return remove_count
+
+def remove_dangling_reroutes(nodes):
+    remove_count = 0
+    while True:
+        dangling_reroutes = [
+            node
+            for node in nodes
+            if node.type == 'REROUTE'
+            and (
+                not any(input_socket.is_linked for input_socket in node.inputs)
+                or not any(output_socket.is_linked for output_socket in node.outputs)
+            )
+        ]
+        if not dangling_reroutes:
+            return remove_count
+        for reroute in dangling_reroutes:
+            nodes.remove(reroute)
+            remove_count += 1
+
+
+def remove_unlinked_shader_combiners(nodes):
+    nodes_to_remove = [
+        node
+        for node in nodes
+        if node.type in {'MIX_SHADER', 'ADD_SHADER'}
+        and not any(input_socket.is_linked for input_socket in node.inputs)
+        and not any(output_socket.is_linked for output_socket in node.outputs)
+    ]
+    for node in nodes_to_remove:
+        nodes.remove(node)
+    return len(nodes_to_remove)
+
+
+def layout_reachable_nodes(output_node):
+    depths = {output_node.name: 0}
+
+    def visit(node, depth, path):
+        if node.name in path:
+            return
+        depths[node.name] = max(depths.get(node.name, 0), depth)
+        next_path = path | {node.name}
+        for input_socket in node.inputs:
+            for link in input_socket.links:
+                visit(link.from_node, depth + 1, next_path)
+
+    visit(output_node, 0, set())
+    reachable_nodes = [output_node.id_data.nodes[name] for name in depths]
+    for node in reachable_nodes:
+        node.parent = None
+
+    columns = {}
+    for node in reachable_nodes:
+        columns.setdefault(depths[node.name], []).append(node)
+
+    for depth, column in columns.items():
+        column.sort(key=lambda node: (-node.location.y, node.name))
+        start_y = (len(column) - 1) * 110.0
+        for index, node in enumerate(column):
+            node.location = (900.0 - depth * 320.0, start_y - index * 220.0)
+
+    return reachable_nodes
+
+
+def layout_preserved_nodes(nodes, reachable_nodes):
+    preserved_frame = nodes.get(CYCLES_TOONER_PRESERVED_NODES_FRAME)
+    if not preserved_frame or preserved_frame.type != 'FRAME':
+        return
+
+    children = [node for node in nodes if node.parent == preserved_frame]
+    children.sort(key=lambda node: (node.type != 'FRAME', node.name))
+    for index, node in enumerate(children):
+        column = index % 4
+        row = index // 4
+        node.location = (column * 300.0, -row * 240.0)
+
+    min_x = min((node.location.x for node in reachable_nodes), default=0.0)
+    min_y = min((node.location.y for node in reachable_nodes), default=0.0)
+    preserved_frame.location = (min_x, min_y - 500.0)
+
+
+def organize_converted_material_nodes(mat):
+    if not mat.use_nodes or not mat.node_tree:
+        return
+
+    nodes = mat.node_tree.nodes
+    output_node = find_output_node(nodes)
+    if not output_node:
+        return
+
+    reachable_nodes = layout_reachable_nodes(output_node)
+    remove_dangling_reroutes(nodes)
+    remove_unlinked_shader_combiners(nodes)
+    remove_empty_frames(nodes)
+    archive_unreachable_nodes_from_output(mat)
+    remove_empty_frames(nodes)
+    layout_preserved_nodes(nodes, reachable_nodes)
 
 
 def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opacity=1.0):
@@ -947,6 +1101,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
                     opacity=mat.get(CYCLES_TOONER_OPACITY_PROP, getattr(mat, "cyclestooner_opacity", 1.0)),
                 )
                 remove_nodes_if_present(nodes, obsolete_nodes)
+                organize_converted_material_nodes(mat)
                 return True
 
         if is_mmd_shader_material(mat, principled_node):
@@ -985,6 +1140,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         
         # 古いノードを削除
         nodes.remove(principled_node)
+        organize_converted_material_nodes(mat)
         
         return True
 
@@ -1010,13 +1166,19 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         if color_source:
             tree.links.new(color_source, toon_node.inputs['Color'])
 
+        normal_source = get_linked_input_source(mmd_shader_node, ("Normal", "Normal Map"))
+        if normal_source:
+            tree.links.new(normal_source, toon_node.inputs['Normal'])
+
         texture_alpha_socket = get_texture_alpha_socket(base_texture_node)
         opacity = get_source_opacity(mat, alpha_value)
         setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=texture_alpha_socket, opacity=opacity)
 
         mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "MMDShaderDev"
-        remove_nodes_if_present(nodes, collect_mmd_shader_nodes_to_remove(nodes))
+        protected_node_names = collect_reachable_nodes_from_output(output_node)
+        remove_nodes_if_present(nodes, collect_mmd_shader_nodes_to_remove(nodes, protected_node_names))
         repair_cycles_tooner_output(mat)
+        organize_converted_material_nodes(mat)
 
         return True
 
@@ -1044,14 +1206,19 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         if color_source:
             tree.links.new(color_source, toon_node.inputs['Color'])
 
+        normal_source = get_mtoon_normal_source(mat, output_node, mtoon_node)
+        if normal_source:
+            tree.links.new(normal_source, toon_node.inputs['Normal'])
+
         texture_alpha_socket = get_texture_alpha_socket(base_texture_node)
         opacity = get_source_opacity(mat, alpha_value)
         setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=texture_alpha_socket, opacity=opacity)
 
         mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "MToon"
-        remove_nodes_if_present(nodes, collect_mtoon_shader_nodes_to_remove(nodes))
+        protected_node_names = collect_reachable_nodes_from_output(output_node)
+        remove_nodes_if_present(nodes, collect_mtoon_shader_nodes_to_remove(nodes, protected_node_names))
         repair_cycles_tooner_output(mat)
-        remove_unreachable_nodes_from_output(mat)
+        organize_converted_material_nodes(mat)
 
         return True
 
@@ -1082,7 +1249,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "VRToon"
         nodes.remove(vrtoon_node)
         repair_cycles_tooner_output(mat)
-        remove_unreachable_nodes_from_output(mat)
+        organize_converted_material_nodes(mat)
         return True
 
 

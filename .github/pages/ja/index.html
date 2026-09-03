@@ -102,9 +102,9 @@
         <article class="feature-card">
           <h3>Toon BSDFへ変換</h3>
           <p>
-            Principled BSDFをToon BSDFへ置き換え、接続またはソケットに設定されたBase Color、
-            Normal接続、テクスチャAlpha、マテリアル透明度を引き継ぎます。VRToon変換時は、
-            後からAdd Outlineで使うウェイトとThicknessも退避します。
+            Principled BSDFをToon BSDFへ置き換え、対応するColor・UV・Normal・Alpha・Opacity経路を
+            引き継ぎます。変換後のノードを自動整列し、意味のある未接続ノードは安全に退避します。
+            VRToon変換時は、後からAdd Outlineで使うウェイトとThicknessも退避します。
           </p>
           <ul>
             <li>Principled BSDFからToon BSDFへ変換</li>

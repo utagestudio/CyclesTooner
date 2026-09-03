@@ -102,9 +102,10 @@
         <article class="feature-card">
           <h3>Convert materials to Toon BSDF</h3>
           <p>
-            Replace Principled BSDF with Toon BSDF while preserving linked or socket-set base color,
-            normal connections, texture alpha, and material opacity where supported. VRToon conversion
-            prepares its outline weights and Thickness for a later Add Outline operation.
+            Replace Principled BSDF with Toon BSDF while preserving supported color, UV, normal, alpha,
+            and opacity paths. The converted graph is arranged automatically, with meaningful disconnected
+            nodes retained safely. VRToon conversion prepares its outline weights and Thickness for a later
+            Add Outline operation.
           </p>
           <ul>
             <li>Principled BSDF to Toon BSDF</li>
