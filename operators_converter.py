@@ -13,6 +13,7 @@ CYCLES_TOONER_MMD_DIFFUSE_MULTIPLY = "CyclesTooner_MMDDiffuseMultiply"
 CYCLES_TOONER_MTOON_BASE_TEX = "CyclesTooner_MToonBaseTex"
 CYCLES_TOONER_MTOON_BASE_MULTIPLY = "CyclesTooner_MToonBaseMultiply"
 CYCLES_TOONER_VRTOON_ALPHA_MULTIPLY = "CyclesTooner_VRToonAlphaMultiply"
+CYCLES_TOONER_PRESERVED_NODES_FRAME = "CyclesTooner_PreservedNodes"
 VRTOON_OUTLINE_MATERIAL_PROP = "vrt_outline_mat"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
@@ -560,11 +561,16 @@ def collect_mtoon_shader_nodes_to_remove(nodes, protected_node_names=()):
     for node in nodes:
         if node.name in keep_names or node.name in protected_node_names:
             continue
-        if node.type == 'GROUP' and node_name_contains(node, ("mtoon",)):
+        node_name = node.name.lower()
+        node_label = node.label.lower()
+        node_tree_name = node.node_tree.name.lower() if node.type == 'GROUP' and node.node_tree else ""
+        if node_name.startswith(("mtoon", "vrmtoon")):
             nodes_to_remove.append(node)
         elif node.type == 'GROUP' and node_socket_names_contain(node, ("lit color texture", "shade color texture", "shading shift texture")):
             nodes_to_remove.append(node)
-        elif node_name_contains(node, ("mtoon", "vrmtoon")):
+        elif node.type == 'GROUP' and node_tree_name.startswith(("mtoon", "vrm add-on mtoon")):
+            nodes_to_remove.append(node)
+        elif node.type == 'FRAME' and node_label.startswith("mtoon"):
             nodes_to_remove.append(node)
 
     return nodes_to_remove
@@ -767,14 +773,13 @@ def collect_reachable_nodes_from_output(output_node):
             visit_socket_input(input_socket)
 
     reachable.add(output_node.name)
-    surface_input = output_node.inputs.get('Surface')
-    if surface_input:
-        visit_socket_input(surface_input)
+    for input_socket in output_node.inputs:
+        visit_socket_input(input_socket)
 
     return reachable
 
 
-def remove_unreachable_nodes_from_output(mat):
+def archive_unreachable_nodes_from_output(mat):
     if not mat.use_nodes or not mat.node_tree:
         return 0
 
@@ -784,15 +789,27 @@ def remove_unreachable_nodes_from_output(mat):
         return 0
 
     reachable = collect_reachable_nodes_from_output(output_node)
-    nodes_to_remove = [node for node in nodes if node.name not in reachable]
-    remove_count = 0
+    preserved_frame = nodes.get(CYCLES_TOONER_PRESERVED_NODES_FRAME)
+    nodes_to_archive = [
+        node
+        for node in nodes
+        if node.name not in reachable
+        and node != preserved_frame
+        and node.type != 'FRAME'
+        and node.parent is None
+    ]
+    if not nodes_to_archive:
+        return 0
 
-    for node in nodes_to_remove:
-        if nodes.get(node.name) == node:
-            nodes.remove(node)
-            remove_count += 1
+    if not preserved_frame or preserved_frame.type != 'FRAME':
+        preserved_frame = nodes.new(type='NodeFrame')
+        preserved_frame.name = CYCLES_TOONER_PRESERVED_NODES_FRAME
+        preserved_frame.label = "CyclesTooner Preserved Nodes"
 
-    return remove_count
+    for node in nodes_to_archive:
+        node.parent = preserved_frame
+
+    return len(nodes_to_archive)
 
 
 def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opacity=1.0):
@@ -1087,7 +1104,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         protected_node_names = collect_reachable_nodes_from_output(output_node)
         remove_nodes_if_present(nodes, collect_mtoon_shader_nodes_to_remove(nodes, protected_node_names))
         repair_cycles_tooner_output(mat)
-        remove_unreachable_nodes_from_output(mat)
+        archive_unreachable_nodes_from_output(mat)
 
         return True
 
@@ -1118,7 +1135,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "VRToon"
         nodes.remove(vrtoon_node)
         repair_cycles_tooner_output(mat)
-        remove_unreachable_nodes_from_output(mat)
+        archive_unreachable_nodes_from_output(mat)
         return True
 
 
