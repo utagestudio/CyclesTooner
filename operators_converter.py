@@ -527,7 +527,7 @@ def build_mtoon_color_source(mat, toon_node, base_color, texture_node):
     return None
 
 
-def collect_mtoon_shader_nodes_to_remove(nodes):
+def collect_mtoon_shader_nodes_to_remove(nodes, protected_node_names=()):
     nodes_to_remove = []
     keep_names = {
         CYCLES_TOONER_MTOON_BASE_TEX,
@@ -535,7 +535,7 @@ def collect_mtoon_shader_nodes_to_remove(nodes):
     }
 
     for node in nodes:
-        if node.name in keep_names:
+        if node.name in keep_names or node.name in protected_node_names:
             continue
         if node.type == 'GROUP' and node_name_contains(node, ("mtoon",)):
             nodes_to_remove.append(node)
@@ -646,12 +646,12 @@ def get_source_opacity(mat, alpha_value):
     return alpha_value
 
 
-def collect_mmd_shader_nodes_to_remove(nodes):
+def collect_mmd_shader_nodes_to_remove(nodes, protected_node_names=()):
     nodes_to_remove = []
     keep_names = {CYCLES_TOONER_MMD_BASE_TEX, "mmd_base_tex"}
 
     for node in nodes:
-        if node.name in keep_names:
+        if node.name in keep_names or node.name in protected_node_names:
             continue
         if node.name.startswith("mmd_"):
             nodes_to_remove.append(node)
@@ -1018,7 +1018,8 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=texture_alpha_socket, opacity=opacity)
 
         mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "MMDShaderDev"
-        remove_nodes_if_present(nodes, collect_mmd_shader_nodes_to_remove(nodes))
+        protected_node_names = collect_reachable_nodes_from_output(output_node)
+        remove_nodes_if_present(nodes, collect_mmd_shader_nodes_to_remove(nodes, protected_node_names))
         repair_cycles_tooner_output(mat)
 
         return True
@@ -1052,7 +1053,8 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=texture_alpha_socket, opacity=opacity)
 
         mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "MToon"
-        remove_nodes_if_present(nodes, collect_mtoon_shader_nodes_to_remove(nodes))
+        protected_node_names = collect_reachable_nodes_from_output(output_node)
+        remove_nodes_if_present(nodes, collect_mtoon_shader_nodes_to_remove(nodes, protected_node_names))
         repair_cycles_tooner_output(mat)
         remove_unreachable_nodes_from_output(mat)
 
