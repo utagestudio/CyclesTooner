@@ -500,6 +500,29 @@ def get_mtoon_base_texture_node(mat, mtoon_extension):
     return best_node
 
 
+def get_linked_input_source(node, socket_names):
+    if not node:
+        return None
+
+    for socket_name in socket_names:
+        input_socket = node.inputs.get(socket_name)
+        if input_socket and input_socket.is_linked:
+            return input_socket.links[0].from_socket
+
+    return None
+
+
+def get_mtoon_normal_source(mat, output_node, mtoon_node):
+    surface_input = output_node.inputs.get('Surface') if output_node else None
+    root_node = surface_input.links[0].from_node if surface_input and surface_input.is_linked else None
+    source = get_linked_input_source(root_node, ("Normal", "Normal Map"))
+    if source:
+        return source
+
+    output_group = mat.node_tree.nodes.get("Mtoon1Material.Mtoon1Output")
+    return get_linked_input_source(output_group or mtoon_node, ("Normal", "Normal Map"))
+
+
 def build_mtoon_color_source(mat, toon_node, base_color, texture_node):
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
@@ -1047,6 +1070,10 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         color_source = build_mtoon_color_source(mat, toon_node, base_color, base_texture_node)
         if color_source:
             tree.links.new(color_source, toon_node.inputs['Color'])
+
+        normal_source = get_mtoon_normal_source(mat, output_node, mtoon_node)
+        if normal_source:
+            tree.links.new(normal_source, toon_node.inputs['Normal'])
 
         texture_alpha_socket = get_texture_alpha_socket(base_texture_node)
         opacity = get_source_opacity(mat, alpha_value)
