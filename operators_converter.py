@@ -845,6 +845,19 @@ def remove_dangling_reroutes(nodes):
             remove_count += 1
 
 
+def remove_unlinked_shader_combiners(nodes):
+    nodes_to_remove = [
+        node
+        for node in nodes
+        if node.type in {'MIX_SHADER', 'ADD_SHADER'}
+        and not any(input_socket.is_linked for input_socket in node.inputs)
+        and not any(output_socket.is_linked for output_socket in node.outputs)
+    ]
+    for node in nodes_to_remove:
+        nodes.remove(node)
+    return len(nodes_to_remove)
+
+
 def layout_reachable_nodes(output_node):
     depths = {output_node.name: 0}
 
@@ -903,6 +916,7 @@ def organize_converted_material_nodes(mat):
 
     reachable_nodes = layout_reachable_nodes(output_node)
     remove_dangling_reroutes(nodes)
+    remove_unlinked_shader_combiners(nodes)
     remove_empty_frames(nodes)
     archive_unreachable_nodes_from_output(mat)
     remove_empty_frames(nodes)
