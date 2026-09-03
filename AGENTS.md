@@ -30,19 +30,28 @@
   - Keep the core version in `__init__.py` and the full version in `blender_manifest.toml` synchronized in the same commit.
 - `bl_info["version"]` contains only the integer `(MAJOR, MINOR, PATCH)` tuple. `ADDON_VERSION_PRERELEASE` and `ADDON_VERSION_STRING` in `__init__.py` carry the development suffix used by the manifest.
 
+## Release History
+
+- When preparing a completed development branch for merge into `main`, update the GitHub Pages release history in both `.github/pages/index.html` and `.github/pages/ja/index.html` as part of the release work. Do not limit the release task to changing version numbers.
+- Add one entry for the final release version, with the release date, a concise title, and a detailed list summarizing the user-visible fixes and features developed on that branch.
+- Derive the entry from the branch's actual commits and resulting behavior. Consolidate related implementation commits into clear release notes instead of copying commit subjects verbatim.
+- Keep the English and Japanese entries equivalent, place the newest release first, and leave only the newest entry expanded by default.
+- Documentation-only or GitHub Pages-only branches do not require a release-history entry unless they are themselves part of an add-on release.
+
 ## Commit Checklist
 
 Before committing or amending, complete these steps in order:
 
 1. Determine whether the commit contains add-on program changes, only non-program changes, or is the release commit for `main`.
 2. Set the target and development version according to the Versioning rules above.
-3. Run:
+3. For a release being merged into `main`, add the corresponding bilingual GitHub Pages release-history entry described above.
+4. Run:
    - `python3 -m py_compile __init__.py operators_converter.py operators_outline.py ui.py`
    - `git diff --check`
-4. Remove generated `__pycache__/`.
-5. Stage only the intended files, excluding `_temp/`, `__pycache__/`, screenshots, and unrelated local artifacts.
-6. Run `git diff --cached --check`.
-7. Re-check the staged core version, prerelease suffix, full version string, and manifest version before `git commit` or `git commit --amend`.
+5. Remove generated `__pycache__/`.
+6. Stage only the intended files, excluding `_temp/`, `__pycache__/`, screenshots, and unrelated local artifacts.
+7. Run `git diff --cached --check`.
+8. Re-check the staged core version, prerelease suffix, full version string, manifest version, and release-history entry before `git commit` or `git commit --amend`.
 
 ## Verification
 
