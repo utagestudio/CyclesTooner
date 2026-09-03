@@ -45,6 +45,7 @@
     </a>
     <nav class="top-nav" aria-label="Primary navigation">
       <a href="#features">Features</a>
+      <a href="#updates">Updates</a>
       <a href="#install">Install</a>
       <a href="https://github.com/utagestudio/CyclesTooner" target="_blank" rel="noopener noreferrer">GitHub</a>
       <a class="language-switch" href="ja/" lang="ja">日本語</a>
@@ -91,6 +92,63 @@
       <div><strong>MMD / VRM / VRToon</strong><span>Direct shader path support</span></div>
       <div><strong>Geometry Nodes</strong><span>Inverted-hull outline generation</span></div>
       <div><strong>Blender Extensions</strong><span>Install and update from repository</span></div>
+    </section>
+
+    <section id="updates" class="section updates-section" aria-labelledby="updates-title">
+      <div class="updates-heading">
+        <div>
+          <p class="eyebrow">What's new</p>
+          <h2 id="updates-title">Update history</h2>
+        </div>
+        <a href="https://github.com/utagestudio/CyclesTooner/releases" target="_blank" rel="noopener noreferrer">All releases on GitHub</a>
+      </div>
+      <div class="update-list">
+        <details class="update-entry" open>
+          <summary><span class="update-version">v1.24.1</span><strong>More reliable material conversion</strong><time datetime="2026-09-03">September 3, 2026</time></summary>
+          <ul>
+            <li>Preserves MToon base-color multiplication, texture UV chains, and linked normals from MToon and MMD materials.</li>
+            <li>Collects unknown disconnected nodes safely and arranges converted nodes by connection depth.</li>
+            <li>Cleans up dangling reroutes and unused shader combiners without breaking connected shader paths.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
+          <summary><span class="update-version">v1.24.0</span><strong>VRToon conversion support</strong><time datetime="2026-09-03">September 3, 2026</time></summary>
+          <ul>
+            <li>Adds direct conversion for VRToon shader groups connected to the active Material Output.</li>
+            <li>Preserves supported base color, texture alpha, normal, and material opacity paths.</li>
+            <li>Prepares VRToon outline weights and thickness for use with Add Outline after conversion.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
+          <summary><span class="update-version">v1.23.3</span><strong>Blender compatibility alignment</strong><time datetime="2026-08-29">August 29, 2026</time></summary>
+          <ul>
+            <li>Aligns the declared minimum Blender version with the add-on's supported environment.</li>
+            <li>Updates the website and documentation to show consistent Blender requirements.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
+          <summary><span class="update-version">v1.23.2</span><strong>Safer color and outline handling</strong><time datetime="2026-08-29">August 29, 2026</time></summary>
+          <ul>
+            <li>Copies the configured Principled Base Color when it is not linked.</li>
+            <li>Creates missing CT_Outline vertex groups with a default weight of 0.5.</li>
+            <li>Excludes internal outline source collections from the active View Layer.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
+          <summary><span class="update-version">v1.23.1</span><strong>Outline visibility fix</strong><time datetime="2026-08-22">August 22, 2026</time></summary>
+          <ul>
+            <li>Preserves disabled collection state while building and refreshing outlines.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
+          <summary><span class="update-version">v1.23.0</span><strong>Expanded outline controls</strong><time datetime="2026-08-21">August 21, 2026</time></summary>
+          <ul>
+            <li>Adds outline color and thickness controls.</li>
+            <li>Improves Geometry Nodes compatibility with Blender 5.2.</li>
+            <li>Filters outline sources by render visibility and normalizes Material Output targets during conversion.</li>
+          </ul>
+        </details>
+      </div>
     </section>
 
     <section id="features" class="section">

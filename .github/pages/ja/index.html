@@ -45,6 +45,7 @@
     </a>
     <nav class="top-nav" aria-label="主要ナビゲーション">
       <a href="#features">機能</a>
+      <a href="#updates">更新履歴</a>
       <a href="#install">導入</a>
       <a href="https://github.com/utagestudio/CyclesTooner" target="_blank" rel="noopener noreferrer">GitHub</a>
       <a class="language-switch" href="../" lang="en">English</a>
@@ -91,6 +92,63 @@
       <div><strong>MMD / VRM / VRToon</strong><span>主要なインポート素材に対応</span></div>
       <div><strong>Geometry Nodes</strong><span>背面法アウトライン生成</span></div>
       <div><strong>Blender Extensions</strong><span>リポジトリから導入・更新</span></div>
+    </section>
+
+    <section id="updates" class="section updates-section" aria-labelledby="updates-title">
+      <div class="updates-heading">
+        <div>
+          <p class="eyebrow">What's new</p>
+          <h2 id="updates-title">更新履歴</h2>
+        </div>
+        <a href="https://github.com/utagestudio/CyclesTooner/releases" target="_blank" rel="noopener noreferrer">GitHubですべてのリリースを見る</a>
+      </div>
+      <div class="update-list">
+        <details class="update-entry" open>
+          <summary><span class="update-version">v1.24.1</span><strong>マテリアル変換の安定性を向上</strong><time datetime="2026-09-03">2026年9月3日</time></summary>
+          <ul>
+            <li>MToonのベースカラー乗算、テクスチャのUV経路、MToon・MMDのNormal接続を保持するようにしました。</li>
+            <li>不明な未接続ノードを安全にまとめ、変換後のノードを接続の深さに応じて整列するようにしました。</li>
+            <li>接続済みのシェーダー経路を壊さず、不要なRerouteやシェーダー合成ノードを整理するようにしました。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
+          <summary><span class="update-version">v1.24.0</span><strong>VRToon変換に対応</strong><time datetime="2026-09-03">2026年9月3日</time></summary>
+          <ul>
+            <li>有効なMaterial Outputに接続されたVRToonシェーダーグループを直接変換できるようにしました。</li>
+            <li>対応するベースカラー、テクスチャAlpha、Normal、マテリアルOpacityの経路を保持します。</li>
+            <li>変換後のAdd Outlineで使えるよう、VRToonのアウトラインウェイトと太さを準備します。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
+          <summary><span class="update-version">v1.23.3</span><strong>Blender対応条件を統一</strong><time datetime="2026-08-29">2026年8月29日</time></summary>
+          <ul>
+            <li>アドオンが宣言するBlenderの最低バージョンを、実際の対応環境に合わせました。</li>
+            <li>Webサイトとドキュメントに記載するBlenderの動作要件を統一しました。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
+          <summary><span class="update-version">v1.23.2</span><strong>カラーとアウトライン処理を改善</strong><time datetime="2026-08-29">2026年8月29日</time></summary>
+          <ul>
+            <li>Principled Base Colorが未接続の場合、設定されている色を引き継ぐようにしました。</li>
+            <li>CT_Outline頂点グループがない場合、初期ウェイト0.5で自動作成するようにしました。</li>
+            <li>内部用アウトラインSourceコレクションをアクティブなView Layerから除外するようにしました。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
+          <summary><span class="update-version">v1.23.1</span><strong>アウトライン表示状態を修正</strong><time datetime="2026-08-22">2026年8月22日</time></summary>
+          <ul>
+            <li>アウトラインの作成・更新時に、無効化されたコレクションの状態を保持するようにしました。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
+          <summary><span class="update-version">v1.23.0</span><strong>アウトライン調整機能を拡張</strong><time datetime="2026-08-21">2026年8月21日</time></summary>
+          <ul>
+            <li>アウトラインの色と太さを調整する機能を追加しました。</li>
+            <li>Blender 5.2でのGeometry Nodes互換性を改善しました。</li>
+            <li>レンダー表示状態によるソース選別と、変換時のMaterial Outputターゲット正規化を追加しました。</li>
+          </ul>
+        </details>
+      </div>
     </section>
 
     <section id="features" class="section">
