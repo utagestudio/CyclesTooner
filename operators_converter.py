@@ -529,7 +529,10 @@ def build_mtoon_color_source(mat, toon_node, base_color, texture_node):
 
 def collect_mtoon_shader_nodes_to_remove(nodes):
     nodes_to_remove = []
-    keep_names = {CYCLES_TOONER_MTOON_BASE_TEX}
+    keep_names = {
+        CYCLES_TOONER_MTOON_BASE_TEX,
+        CYCLES_TOONER_MTOON_BASE_MULTIPLY,
+    }
 
     for node in nodes:
         if node.name in keep_names:
