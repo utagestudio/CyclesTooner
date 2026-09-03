@@ -15,8 +15,10 @@ Automatically converts materials for selected objects (and all their children re
     *   Directly converts output-connected `VRToon*` shader groups from VRToon Shader Manager.
     *   When a VRToon outline is present, stores its per-vertex weights in `CT_Outline` and its base Thickness on the model root before removing the legacy Solidify setup and outline materials. No new outline is created until you click **Add Outline**.
     *   Preserves a linked `Base Color` source, or copies the socket color when it is unlinked. `Normal` connections are also preserved.
+    *   For MToon and MMD materials, preserves upstream base-texture UV transformations and normal-map nodes where supported.
     *   Automatically adds opacity control nodes (Mix Shader + Transparent BSDF).
     *   If there is an `Alpha` connection, both the Alpha input and Opacity setting are applied.
+    *   Automatically arranges the converted graph by connection order. Unknown disconnected nodes are collected in a `CyclesTooner Preserved Nodes` frame, while dangling reroutes, fully unlinked Mix/Add Shader nodes, and empty frames are removed.
     *   Automatically switches the render engine to **Cycles** if EEVEE is currently selected.
 *   **Revert**:
     *   Restores materials converted by CyclesTooner back to `Principled BSDF`.
@@ -86,12 +88,12 @@ The **CyclesTooner** panel is located in the **Tool** tab of the 3D Viewport Sid
 #### Direct MMDShaderDev Conversion
 Materials loaded by MMD Tools with `mmd_shader` can be converted directly with **Convert**.
 
-CyclesTooner preserves `mmd_base_tex` image color/alpha and MMD Diffuse Color where possible. MMD material Alpha is folded into the initial **Opacity** value. The conversion removes `MMDShaderDev` nodes, so **Revert** restores a simplified `Principled BSDF` material rather than the original MMDShaderDev node setup. Exact Sphere/Toon texture compositing is not preserved.
+CyclesTooner preserves `mmd_base_tex` image color/alpha, UV transformations, normal connections, and MMD Diffuse Color where possible. MMD material Alpha is folded into the initial **Opacity** value. The conversion removes `MMDShaderDev` nodes, so **Revert** restores a simplified `Principled BSDF` material rather than the original MMDShaderDev node setup. Exact Sphere/Toon texture compositing is not preserved.
 
 #### Direct MToon Conversion
 Materials loaded by VRM Add-on for Blender with `MToon` can be converted directly with **Convert**.
 
-CyclesTooner preserves base texture color/alpha and MToon Base Color where possible. MToon Alpha is folded into the initial **Opacity** value. The conversion removes `MToon` nodes, so **Revert** restores a simplified `Principled BSDF` material rather than the original MToon node setup. Exact MToon Shade Color, MatCap, Rim, Emission, and Outline effects are not preserved.
+CyclesTooner preserves base texture color/alpha, UV transformations, normal connections, and MToon Base Color where possible. MToon Alpha is folded into the initial **Opacity** value. The conversion removes `MToon` nodes, so **Revert** restores a simplified `Principled BSDF` material rather than the original MToon node setup. Exact MToon Shade Color, MatCap, Rim, Emission, and Outline effects are not preserved.
 
 #### Direct VRToon Conversion
 Shader groups whose names start with `VRToon` from [VRToon Shader Manager](https://kafuji.github.io/Sakura-Creative-Suite/en/addons/VRToon_Shader_Manager/) can be converted directly when connected to an active Material Output.

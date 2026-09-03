@@ -66,6 +66,11 @@ Before committing or amending, complete these steps in order:
 - Classify VRToon only when a shader group whose node-tree name starts with `VRToon` is connected to the active Material Output. Do not classify an unused group elsewhere in the material as the source shader.
 - VRToon `Alpha` and `Material Alpha` must be combined through the shared CyclesTooner opacity flow.
 - Conversion cleanup should remove unused source shader groups and disconnected nodes created only for the old shader path.
+- MToon and MMD conversion must preserve the upstream nodes that provide base-texture UV transformations and linked normals.
+- Conversion cleanup must preserve every path connected to any Material Output input, including Surface, Volume, and Displacement.
+- Do not delete an unknown disconnected node merely because it is unreachable from Material Output. Collect unknown top-level nodes and node groups in the `CyclesTooner Preserved Nodes` frame.
+- Remove dangling Reroute nodes, fully unlinked Mix Shader and Add Shader nodes, and empty Frames during converted-node cleanup. Preserve shader combiners that retain any input or output connection.
+- Arrange converted material nodes by their connection depth. Keep reachable nodes outside legacy source Frames and consolidate preserved disconnected components without breaking their internal links.
 
 ## Outline Rules
 

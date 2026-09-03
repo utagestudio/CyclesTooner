@@ -15,8 +15,10 @@ CyclesToonerは、Principled BSDF、MMD（mmd_shader）、VRM（MToon）、VRToo
     *   VRToon Shader Manager の出力接続済み `VRToon*` シェーダーグループも直接変換できます。
     *   VRToonアウトラインがある場合、頂点ごとの太さを `CT_Outline` へ、基準Thicknessをモデルルートへ退避してから旧Solidifyとアウトライン材を削除します。アウトライン自体は **Add Outline** を押すまで作成されません。
     *   `Base Color` は、接続ノードがある場合は接続を維持し、未接続の場合はソケットに設定された色を引き継ぎます。`Normal` の接続も維持されます。
+    *   MToon / MMDでは、ベーステクスチャのUV変換とNormal Mapの上流ノードも可能な範囲で維持します。
     *   透明度調整用のノードを自動で追加します（Mix Shader + Transparent BSDF）。
     *   `Alpha` に接続がある場合、Alpha入力とOpacity設定の両方を反映します。
+    *   変換後のノードを接続順に自動整列します。用途を確定できない未接続ノードは `CyclesTooner Preserved Nodes` Frameへまとめ、孤立したReroute、完全未接続のMix/Add Shader、空Frameは削除します。
     *   実行時、レンダリングエンジンが EEVEE の場合は自動的に **Cycles** に切り替わります。
 *   **Revert**:
     *   CyclesToonerによって変換されたマテリアルを、元の `Principled BSDF` に戻します。
@@ -87,12 +89,12 @@ Cyclesレンダラーでのトゥーン表現に最適な「背面法」を用�
 #### MMDShaderDev からの直接変換
 MMD Tools で読み込まれた `mmd_shader` マテリアルは、**Convert** ボタンで直接 CyclesTooner 形式へ変換できます。
 
-`mmd_base_tex` の画像色とAlpha、MMDマテリアルのDiffuse Colorを可能な範囲で引き継ぎます。MMDマテリアルのAlphaはCyclesToonerの **Opacity** 初期値として統合されます。変換時に `MMDShaderDev` 用ノードは削除されるため、**Revert** は簡易的な `Principled BSDF` への復元になり、元のMMDShaderDev構成は復元しません。Sphere/Toon texture合成の完全再現も対象外です。
+`mmd_base_tex` の画像色とAlpha、UV変換、Normal接続、MMDマテリアルのDiffuse Colorを可能な範囲で引き継ぎます。MMDマテリアルのAlphaはCyclesToonerの **Opacity** 初期値として統合されます。変換時に `MMDShaderDev` 用ノードは削除されるため、**Revert** は簡易的な `Principled BSDF` への復元になり、元のMMDShaderDev構成は復元しません。Sphere/Toon texture合成の完全再現も対象外です。
 
 #### MToon からの直接変換
 VRM Add-on for Blender で読み込まれた `MToon` マテリアルは、**Convert** ボタンで直接 CyclesTooner 形式へ変換できます。
 
-ベーステクスチャの画像色とAlpha、MToonのBase Colorを可能な範囲で引き継ぎます。MToonのAlphaはCyclesToonerの **Opacity** 初期値として統合されます。変換時に `MToon` 用ノードは削除されるため、**Revert** は簡易的な `Principled BSDF` への復元になり、元のMToon構成は復元しません。Shade Color、MatCap、Rim、Emission、OutlineなどのMToon固有表現の完全再現は対象外です。
+ベーステクスチャの画像色とAlpha、UV変換、Normal接続、MToonのBase Colorを可能な範囲で引き継ぎます。MToonのAlphaはCyclesToonerの **Opacity** 初期値として統合されます。変換時に `MToon` 用ノードは削除されるため、**Revert** は簡易的な `Principled BSDF` への復元になり、元のMToon構成は復元しません。Shade Color、MatCap、Rim、Emission、OutlineなどのMToon固有表現の完全再現は対象外です。
 
 #### VRToon からの直接変換
 [VRToon Shader Manager](https://kafuji.github.io/Sakura-Creative-Suite/ja/addons/VRToon_Shader_Manager/) の `VRToon` で始まるシェーダーグループが有効なMaterial Outputへ接続されている場合、**Convert** ボタンで直接 CyclesTooner 形式へ変換できます。
