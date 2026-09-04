@@ -363,6 +363,89 @@ code {
   font-size: 1.08rem;
 }
 
+.updates-section {
+  padding-top: clamp(3rem, 6vw, 5rem);
+}
+
+.updates-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.updates-heading h2 {
+  margin-bottom: 0;
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
+}
+
+.update-list {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(18, 24, 33, 0.62);
+}
+
+.update-entry + .update-entry {
+  border-top: 1px solid var(--line);
+}
+
+.update-entry summary {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.update-entry summary::-webkit-details-marker {
+  display: none;
+}
+
+.update-entry summary::after {
+  content: "+";
+  grid-column: 4;
+  color: var(--muted);
+  font-size: 1.2rem;
+}
+
+.update-entry[open] summary::after {
+  content: "−";
+}
+
+.update-entry summary:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.update-version {
+  color: var(--lime);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.update-entry summary strong {
+  font-size: 0.98rem;
+}
+
+.update-entry time {
+  color: var(--muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.update-entry ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0 3.5rem 1rem 7.6rem;
+  color: var(--muted);
+  font-size: 0.91rem;
+}
+
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -612,6 +695,36 @@ code {
   .requirements dl > div {
     grid-template-columns: 1fr;
     gap: 0.25rem;
+  }
+
+  .updates-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .update-entry summary {
+    grid-template-columns: auto 1fr auto;
+    gap: 0.45rem 0.75rem;
+  }
+
+  .update-entry summary strong {
+    grid-column: 1 / 3;
+    grid-row: 2;
+  }
+
+  .update-entry time {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .update-entry summary::after {
+    grid-column: 3;
+    grid-row: 1 / 3;
+  }
+
+  .update-entry ul {
+    padding: 0 2.5rem 1rem 2.2rem;
   }
 
   .site-footer {
