@@ -380,12 +380,6 @@ code {
   font-size: clamp(1.7rem, 3vw, 2.6rem);
 }
 
-.updates-heading a {
-  color: var(--muted);
-  font-size: 0.86rem;
-  text-underline-offset: 0.2em;
-}
-
 .update-list {
   overflow: hidden;
   border: 1px solid var(--line);
