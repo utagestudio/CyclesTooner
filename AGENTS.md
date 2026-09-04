@@ -36,6 +36,7 @@
 - Add one entry for the final release version, with the release date, a concise title, and a detailed list summarizing the user-visible fixes and features developed on that branch.
 - Derive the entry from the branch's actual commits and resulting behavior. Consolidate related implementation commits into clear release notes instead of copying commit subjects verbatim.
 - Keep the English and Japanese entries equivalent, place the newest release first, and leave only the newest entry expanded by default.
+- Keep no more than six release entries on each landing page. When adding a seventh entry, remove the oldest entry from both the English and Japanese pages so that the two histories remain aligned.
 - Documentation-only or GitHub Pages-only branches do not require a release-history entry unless they are themselves part of an add-on release.
 
 ## Commit Checklist
