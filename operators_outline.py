@@ -220,6 +220,27 @@ def find_outline_object(target_collection):
     return bpy.data.objects.get(get_outline_object_name(target_collection))
 
 
+def is_cycles_tooner_outline_object(obj):
+    if not obj or obj.type != 'MESH':
+        return False
+
+    source_name = obj.get(OUTLINE_SOURCE_PROPERTY)
+    root_name = obj.get(OUTLINE_ROOT_PROPERTY)
+    if not source_name or not root_name:
+        return False
+
+    source_collection = bpy.data.collections.get(source_name)
+    if not source_collection:
+        return False
+    if source_collection.get(OUTLINE_ROOT_PROPERTY) != root_name:
+        return False
+    if source_collection.get(OUTLINE_OBJECT_PROPERTY) != obj.name:
+        return False
+
+    modifier = obj.modifiers.get(OUTLINE_MODIFIER_NAME)
+    return bool(modifier and modifier.type == 'NODES' and modifier.node_group)
+
+
 def collection_contains_object(collection, obj):
     return any(candidate == obj for candidate in collection.all_objects)
 
@@ -1073,14 +1094,14 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
         
         # 判定1: アクティブオブジェクトがアウトラインならそれを削除候補へ
         active_obj = context.active_object
-        if active_obj and active_obj.name.endswith("_Outline"):
-             objects_to_delete.append(active_obj)
+        if is_cycles_tooner_outline_object(active_obj):
+            objects_to_delete.append(active_obj)
 
         if not objects_to_delete and context.selected_objects:
             target_collection = resolve_outline_target_collection(context, list(context.selected_objects))
             if target_collection:
                 target_obj = find_outline_object(target_collection)
-                if target_obj:
+                if is_cycles_tooner_outline_object(target_obj):
                     objects_to_delete.append(target_obj)
         
         # 判定2: アウトラインの選択がなければ、選択コレクションから探す
@@ -1088,7 +1109,7 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
             coll_name = context.collection.name
             target_name = f"{coll_name}_Outline"
             target_obj = bpy.data.objects.get(target_name)
-            if target_obj:
+            if is_cycles_tooner_outline_object(target_obj):
                 objects_to_delete.append(target_obj)
         
         if not objects_to_delete:
