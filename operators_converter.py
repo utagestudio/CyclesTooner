@@ -576,6 +576,19 @@ def collect_mtoon_shader_nodes_to_remove(nodes, protected_node_names=()):
     return nodes_to_remove
 
 
+def collect_vrtoon_shader_nodes_to_remove(nodes, protected_node_names=()):
+    """Collect only nodes that are demonstrably part of an old VRToon path."""
+    nodes_to_remove = []
+    for node in nodes:
+        if node.name in protected_node_names:
+            continue
+        if is_vrtoon_shader_node(node) or node_name_contains(node, ("vrtoon",)):
+            nodes_to_remove.append(node)
+        elif node.type == 'FRAME' and node.label.lower().startswith("vrtoon"):
+            nodes_to_remove.append(node)
+    return nodes_to_remove
+
+
 def is_mmd_shader_material(mat, root_node=None):
     if not mat.use_nodes or not mat.node_tree:
         return False
@@ -1255,6 +1268,11 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "VRToon"
         nodes.remove(vrtoon_node)
         repair_cycles_tooner_output(mat)
+        protected_node_names = collect_reachable_nodes_from_output(output_node)
+        remove_nodes_if_present(
+            nodes,
+            collect_vrtoon_shader_nodes_to_remove(nodes, protected_node_names),
+        )
         organize_converted_material_nodes(mat)
         return True
 
