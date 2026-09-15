@@ -53,7 +53,7 @@ Generates outline meshes using the "inverted hull" method via Geometry Nodes, id
 
 ## Installation
 
-### From the Extension Repository (Recommended, Blender 4.2+)
+### From the Extension Repository (Recommended, Blender 4.5 LTS+)
 
 Registering the remote repository lets Blender detect updates on startup so you can update with one click.
 
@@ -117,7 +117,7 @@ When a `vrt_outline` setup is present, **Convert** stores `vrt_outline_thick × 
 6.  To remove it, select either the outline object or the original collection and click **Remove Outline**.
 
 ## Requirements
-*   Blender 5.0 (Recommended) / 4.2+
+*   Blender 5.2 LTS (Recommended) / 4.5 LTS+
 *   Recommended Renderer: **Cycles** (The outline feature is optimized for Cycles)
 
 ## Development
