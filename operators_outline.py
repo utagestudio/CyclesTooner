@@ -10,6 +10,7 @@ OUTLINE_OBJECT_PROPERTY = "cyclestooner_outline_object"
 OUTLINE_MODIFIER_NAME = "ToonOutlineGN"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
+OUTLINE_NODE_GROUP_PROPERTY = "cyclestooner_outline_node_group"
 OUTLINE_EMISSION_NODE_NAME = "CyclesTooner_Outline_Emission"
 DEFAULT_OUTLINE_COLOR = (0.098, 0.035, 0.023, 1.0)
 DEFAULT_OUTLINE_THICKNESS = 0.002
@@ -300,12 +301,22 @@ def find_outline_collection_for_object(obj, preferred_collection=None):
 
 def find_outline_modifier(outline_obj):
     mod = outline_obj.modifiers.get(OUTLINE_MODIFIER_NAME)
-    if mod and mod.type == 'NODES' and mod.node_group:
-        return mod
-    for candidate in outline_obj.modifiers:
-        if candidate.type == 'NODES' and candidate.node_group:
-            return candidate
-    return None
+    if not mod or mod.type != 'NODES' or not mod.node_group:
+        return None
+
+    group = mod.node_group
+    root_name = outline_obj.get(OUTLINE_ROOT_PROPERTY)
+    expected_group_name = get_outline_node_group_name(root_name) if root_name else None
+    if not group.get(OUTLINE_NODE_GROUP_PROPERTY) and group.name != expected_group_name:
+        return None
+    if not get_node_group_input_identifier(group, 'Collection'):
+        return None
+    if not (
+        get_node_group_input_identifier(group, 'Thickness')
+        or get_node_group_input_identifier(group, 'Value')
+    ):
+        return None
+    return mod
 
 
 def get_node_group_input_identifier(group, name):
@@ -805,6 +816,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
             bpy.data.node_groups.remove(old_group)
             
         group = bpy.data.node_groups.new(name, 'GeometryNodeTree')
+        group[OUTLINE_NODE_GROUP_PROPERTY] = True
         
         # --- インターフェースの作成 (Blender 4.0+ API) ---
         # Collection Input
