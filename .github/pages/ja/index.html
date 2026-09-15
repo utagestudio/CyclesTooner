@@ -103,6 +103,15 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.25.1</span><strong>Opacityとアウトラインの安定性を向上</strong><time datetime="2026-09-15">2026年9月15日</time></summary>
+          <ul>
+            <li>マテリアルをToon BSDFへ変換する際、設定済みで未接続のPrincipled Alphaを保持するようにしました。</li>
+            <li>ユーザー作成のオブジェクトやGeometry Nodesモディファイアを、生成済みアウトラインとして誤認しないようにしました。</li>
+            <li>viewport上のコレクション表示状態にかかわらず、レンダー表示されるメッシュをアウトラインの対象に含め、変位を法線方向のみにしました。</li>
+            <li>不明な切断済みユーザーノードを保持しながら、不要になったVRToon固有のシェーダーノードを削除するようにしました。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.25.0</span><strong>Blender LTS対応を更新</strong><time datetime="2026-09-15">2026年9月15日</time></summary>
           <ul>
             <li>Blender 4.2 LTSのサポート終了に伴い、最低対応バージョンをBlender 4.5 LTSへ引き上げました。</li>
@@ -138,12 +147,6 @@
             <li>Principled Base Colorが未接続の場合、設定されている色を引き継ぐようにしました。</li>
             <li>CT_Outline頂点グループがない場合、初期ウェイト0.5で自動作成するようにしました。</li>
             <li>内部用アウトラインSourceコレクションをアクティブなView Layerから除外するようにしました。</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.23.1</span><strong>アウトライン表示状態を修正</strong><time datetime="2026-08-22">2026年8月22日</time></summary>
-          <ul>
-            <li>アウトラインの作成・更新時に、無効化されたコレクションの状態を保持するようにしました。</li>
           </ul>
         </details>
       </div>
