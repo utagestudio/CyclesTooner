@@ -501,8 +501,6 @@ def is_outline_excluded_object(obj):
         return True
     if obj.hide_render:
         return True
-    if is_disabled_by_object_collections(obj):
-        return True
     return False
 
 
