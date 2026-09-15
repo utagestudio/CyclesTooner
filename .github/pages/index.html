@@ -25,7 +25,7 @@
     "name": "CyclesTooner",
     "applicationCategory": "DesignApplication",
     "operatingSystem": "Windows, macOS, Linux",
-    "softwareRequirements": "Blender 4.2 or later.",
+    "softwareRequirements": "Blender 4.5 LTS or later.",
     "description": "CyclesTooner converts Principled BSDF, MMDShaderDev, VRM MToon, and VRToon materials to Toon BSDF and generates inverted-hull outlines for Cycles rendering.",
     "url": "https://utagestudio.github.io/CyclesTooner/",
     "downloadUrl": "https://utagestudio.github.io/CyclesTooner/index.json",
@@ -103,6 +103,13 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.25.0</span><strong>Updated Blender LTS support</strong><time datetime="2026-09-15">September 15, 2026</time></summary>
+          <ul>
+            <li>Raises the minimum supported version to Blender 4.5 LTS after Blender 4.2 LTS reached end of life.</li>
+            <li>Recommends Blender 5.2 LTS across the extension metadata, documentation, and website.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.24.1</span><strong>More reliable material conversion</strong><time datetime="2026-09-03">September 3, 2026</time></summary>
           <ul>
             <li>Preserves MToon base-color multiplication, texture UV chains, and linked normals from MToon and MMD materials.</li>
@@ -137,14 +144,6 @@
           <summary><span class="update-version">v1.23.1</span><strong>Outline visibility fix</strong><time datetime="2026-08-22">August 22, 2026</time></summary>
           <ul>
             <li>Preserves disabled collection state while building and refreshing outlines.</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.23.0</span><strong>Expanded outline controls</strong><time datetime="2026-08-21">August 21, 2026</time></summary>
-          <ul>
-            <li>Adds outline color and thickness controls.</li>
-            <li>Improves Geometry Nodes compatibility with Blender 5.2.</li>
-            <li>Filters outline sources by render visibility and normalizes Material Output targets during conversion.</li>
           </ul>
         </details>
       </div>
@@ -273,7 +272,7 @@
 
     <section id="install" class="section install-section">
       <div class="section-heading">
-        <p class="eyebrow">Blender 4.2+</p>
+        <p class="eyebrow">Blender 4.5 LTS+</p>
         <h2>Install from the Extension Repository.</h2>
       </div>
       <div class="install-layout">
@@ -301,7 +300,7 @@
       <dl>
         <div>
           <dt>Blender</dt>
-          <dd>Blender 5.0 recommended / 4.2+</dd>
+          <dd>Blender 5.2 LTS recommended / 4.5 LTS+</dd>
         </div>
         <div>
           <dt>Renderer</dt>

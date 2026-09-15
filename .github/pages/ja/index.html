@@ -25,7 +25,7 @@
     "name": "CyclesTooner",
     "applicationCategory": "DesignApplication",
     "operatingSystem": "Windows, macOS, Linux",
-    "softwareRequirements": "Blender 4.2以降。",
+    "softwareRequirements": "Blender 4.5 LTS以降。",
     "description": "CyclesToonerは、Principled BSDF、MMDShaderDev、VRM MToon、VRToonマテリアルをToon BSDFへ変換し、Cycles向けの背面法アウトラインを生成するBlenderアドオンです。",
     "url": "https://utagestudio.github.io/CyclesTooner/ja/",
     "downloadUrl": "https://utagestudio.github.io/CyclesTooner/index.json",
@@ -103,6 +103,13 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.25.0</span><strong>Blender LTS対応を更新</strong><time datetime="2026-09-15">2026年9月15日</time></summary>
+          <ul>
+            <li>Blender 4.2 LTSのサポート終了に伴い、最低対応バージョンをBlender 4.5 LTSへ引き上げました。</li>
+            <li>拡張機能メタデータ、ドキュメント、Webサイトの推奨環境をBlender 5.2 LTSへ更新しました。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.24.1</span><strong>マテリアル変換の安定性を向上</strong><time datetime="2026-09-03">2026年9月3日</time></summary>
           <ul>
             <li>MToonのベースカラー乗算、テクスチャのUV経路、MToon・MMDのNormal接続を保持するようにしました。</li>
@@ -137,14 +144,6 @@
           <summary><span class="update-version">v1.23.1</span><strong>アウトライン表示状態を修正</strong><time datetime="2026-08-22">2026年8月22日</time></summary>
           <ul>
             <li>アウトラインの作成・更新時に、無効化されたコレクションの状態を保持するようにしました。</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.23.0</span><strong>アウトライン調整機能を拡張</strong><time datetime="2026-08-21">2026年8月21日</time></summary>
-          <ul>
-            <li>アウトラインの色と太さを調整する機能を追加しました。</li>
-            <li>Blender 5.2でのGeometry Nodes互換性を改善しました。</li>
-            <li>レンダー表示状態によるソース選別と、変換時のMaterial Outputターゲット正規化を追加しました。</li>
           </ul>
         </details>
       </div>
@@ -272,7 +271,7 @@
 
     <section id="install" class="section install-section">
       <div class="section-heading">
-        <p class="eyebrow">Blender 4.2以降</p>
+        <p class="eyebrow">Blender 4.5 LTS以降</p>
         <h2>拡張機能リポジトリからインストール。</h2>
       </div>
       <div class="install-layout">
@@ -300,7 +299,7 @@
       <dl>
         <div>
           <dt>Blender</dt>
-          <dd>Blender 5.0推奨 / 4.2以上</dd>
+          <dd>Blender 5.2 LTS推奨 / 4.5 LTS以上</dd>
         </div>
         <div>
           <dt>Renderer</dt>
