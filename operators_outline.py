@@ -238,8 +238,7 @@ def is_cycles_tooner_outline_object(obj):
     if source_collection.get(OUTLINE_OBJECT_PROPERTY) != obj.name:
         return False
 
-    modifier = obj.modifiers.get(OUTLINE_MODIFIER_NAME)
-    return bool(modifier and modifier.type == 'NODES' and modifier.node_group)
+    return find_outline_modifier(obj) is not None
 
 
 def collection_contains_object(collection, obj):
