@@ -1154,7 +1154,12 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
             if alpha_source is None and alpha_input and hasattr(alpha_input, 'default_value')
             else 1.0
         )
-        opacity = get_source_opacity(mat, alpha_value)
+        existing_opacity = mat.get(CYCLES_TOONER_OPACITY_PROP)
+        opacity = (
+            existing_opacity
+            if existing_opacity is not None and abs(existing_opacity - 1.0) > 0.0001
+            else alpha_value
+        )
         setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=alpha_source, opacity=opacity)
         
         # 古いノードを削除
