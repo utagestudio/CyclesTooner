@@ -873,12 +873,6 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         vec_mul.operation = 'MULTIPLY'
         vec_mul.location = (-200, -300)
         
-        # Add (Offset + 0.0001) -> Vector Math
-        vec_add = nodes.new('ShaderNodeVectorMath')
-        vec_add.operation = 'ADD'
-        vec_add.location = (-100, -300)
-        vec_add.inputs[1].default_value = (0.0001, 0.0001, 0.0001)
-        
         # --- 接続 ---
         def get_socket(node, name, is_output=True):
             collection = node.outputs if is_output else node.inputs
@@ -913,11 +907,8 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         links.new(normal.outputs['Normal'], vec_mul.inputs[0])
         links.new(math_mul.outputs['Value'], vec_mul.inputs[1])
         
-        # Add small offset
-        links.new(vec_mul.outputs['Vector'], vec_add.inputs[0])
-        
         # Result -> Set Position Offset
-        links.new(vec_add.outputs['Vector'], set_pos.inputs['Offset'])
+        links.new(vec_mul.outputs['Vector'], set_pos.inputs['Offset'])
         
         # Set Position -> Set Material
         links.new(set_pos.outputs['Geometry'], set_mat.inputs['Geometry'])
