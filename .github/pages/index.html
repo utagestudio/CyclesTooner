@@ -103,6 +103,15 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.25.2</span><strong>Reliable opacity and safer outlines</strong><time datetime="2026-09-15">September 15, 2026</time></summary>
+          <ul>
+            <li>Preserves configured, unlinked Principled Alpha values when converting materials to Toon BSDF.</li>
+            <li>Protects user objects and Geometry Nodes modifiers from being mistaken for generated outlines.</li>
+            <li>Includes render-visible meshes in outline sources regardless of viewport collection visibility, and keeps displacement normal-directed.</li>
+            <li>Removes obsolete VRToon-specific shader nodes while retaining unknown disconnected user nodes.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.25.0</span><strong>Updated Blender LTS support</strong><time datetime="2026-09-15">September 15, 2026</time></summary>
           <ul>
             <li>Raises the minimum supported version to Blender 4.5 LTS after Blender 4.2 LTS reached end of life.</li>
@@ -138,12 +147,6 @@
             <li>Copies the configured Principled Base Color when it is not linked.</li>
             <li>Creates missing CT_Outline vertex groups with a default weight of 0.5.</li>
             <li>Excludes internal outline source collections from the active View Layer.</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.23.1</span><strong>Outline visibility fix</strong><time datetime="2026-08-22">August 22, 2026</time></summary>
-          <ul>
-            <li>Preserves disabled collection state while building and refreshing outlines.</li>
           </ul>
         </details>
       </div>

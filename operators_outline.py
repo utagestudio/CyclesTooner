@@ -10,6 +10,7 @@ OUTLINE_OBJECT_PROPERTY = "cyclestooner_outline_object"
 OUTLINE_MODIFIER_NAME = "ToonOutlineGN"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
+OUTLINE_NODE_GROUP_PROPERTY = "cyclestooner_outline_node_group"
 OUTLINE_EMISSION_NODE_NAME = "CyclesTooner_Outline_Emission"
 DEFAULT_OUTLINE_COLOR = (0.098, 0.035, 0.023, 1.0)
 DEFAULT_OUTLINE_THICKNESS = 0.002
@@ -220,6 +221,26 @@ def find_outline_object(target_collection):
     return bpy.data.objects.get(get_outline_object_name(target_collection))
 
 
+def is_cycles_tooner_outline_object(obj):
+    if not obj or obj.type != 'MESH':
+        return False
+
+    source_name = obj.get(OUTLINE_SOURCE_PROPERTY)
+    root_name = obj.get(OUTLINE_ROOT_PROPERTY)
+    if not source_name or not root_name:
+        return False
+
+    source_collection = bpy.data.collections.get(source_name)
+    if not source_collection:
+        return False
+    if source_collection.get(OUTLINE_ROOT_PROPERTY) != root_name:
+        return False
+    if source_collection.get(OUTLINE_OBJECT_PROPERTY) != obj.name:
+        return False
+
+    return find_outline_modifier(obj) is not None
+
+
 def collection_contains_object(collection, obj):
     return any(candidate == obj for candidate in collection.all_objects)
 
@@ -279,12 +300,22 @@ def find_outline_collection_for_object(obj, preferred_collection=None):
 
 def find_outline_modifier(outline_obj):
     mod = outline_obj.modifiers.get(OUTLINE_MODIFIER_NAME)
-    if mod and mod.type == 'NODES' and mod.node_group:
-        return mod
-    for candidate in outline_obj.modifiers:
-        if candidate.type == 'NODES' and candidate.node_group:
-            return candidate
-    return None
+    if not mod or mod.type != 'NODES' or not mod.node_group:
+        return None
+
+    group = mod.node_group
+    root_name = outline_obj.get(OUTLINE_ROOT_PROPERTY)
+    expected_group_name = get_outline_node_group_name(root_name) if root_name else None
+    if not group.get(OUTLINE_NODE_GROUP_PROPERTY) and group.name != expected_group_name:
+        return None
+    if not get_node_group_input_identifier(group, 'Collection'):
+        return None
+    if not (
+        get_node_group_input_identifier(group, 'Thickness')
+        or get_node_group_input_identifier(group, 'Value')
+    ):
+        return None
+    return mod
 
 
 def get_node_group_input_identifier(group, name):
@@ -479,8 +510,6 @@ def is_outline_excluded_object(obj):
     if obj.name.endswith("_Outline"):
         return True
     if obj.hide_render:
-        return True
-    if is_disabled_by_object_collections(obj):
         return True
     return False
 
@@ -786,6 +815,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
             bpy.data.node_groups.remove(old_group)
             
         group = bpy.data.node_groups.new(name, 'GeometryNodeTree')
+        group[OUTLINE_NODE_GROUP_PROPERTY] = True
         
         # --- インターフェースの作成 (Blender 4.0+ API) ---
         # Collection Input
@@ -854,12 +884,6 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         vec_mul.operation = 'MULTIPLY'
         vec_mul.location = (-200, -300)
         
-        # Add (Offset + 0.0001) -> Vector Math
-        vec_add = nodes.new('ShaderNodeVectorMath')
-        vec_add.operation = 'ADD'
-        vec_add.location = (-100, -300)
-        vec_add.inputs[1].default_value = (0.0001, 0.0001, 0.0001)
-        
         # --- 接続 ---
         def get_socket(node, name, is_output=True):
             collection = node.outputs if is_output else node.inputs
@@ -894,11 +918,8 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         links.new(normal.outputs['Normal'], vec_mul.inputs[0])
         links.new(math_mul.outputs['Value'], vec_mul.inputs[1])
         
-        # Add small offset
-        links.new(vec_mul.outputs['Vector'], vec_add.inputs[0])
-        
         # Result -> Set Position Offset
-        links.new(vec_add.outputs['Vector'], set_pos.inputs['Offset'])
+        links.new(vec_mul.outputs['Vector'], set_pos.inputs['Offset'])
         
         # Set Position -> Set Material
         links.new(set_pos.outputs['Geometry'], set_mat.inputs['Geometry'])
@@ -1073,14 +1094,14 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
         
         # 判定1: アクティブオブジェクトがアウトラインならそれを削除候補へ
         active_obj = context.active_object
-        if active_obj and active_obj.name.endswith("_Outline"):
-             objects_to_delete.append(active_obj)
+        if is_cycles_tooner_outline_object(active_obj):
+            objects_to_delete.append(active_obj)
 
         if not objects_to_delete and context.selected_objects:
             target_collection = resolve_outline_target_collection(context, list(context.selected_objects))
             if target_collection:
                 target_obj = find_outline_object(target_collection)
-                if target_obj:
+                if is_cycles_tooner_outline_object(target_obj):
                     objects_to_delete.append(target_obj)
         
         # 判定2: アウトラインの選択がなければ、選択コレクションから探す
@@ -1088,7 +1109,7 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
             coll_name = context.collection.name
             target_name = f"{coll_name}_Outline"
             target_obj = bpy.data.objects.get(target_name)
-            if target_obj:
+            if is_cycles_tooner_outline_object(target_obj):
                 objects_to_delete.append(target_obj)
         
         if not objects_to_delete:

@@ -576,6 +576,19 @@ def collect_mtoon_shader_nodes_to_remove(nodes, protected_node_names=()):
     return nodes_to_remove
 
 
+def collect_vrtoon_shader_nodes_to_remove(nodes, protected_node_names=()):
+    """Collect only nodes that are demonstrably part of an old VRToon path."""
+    nodes_to_remove = []
+    for node in nodes:
+        if node.name in protected_node_names:
+            continue
+        if is_vrtoon_shader_node(node) or node_name_contains(node, ("vrtoon",)):
+            nodes_to_remove.append(node)
+        elif node.type == 'FRAME' and node.label.lower().startswith("vrtoon"):
+            nodes_to_remove.append(node)
+    return nodes_to_remove
+
+
 def is_mmd_shader_material(mat, root_node=None):
     if not mat.use_nodes or not mat.node_tree:
         return False
@@ -1135,7 +1148,18 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
             links.new(source, toon_node.inputs['Normal'])
             
         alpha_source = get_alpha_source_from_principled(principled_node)
-        opacity = mat.get(CYCLES_TOONER_OPACITY_PROP, getattr(mat, "cyclestooner_opacity", 1.0))
+        alpha_input = principled_node.inputs.get('Alpha')
+        alpha_value = (
+            clamp_opacity(alpha_input.default_value)
+            if alpha_source is None and alpha_input and hasattr(alpha_input, 'default_value')
+            else 1.0
+        )
+        existing_opacity = mat.get(CYCLES_TOONER_OPACITY_PROP)
+        opacity = (
+            existing_opacity
+            if existing_opacity is not None and abs(existing_opacity - 1.0) > 0.0001
+            else alpha_value
+        )
         setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=alpha_source, opacity=opacity)
         
         # 古いノードを削除
@@ -1249,6 +1273,11 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "VRToon"
         nodes.remove(vrtoon_node)
         repair_cycles_tooner_output(mat)
+        protected_node_names = collect_reachable_nodes_from_output(output_node)
+        remove_nodes_if_present(
+            nodes,
+            collect_vrtoon_shader_nodes_to_remove(nodes, protected_node_names),
+        )
         organize_converted_material_nodes(mat)
         return True
 
