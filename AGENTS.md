@@ -9,6 +9,7 @@
 - Skip the automatic commit only when there is a concrete reason, such as incomplete or failing work, unresolved user-owned changes that cannot be separated safely, or a required user decision. State the reason when work is left uncommitted.
 - Preserve existing author, maintainer, and contributor attribution unless the task explicitly includes an attribution change.
 - AI systems, coding agents, and tools may be credited as authors or contributors only when the user explicitly requests that attribution. Preserve the existing attribution unless the request specifies a change.
+- When Codex changes add-on program files, include `Co-authored-by: Codex <noreply@openai.com>` in the commit message. Keep the existing Git author and committer attribution unchanged.
 - If `AGENTS.local.md` exists, follow it for machine-specific tooling and connection details. Never commit that file.
 
 ## Versioning
