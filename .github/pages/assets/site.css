@@ -157,7 +157,6 @@ h3 {
   line-height: 1.25;
 }
 
-:lang(ja) h1,
 :lang(ja) h2,
 :lang(ja) h3,
 :lang(ja) .eyebrow,
@@ -167,6 +166,19 @@ h3 {
   overflow-wrap: normal;
   text-wrap: balance;
   word-break: auto-phrase;
+}
+
+:lang(ja) .hero h1 {
+  font-size: clamp(3rem, 4.5vw, 4.8rem);
+  line-height: 1.08;
+  line-break: strict;
+  overflow-wrap: normal;
+  text-wrap: balance;
+  word-break: normal;
+}
+
+:lang(ja) .hero-heading-phrase {
+  white-space: nowrap;
 }
 
 .hero-lede {
