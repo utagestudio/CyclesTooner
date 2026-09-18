@@ -3,6 +3,7 @@
 ## Project Rules
 
 - This is a Blender add-on for Cycles toon rendering. Keep changes scoped to the add-on files unless the user explicitly asks for repository or release automation work.
+- Start every implementation task on a new topic branch; do not make task commits directly on `main`. Name the branch for the work, and keep `main` aligned with its upstream until the work is intentionally merged.
 - Do not commit `_temp/`, `__pycache__/`, screenshots, or other local verification artifacts.
 - Prefer small, behavior-focused commits. Commit messages should use a concise title, a blank second line, then details from the third line onward.
 - Unless the user explicitly asks to leave work uncommitted, commit completed work before reporting completion.

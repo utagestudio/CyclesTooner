@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CyclesTooner - Blender Toon Shader Assistant for Cycles</title>
-  <meta name="description" content="Convert Principled BSDF, MMDShaderDev, VRM MToon, and VRToon materials to Toon BSDF, then generate clean Geometry Nodes outlines for Cycles toon rendering in Blender.">
+  <meta name="description" content="Convert Principled BSDF, MMDShaderDev, VRM MToon, VRToon, and Unitypackage Importer UnityToon materials to Toon BSDF, then generate clean Geometry Nodes outlines for Cycles toon rendering in Blender.">
   <link rel="canonical" href="https://utagestudio.github.io/CyclesTooner/">
   <link rel="alternate" hreflang="en" href="https://utagestudio.github.io/CyclesTooner/">
   <link rel="alternate" hreflang="ja" href="https://utagestudio.github.io/CyclesTooner/ja/">
@@ -12,11 +12,11 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://utagestudio.github.io/CyclesTooner/">
   <meta property="og:title" content="CyclesTooner - Blender Toon Shader Assistant for Cycles">
-  <meta property="og:description" content="Convert Principled, MMD, MToon, and VRToon materials to Toon BSDF and generate clean Cycles outlines with Geometry Nodes.">
+  <meta property="og:description" content="Convert Principled, MMD, MToon, VRToon, and UnityToon materials to Toon BSDF and generate clean Cycles outlines with Geometry Nodes.">
   <meta property="og:site_name" content="CyclesTooner">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CyclesTooner - Blender Toon Shader Assistant for Cycles">
-  <meta name="twitter:description" content="A Blender add-on for Cycles toon rendering, Toon BSDF conversion, MMD/VRM/VRToon material support, and Geometry Nodes outlines.">
+  <meta name="twitter:description" content="A Blender add-on for Cycles toon rendering, Toon BSDF conversion, MMD/VRM/VRToon/UnityToon material support, and Geometry Nodes outlines.">
   <link rel="stylesheet" href="assets/site.css">
   <script type="application/ld+json">
   {
@@ -26,7 +26,7 @@
     "applicationCategory": "DesignApplication",
     "operatingSystem": "Windows, macOS, Linux",
     "softwareRequirements": "Blender 4.5 LTS or later.",
-    "description": "CyclesTooner converts Principled BSDF, MMDShaderDev, VRM MToon, and VRToon materials to Toon BSDF and generates inverted-hull outlines for Cycles rendering.",
+    "description": "CyclesTooner converts Principled BSDF, MMDShaderDev, VRM MToon, VRToon, and Unitypackage Importer UnityToon materials to Toon BSDF and generates inverted-hull outlines for Cycles rendering.",
     "url": "https://utagestudio.github.io/CyclesTooner/",
     "downloadUrl": "https://utagestudio.github.io/CyclesTooner/index.json",
     "license": "https://www.gnu.org/licenses/gpl-3.0.en.html",
@@ -58,7 +58,8 @@
         <p class="eyebrow">Blender toon shader assistant for Cycles</p>
         <h1>Cycles toon rendering, without rebuilding every material.</h1>
         <p class="hero-lede">
-          Convert Principled BSDF, MMDShaderDev, VRM MToon, and VRToon materials to Toon BSDF,
+          Convert Principled BSDF, MMDShaderDev, VRM MToon, VRToon, and
+          <a href="https://utagestudio.github.io/unitypackage_loader/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a> UnityToon materials to Toon BSDF,
           then add clean inverted-hull outlines powered by Geometry Nodes.
         </p>
         <div class="hero-actions">
@@ -89,7 +90,7 @@
 
     <section class="proof-strip" aria-label="Key capabilities">
       <div><strong>Toon BSDF</strong><span>Cycles-ready material conversion</span></div>
-      <div><strong>MMD / VRM / VRToon</strong><span>Direct shader path support</span></div>
+      <div><strong>MMD / VRM / VRToon / UnityToon</strong><span>Direct shader path support</span></div>
       <div><strong>Geometry Nodes</strong><span>Inverted-hull outline generation</span></div>
       <div><strong>Blender Extensions</strong><span>Install and update from repository</span></div>
     </section>
@@ -103,6 +104,14 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.26.0</span><strong>Unitypackage Importer material conversion</strong><time datetime="2026-09-19">September 19, 2026</time></summary>
+          <ul>
+            <li>Converts Unitypackage Importer UnityToon v1 groups and labelled Unlit Emission materials directly to Toon BSDF.</li>
+            <li>Preserves linked base colors, UnityToon normals, and texture or constant alpha through CyclesTooner's shared opacity flow.</li>
+            <li>Keeps ordinary Emission materials untouched and links the feature overview to the Unitypackage Importer product pages.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.25.2</span><strong>Reliable opacity and safer outlines</strong><time datetime="2026-09-15">September 15, 2026</time></summary>
           <ul>
             <li>Preserves configured, unlinked Principled Alpha values when converting materials to Toon BSDF.</li>
@@ -141,14 +150,6 @@
             <li>Updates the website and documentation to show consistent Blender requirements.</li>
           </ul>
         </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.23.2</span><strong>Safer color and outline handling</strong><time datetime="2026-08-29">August 29, 2026</time></summary>
-          <ul>
-            <li>Copies the configured Principled Base Color when it is not linked.</li>
-            <li>Creates missing CT_Outline vertex groups with a default weight of 0.5.</li>
-            <li>Excludes internal outline source collections from the active View Layer.</li>
-          </ul>
-        </details>
       </div>
     </section>
 
@@ -164,13 +165,16 @@
             Replace Principled BSDF with Toon BSDF while preserving supported color, UV, normal, alpha,
             and opacity paths. The converted graph is arranged automatically, with meaningful disconnected
             nodes retained safely. VRToon conversion prepares its outline weights and Thickness for a later
-            Add Outline operation.
+            Add Outline operation. UnityToon v1 materials created by
+            <a href="https://utagestudio.github.io/unitypackage_loader/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a>
+            carry their base color, normal, and alpha paths into the Cycles-ready setup.
           </p>
           <ul>
             <li>Principled BSDF to Toon BSDF</li>
             <li>MMDShaderDev / mmd_shader conversion</li>
             <li>VRM MToon conversion</li>
             <li>VRToon conversion with outline weight preparation</li>
+            <li><a href="https://utagestudio.github.io/unitypackage_loader/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a> UnityToon v1 conversion</li>
           </ul>
         </article>
         <article class="feature-card">

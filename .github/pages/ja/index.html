@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン</title>
-  <meta name="description" content="Principled BSDF、MMDShaderDev、VRM MToon、VRToonマテリアルをToon BSDFへ変換し、Cycles向けのGeometry Nodesアウトラインを生成するBlenderアドオンです。">
+  <meta name="description" content="Principled BSDF、MMDShaderDev、VRM MToon、VRToon、Unitypackage ImporterのUnityToonマテリアルをToon BSDFへ変換し、Cycles向けのGeometry Nodesアウトラインを生成するBlenderアドオンです。">
   <link rel="canonical" href="https://utagestudio.github.io/CyclesTooner/ja/">
   <link rel="alternate" hreflang="en" href="https://utagestudio.github.io/CyclesTooner/">
   <link rel="alternate" hreflang="ja" href="https://utagestudio.github.io/CyclesTooner/ja/">
@@ -12,11 +12,11 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://utagestudio.github.io/CyclesTooner/ja/">
   <meta property="og:title" content="CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン">
-  <meta property="og:description" content="Toon BSDF変換、MMD/VRM/VRToon素材対応、Geometry Nodesアウトライン生成をまとめたBlenderアドオンです。">
+  <meta property="og:description" content="Toon BSDF変換、MMD/VRM/VRToon/UnityToon素材対応、Geometry Nodesアウトライン生成をまとめたBlenderアドオンです。">
   <meta property="og:site_name" content="CyclesTooner">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン">
-  <meta name="twitter:description" content="Cycles向けのToon BSDF変換、MMD/VRM/VRToon素材対応、Geometry Nodesアウトライン生成をまとめたBlenderアドオンです。">
+  <meta name="twitter:description" content="Cycles向けのToon BSDF変換、MMD/VRM/VRToon/UnityToon素材対応、Geometry Nodesアウトライン生成をまとめたBlenderアドオンです。">
   <link rel="stylesheet" href="../assets/site.css">
   <script type="application/ld+json">
   {
@@ -26,7 +26,7 @@
     "applicationCategory": "DesignApplication",
     "operatingSystem": "Windows, macOS, Linux",
     "softwareRequirements": "Blender 4.5 LTS以降。",
-    "description": "CyclesToonerは、Principled BSDF、MMDShaderDev、VRM MToon、VRToonマテリアルをToon BSDFへ変換し、Cycles向けの背面法アウトラインを生成するBlenderアドオンです。",
+    "description": "CyclesToonerは、Principled BSDF、MMDShaderDev、VRM MToon、VRToon、Unitypackage ImporterのUnityToonマテリアルをToon BSDFへ変換し、Cycles向けの背面法アウトラインを生成するBlenderアドオンです。",
     "url": "https://utagestudio.github.io/CyclesTooner/ja/",
     "downloadUrl": "https://utagestudio.github.io/CyclesTooner/index.json",
     "license": "https://www.gnu.org/licenses/gpl-3.0.ja.html",
@@ -58,7 +58,8 @@
         <p class="eyebrow">BlenderのCycles向けトゥーンシェーダー補助アドオン</p>
         <h1><span class="hero-heading-phrase">マテリアルを</span><wbr><span class="hero-heading-phrase">作り直さず、</span><wbr><span class="hero-heading-phrase">Cyclesで</span><wbr><span class="hero-heading-phrase">トゥーン表現へ。</span></h1>
         <p class="hero-lede">
-          Principled BSDF、MMDShaderDev、VRM MToon、VRToonをToon BSDFへ変換し、
+          Principled BSDF、MMDShaderDev、VRM MToon、VRToon、
+          <a href="https://utagestudio.github.io/unitypackage_loader/ja/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a> のUnityToonをToon BSDFへ変換し、
           Geometry Nodesによる背面法アウトラインもまとめて扱えます。
         </p>
         <div class="hero-actions">
@@ -89,7 +90,7 @@
 
     <section class="proof-strip" aria-label="主な機能">
       <div><strong>Toon BSDF</strong><span>Cycles向けマテリアル変換</span></div>
-      <div><strong>MMD / VRM / VRToon</strong><span>主要なインポート素材に対応</span></div>
+      <div><strong>MMD / VRM / VRToon / UnityToon</strong><span>主要なインポート素材に対応</span></div>
       <div><strong>Geometry Nodes</strong><span>背面法アウトライン生成</span></div>
       <div><strong>Blender Extensions</strong><span>リポジトリから導入・更新</span></div>
     </section>
@@ -103,6 +104,14 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.26.0</span><strong>Unitypackage Importerのマテリアル変換に対応</strong><time datetime="2026-09-19">2026年9月19日</time></summary>
+          <ul>
+            <li>Unitypackage ImporterのUnityToon v1グループと、Unlitラベル付きEmissionマテリアルをToon BSDFへ直接変換できるようにしました。</li>
+            <li>接続済みのベースカラー、UnityToonのNormal、テクスチャまたは定数のAlphaを、CyclesTooner共通のOpacityフローへ引き継ぎます。</li>
+            <li>通常のEmissionマテリアルは変換せず、機能紹介からUnitypackage Importerの紹介ページへ移動できるようにしました。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.25.2</span><strong>Opacityとアウトラインの安定性を向上</strong><time datetime="2026-09-15">2026年9月15日</time></summary>
           <ul>
             <li>マテリアルをToon BSDFへ変換する際、設定済みで未接続のPrincipled Alphaを保持するようにしました。</li>
@@ -141,14 +150,6 @@
             <li>Webサイトとドキュメントに記載するBlenderの動作要件を統一しました。</li>
           </ul>
         </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.23.2</span><strong>カラーとアウトライン処理を改善</strong><time datetime="2026-08-29">2026年8月29日</time></summary>
-          <ul>
-            <li>Principled Base Colorが未接続の場合、設定されている色を引き継ぐようにしました。</li>
-            <li>CT_Outline頂点グループがない場合、初期ウェイト0.5で自動作成するようにしました。</li>
-            <li>内部用アウトラインSourceコレクションをアクティブなView Layerから除外するようにしました。</li>
-          </ul>
-        </details>
       </div>
     </section>
 
@@ -164,12 +165,15 @@
             Principled BSDFをToon BSDFへ置き換え、対応するColor・UV・Normal・Alpha・Opacity経路を
             引き継ぎます。変換後のノードを自動整列し、意味のある未接続ノードは安全に退避します。
             VRToon変換時は、後からAdd Outlineで使うウェイトとThicknessも退避します。
+            <a href="https://utagestudio.github.io/unitypackage_loader/ja/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a>
+            が生成するUnityToon v1は、ベースカラー・Normal・Alphaの経路をCycles向けのセットアップへ引き継げます。
           </p>
           <ul>
             <li>Principled BSDFからToon BSDFへ変換</li>
             <li>MMDShaderDev / mmd_shaderを直接変換</li>
             <li>VRM MToonを直接変換</li>
             <li>VRToon変換時にアウトライン情報を退避</li>
+            <li><a href="https://utagestudio.github.io/unitypackage_loader/ja/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a> のUnityToon v1を直接変換</li>
           </ul>
         </article>
         <article class="feature-card">
