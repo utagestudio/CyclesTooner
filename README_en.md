@@ -1,6 +1,6 @@
 # CyclesTooner - Blender Toon Shader Assistant
 
-CyclesTooner is a Blender add-on that streamlines toon (cel-shaded) rendering by converting Principled BSDF, MMD (mmd_shader), VRM (MToon), and VRToon shaders into a Toon BSDF usable in Cycles.
+CyclesTooner is a Blender add-on that streamlines toon (cel-shaded) rendering by converting Principled BSDF, MMD (mmd_shader), VRM (MToon), VRToon, and Unitypackage Importer's UnityToon shaders into a Toon BSDF usable in Cycles.
 It also includes automatic outline generation using the "inverted hull" (backfacing) method, which renders cleanly in the Cycles renderer.
 
 ## Features
@@ -13,6 +13,7 @@ Automatically converts materials for selected objects (and all their children re
     *   Directly converts MMD Tools `MMDShaderDev` / `mmd_shader` materials to `Toon BSDF`.
     *   Directly converts VRM Add-on for Blender `MToon` materials to `Toon BSDF`.
     *   Directly converts output-connected `VRToon*` shader groups from VRToon Shader Manager.
+    *   Directly converts output-connected `UnityToon` v1 shader groups created by Unitypackage Importer.
     *   When a VRToon outline is present, stores its per-vertex weights in `CT_Outline` and its base Thickness on the model root before removing the legacy Solidify setup and outline materials. No new outline is created until you click **Add Outline**.
     *   Preserves a linked `Base Color` source, or copies the socket color when it is unlinked. `Normal` connections are also preserved.
     *   For MToon and MMD materials, preserves upstream base-texture UV transformations and normal-map nodes where supported.
@@ -101,6 +102,12 @@ Shader groups whose names start with `VRToon` from [VRToon Shader Manager](https
 CyclesTooner preserves the `Base Color` value or connection, the `Normal` connection, and `Alpha` plus `Material Alpha` where possible. VRToon-specific shading, specular, rim, AO, and mask effects are not reproduced exactly.
 
 When a `vrt_outline` setup is present, **Convert** stores `vrt_outline_thick × vrt_outline_mask` as `CT_Outline` and saves the Solidify Thickness on the model root. Only after that preparation succeeds does it remove the old `vrt_outline` Solidify modifier and `vrt_outline_mat` material slots. The outline is therefore intentionally absent immediately after conversion. Select an object in the model and click **Add Outline** to create the CyclesTooner outline from the saved weights and Thickness. Existing `CT_Outline` weights are never overwritten.
+
+#### Direct UnityToon Conversion
+
+When a `UnityToon` v1 group created by [Unitypackage Importer](https://github.com/utagestudio/unitypackage_loader) is directly connected to an active Material Output, **Convert** can replace it with a Toon BSDF for Cycles.
+
+The `Base Color` connection (including the base texture, tint, and UV mapping), `Normal` connection, and `Alpha` value or connection are preserved. Alpha is integrated into the shared CyclesTooner Opacity flow. UnityToon-specific shadowing, MatCap, rim lighting, and emission are not reproduced by Toon BSDF. The UnityToon group is removed during conversion, so **Revert** performs only the usual simplified restoration to Principled BSDF; it cannot reconstruct the original UnityToon setup.
 
 ### Creating Outlines
 1.  Select an object inside the model you want to outline.

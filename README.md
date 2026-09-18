@@ -1,6 +1,6 @@
 # CyclesTooner - Blender Toon Shader Assistant
 
-CyclesToonerは、Principled BSDF、MMD（mmd_shader）、VRM（MToon）、VRToonといったシェーダーを、Cyclesで扱える Toon BSDF に簡易変換し、トゥーンレンダリング（セルルック）表現を効率的に行うためのBlenderアドオンです。
+CyclesToonerは、Principled BSDF、MMD（mmd_shader）、VRM（MToon）、VRToon、Unitypackage Importer の UnityToon といったシェーダーを、Cyclesで扱える Toon BSDF に簡易変換し、トゥーンレンダリング（セルルック）表現を効率的に行うためのBlenderアドオンです。
 あわせて、Cyclesレンダラーでも綺麗に表示できる「背面法」によるアウトライン自動生成機能も備えています。
 
 ## 機能概要
@@ -13,6 +13,7 @@ CyclesToonerは、Principled BSDF、MMD（mmd_shader）、VRM（MToon）、VRToo
     *   MMD Tools の `MMDShaderDev` / `mmd_shader` 構成も直接 `Toon BSDF` に変換できます。
     *   VRM Add-on for Blender の `MToon` 構成も直接 `Toon BSDF` に変換できます。
     *   VRToon Shader Manager の出力接続済み `VRToon*` シェーダーグループも直接変換できます。
+    *   Unitypackage Importer の出力接続済み `UnityToon` v1 シェーダーグループも直接変換できます。
     *   VRToonアウトラインがある場合、頂点ごとの太さを `CT_Outline` へ、基準Thicknessをモデルルートへ退避してから旧Solidifyとアウトライン材を削除します。アウトライン自体は **Add Outline** を押すまで作成されません。
     *   `Base Color` は、接続ノードがある場合は接続を維持し、未接続の場合はソケットに設定された色を引き継ぎます。`Normal` の接続も維持されます。
     *   MToon / MMDでは、ベーステクスチャのUV変換とNormal Mapの上流ノードも可能な範囲で維持します。
@@ -102,6 +103,11 @@ VRM Add-on for Blender で読み込まれた `MToon` マテリアルは、**Conv
 `Base Color` の値または接続、`Normal` の接続、`Alpha` と `Material Alpha` を可能な範囲で引き継ぎます。VRToon固有の陰影、スペキュラー、リム、AO、マスクなどの完全再現は対象外です。
 
 VRToonの `vrt_outline` アウトラインがある場合、**Convert** は `vrt_outline_thick × vrt_outline_mask` を `CT_Outline` として保存し、SolidifyのThicknessもモデルルートへ退避します。退避に成功してから旧 `vrt_outline` Solidifyと `vrt_outline_mat` マテリアルスロットを削除するため、Convert直後はアウトラインが表示されません。続けてモデル内のオブジェクトを選択し、**Add Outline** を押すと、保存したウェイトとThicknessを使ってCyclesToonerアウトラインを作成できます。既存の `CT_Outline` は上書きされません。
+
+#### Unitypackage Importer の UnityToon からの直接変換
+[Unitypackage Importer](https://github.com/utagestudio/unitypackage_loader) が作成した `UnityToon` v1 グループが有効な Material Output へ直接接続されている場合、**Convert** で Cycles 用の Toon BSDF へ変換できます。
+
+`Base Color` の接続（ベーステクスチャ、Tint、UV変換を含む）、`Normal` の接続、`Alpha` の値または接続を引き継ぎ、透明度は CyclesTooner の共通 Opacity フローへ統合されます。UnityToon 固有の影、MatCap、リム、Emission は Toon BSDF では再現されません。変換時に UnityToon グループは削除されるため、**Revert** は簡易的な Principled BSDF への復元になり、元の UnityToon 構成は復元しません。
 
 ### アウトラインの作成
 1.  アウトラインを作成したいモデル内のオブジェクトを選択します。

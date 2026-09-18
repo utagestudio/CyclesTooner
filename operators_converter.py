@@ -14,6 +14,10 @@ CYCLES_TOONER_MTOON_BASE_TEX = "CyclesTooner_MToonBaseTex"
 CYCLES_TOONER_MTOON_BASE_MULTIPLY = "CyclesTooner_MToonBaseMultiply"
 CYCLES_TOONER_VRTOON_ALPHA_MULTIPLY = "CyclesTooner_VRToonAlphaMultiply"
 CYCLES_TOONER_PRESERVED_NODES_FRAME = "CyclesTooner_PreservedNodes"
+UNITY_TOON_GROUP_VERSION_PROP = "unitypkg_version"
+SUPPORTED_UNITY_TOON_GROUP_VERSIONS = {1}
+UNITY_TOON_REQUIRED_INPUTS = ("Base Color", "Alpha", "Normal")
+UNITY_TOON_SHADER_OUTPUT = "Shader"
 VRTOON_OUTLINE_MATERIAL_PROP = "vrt_outline_mat"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
@@ -413,6 +417,55 @@ def get_vrtoon_opacity_source(mat, vrtoon_node):
     if material_alpha_source:
         return material_alpha_source, alpha_value
     return None, alpha_value * material_alpha_value
+
+
+def is_unitytoon_shader_node(node):
+    """Return whether *node* is a supported Unitypackage Importer UnityToon group."""
+    if not node or node.type != 'GROUP' or not node.node_tree:
+        return False
+
+    group_version = node.node_tree.get(UNITY_TOON_GROUP_VERSION_PROP)
+    if group_version not in SUPPORTED_UNITY_TOON_GROUP_VERSIONS:
+        return False
+
+    if not all(node.inputs.get(name) for name in UNITY_TOON_REQUIRED_INPUTS):
+        return False
+
+    shader_output = node.outputs.get(UNITY_TOON_SHADER_OUTPUT)
+    return bool(shader_output and shader_output.type == 'SHADER')
+
+
+def get_unitytoon_input(node, name):
+    return node.inputs.get(name) if is_unitytoon_shader_node(node) else None
+
+
+def get_unitytoon_opacity_source(unitytoon_node):
+    """Return the UnityToon alpha link, if any, and its constant opacity factor."""
+    alpha_input = get_unitytoon_input(unitytoon_node, "Alpha")
+    if not alpha_input:
+        return None, 1.0
+
+    if alpha_input.is_linked:
+        return alpha_input.links[0].from_socket, 1.0
+
+    return None, clamp_opacity(alpha_input.default_value)
+
+
+def remove_unused_unitytoon_group(node_tree):
+    """Remove an unshared local UnityToon group after its last node instance is removed."""
+    if (
+        not node_tree
+        or node_tree.library is not None
+        or node_tree.use_fake_user
+        or node_tree.users != 0
+    ):
+        return
+
+    try:
+        bpy.data.node_groups.remove(node_tree)
+    except RuntimeError:
+        # A concurrent dependency update can make the group unavailable for removal.
+        pass
 
 
 def is_mtoon_shader_material(mat, root_node=None):
@@ -1117,6 +1170,9 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
                 organize_converted_material_nodes(mat)
                 return True
 
+        if is_unitytoon_shader_node(principled_node):
+            return self.process_unitytoon_material(mat, output_node, principled_node)
+
         if is_mmd_shader_material(mat, principled_node):
             return self.process_mmd_material(mat, output_node)
 
@@ -1166,6 +1222,38 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         nodes.remove(principled_node)
         organize_converted_material_nodes(mat)
         
+        return True
+
+    def process_unitytoon_material(self, mat, output_node, unitytoon_node):
+        tree = mat.node_tree
+        nodes = tree.nodes
+        unitytoon_group = unitytoon_node.node_tree
+
+        toon_node = nodes.new(type='ShaderNodeBsdfToon')
+        toon_node.location = (unitytoon_node.location.x, unitytoon_node.location.y - 200)
+        output_node.location = (toon_node.location.x + 760, toon_node.location.y + 20)
+        toon_node.inputs['Size'].default_value = 0.8
+        apply_toon_smooth(mat, toon_node, get_material_smooth(mat))
+
+        transfer_color_input(
+            tree.links,
+            get_unitytoon_input(unitytoon_node, "Base Color"),
+            toon_node.inputs.get('Color'),
+        )
+
+        normal_input = get_unitytoon_input(unitytoon_node, "Normal")
+        if normal_input and normal_input.is_linked:
+            tree.links.new(normal_input.links[0].from_socket, toon_node.inputs['Normal'])
+
+        alpha_source, alpha_value = get_unitytoon_opacity_source(unitytoon_node)
+        opacity = get_source_opacity(mat, alpha_value)
+        setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=alpha_source, opacity=opacity)
+
+        mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "UnityToon"
+        nodes.remove(unitytoon_node)
+        repair_cycles_tooner_output(mat)
+        organize_converted_material_nodes(mat)
+        remove_unused_unitytoon_group(unitytoon_group)
         return True
 
     def process_mmd_material(self, mat, output_node):
