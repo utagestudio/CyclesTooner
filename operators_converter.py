@@ -18,6 +18,7 @@ UNITY_TOON_GROUP_VERSION_PROP = "unitypkg_version"
 SUPPORTED_UNITY_TOON_GROUP_VERSIONS = {1}
 UNITY_TOON_REQUIRED_INPUTS = ("Base Color", "Alpha", "Normal")
 UNITY_TOON_SHADER_OUTPUT = "Shader"
+UNITYPACKAGE_UNLIT_NODE_LABEL = "Unlit"
 VRTOON_OUTLINE_MATERIAL_PROP = "vrt_outline_mat"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
@@ -449,6 +450,61 @@ def get_unitytoon_opacity_source(unitytoon_node):
         return alpha_input.links[0].from_socket, 1.0
 
     return None, clamp_opacity(alpha_input.default_value)
+
+
+def get_unitypackage_unlit_emission_node(root_node):
+    """Return an importer-created Unlit Emission node connected to *root_node*."""
+    if root_node.type == 'EMISSION' and root_node.label == UNITYPACKAGE_UNLIT_NODE_LABEL:
+        return root_node
+
+    if root_node.type != 'MIX_SHADER':
+        return None
+
+    if len(root_node.inputs) <= 2:
+        return None
+
+    transparent_input = root_node.inputs[1]
+    emission_input = root_node.inputs[2]
+    if not transparent_input.is_linked or not emission_input.is_linked:
+        return None
+
+    transparent_node = transparent_input.links[0].from_node
+    emission_node = emission_input.links[0].from_node
+    if transparent_node.type != 'BSDF_TRANSPARENT':
+        return None
+    if emission_node.type != 'EMISSION' or emission_node.label != UNITYPACKAGE_UNLIT_NODE_LABEL:
+        return None
+
+    return emission_node
+
+
+def get_unitypackage_unlit_opacity_source(root_node):
+    """Return the Importer's Unlit alpha path and constant opacity factor."""
+    if root_node.type != 'MIX_SHADER':
+        return None, 1.0
+
+    factor_input = root_node.inputs[0]
+    if factor_input.is_linked:
+        return factor_input.links[0].from_socket, 1.0
+
+    return None, clamp_opacity(factor_input.default_value)
+
+
+def collect_unitypackage_unlit_nodes_to_remove(root_node, emission_node):
+    """Collect only the old Unlit shader nodes replaced by the Toon path."""
+    nodes_to_remove = [emission_node]
+    if root_node.type != 'MIX_SHADER':
+        return nodes_to_remove
+
+    nodes_to_remove.append(root_node)
+    for index in (1, 2):
+        if len(root_node.inputs) <= index or not root_node.inputs[index].is_linked:
+            continue
+        shader_node = root_node.inputs[index].links[0].from_node
+        if shader_node.type == 'BSDF_TRANSPARENT':
+            nodes_to_remove.append(shader_node)
+
+    return nodes_to_remove
 
 
 def remove_unused_unitytoon_group(node_tree):
@@ -1170,6 +1226,15 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
                 organize_converted_material_nodes(mat)
                 return True
 
+        unitypackage_unlit_node = get_unitypackage_unlit_emission_node(principled_node)
+        if unitypackage_unlit_node:
+            return self.process_unitypackage_unlit_material(
+                mat,
+                output_node,
+                principled_node,
+                unitypackage_unlit_node,
+            )
+
         if is_unitytoon_shader_node(principled_node):
             return self.process_unitytoon_material(mat, output_node, principled_node)
 
@@ -1254,6 +1319,35 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         repair_cycles_tooner_output(mat)
         organize_converted_material_nodes(mat)
         remove_unused_unitytoon_group(unitytoon_group)
+        return True
+
+    def process_unitypackage_unlit_material(self, mat, output_node, root_node, emission_node):
+        tree = mat.node_tree
+        nodes = tree.nodes
+
+        toon_node = nodes.new(type='ShaderNodeBsdfToon')
+        toon_node.location = (emission_node.location.x, emission_node.location.y - 200)
+        output_node.location = (toon_node.location.x + 760, toon_node.location.y + 20)
+        toon_node.inputs['Size'].default_value = 0.8
+        apply_toon_smooth(mat, toon_node, get_material_smooth(mat))
+
+        transfer_color_input(
+            tree.links,
+            emission_node.inputs.get('Color'),
+            toon_node.inputs.get('Color'),
+        )
+
+        alpha_source, alpha_value = get_unitypackage_unlit_opacity_source(root_node)
+        opacity = get_source_opacity(mat, alpha_value)
+        setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=alpha_source, opacity=opacity)
+
+        mat[CYCLES_TOONER_SOURCE_SHADER_PROP] = "Unitypackage Unlit"
+        remove_nodes_if_present(
+            nodes,
+            collect_unitypackage_unlit_nodes_to_remove(root_node, emission_node),
+        )
+        repair_cycles_tooner_output(mat)
+        organize_converted_material_nodes(mat)
         return True
 
     def process_mmd_material(self, mat, output_node):
