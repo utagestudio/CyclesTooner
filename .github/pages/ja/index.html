@@ -104,6 +104,14 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.26.0</span><strong>Unitypackage Importerのマテリアル変換に対応</strong><time datetime="2026-09-19">2026年9月19日</time></summary>
+          <ul>
+            <li>Unitypackage ImporterのUnityToon v1グループと、Unlitラベル付きEmissionマテリアルをToon BSDFへ直接変換できるようにしました。</li>
+            <li>接続済みのベースカラー、UnityToonのNormal、テクスチャまたは定数のAlphaを、CyclesTooner共通のOpacityフローへ引き継ぎます。</li>
+            <li>通常のEmissionマテリアルは変換せず、機能紹介からUnitypackage Importerの紹介ページへ移動できるようにしました。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.25.2</span><strong>Opacityとアウトラインの安定性を向上</strong><time datetime="2026-09-15">2026年9月15日</time></summary>
           <ul>
             <li>マテリアルをToon BSDFへ変換する際、設定済みで未接続のPrincipled Alphaを保持するようにしました。</li>
@@ -140,14 +148,6 @@
           <ul>
             <li>アドオンが宣言するBlenderの最低バージョンを、実際の対応環境に合わせました。</li>
             <li>Webサイトとドキュメントに記載するBlenderの動作要件を統一しました。</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.23.2</span><strong>カラーとアウトライン処理を改善</strong><time datetime="2026-08-29">2026年8月29日</time></summary>
-          <ul>
-            <li>Principled Base Colorが未接続の場合、設定されている色を引き継ぐようにしました。</li>
-            <li>CT_Outline頂点グループがない場合、初期ウェイト0.5で自動作成するようにしました。</li>
-            <li>内部用アウトラインSourceコレクションをアクティブなView Layerから除外するようにしました。</li>
           </ul>
         </details>
       </div>

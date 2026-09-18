@@ -104,6 +104,14 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.26.0</span><strong>Unitypackage Importer material conversion</strong><time datetime="2026-09-19">September 19, 2026</time></summary>
+          <ul>
+            <li>Converts Unitypackage Importer UnityToon v1 groups and labelled Unlit Emission materials directly to Toon BSDF.</li>
+            <li>Preserves linked base colors, UnityToon normals, and texture or constant alpha through CyclesTooner's shared opacity flow.</li>
+            <li>Keeps ordinary Emission materials untouched and links the feature overview to the Unitypackage Importer product pages.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.25.2</span><strong>Reliable opacity and safer outlines</strong><time datetime="2026-09-15">September 15, 2026</time></summary>
           <ul>
             <li>Preserves configured, unlinked Principled Alpha values when converting materials to Toon BSDF.</li>
@@ -140,14 +148,6 @@
           <ul>
             <li>Aligns the declared minimum Blender version with the add-on's supported environment.</li>
             <li>Updates the website and documentation to show consistent Blender requirements.</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.23.2</span><strong>Safer color and outline handling</strong><time datetime="2026-08-29">August 29, 2026</time></summary>
-          <ul>
-            <li>Copies the configured Principled Base Color when it is not linked.</li>
-            <li>Creates missing CT_Outline vertex groups with a default weight of 0.5.</li>
-            <li>Excludes internal outline source collections from the active View Layer.</li>
           </ul>
         </details>
       </div>
