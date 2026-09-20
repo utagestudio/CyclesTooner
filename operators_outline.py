@@ -7,6 +7,9 @@ MODEL_COLLECTION_SUFFIX = "_Collection"
 OUTLINE_ROOT_PROPERTY = "cyclestooner_outline_root_object"
 OUTLINE_SOURCE_PROPERTY = "cyclestooner_outline_source_collection"
 OUTLINE_OBJECT_PROPERTY = "cyclestooner_outline_object"
+OUTLINE_HIDDEN_COLLECTION_PROPERTY = "cyclestooner_outline_hidden_collection"
+OUTLINE_HIDDEN_VIEWPORT_PROPERTY = "cyclestooner_outline_hidden_viewport"
+OUTLINE_HIDDEN_RENDER_PROPERTY = "cyclestooner_outline_hidden_render"
 OUTLINE_MODIFIER_NAME = "ToonOutlineGN"
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
@@ -44,6 +47,17 @@ def get_outline_container_collection_name(target):
 def get_model_collection_name(target):
     name = target.name if hasattr(target, "name") else str(target)
     return f"{name}{MODEL_COLLECTION_SUFFIX}"
+
+
+def get_outline_hidden_collection_name(target, hide_viewport, hide_render):
+    name = target.name if hasattr(target, "name") else str(target)
+    if hide_viewport and hide_render:
+        suffix = "_Outline_Hidden"
+    elif hide_viewport:
+        suffix = "_Outline_Viewport_Hidden"
+    else:
+        suffix = "_Outline_Render_Hidden"
+    return f"{name}{suffix}"
 
 
 def get_outline_target_name(outline_obj):
@@ -113,9 +127,98 @@ def collect_root_hierarchy_objects(root_obj):
     return objects
 
 
-def is_disabled_by_object_collections(obj):
-    collections = list(obj.users_collection)
-    return bool(collections) and all(collection.hide_viewport for collection in collections)
+def is_internal_outline_source_collection(collection, ignored_source_collections=()):
+    """Return whether *collection* is a source collection created by this add-on.
+
+    A user collection can legitimately end in ``_Outline_Source``, so collection
+    names are deliberately not used as an identity check here.  During Refresh,
+    the known source collection is passed explicitly; the stored reciprocal
+    markers cover source collections created by current versions of the add-on.
+    """
+    if collection in ignored_source_collections:
+        return True
+
+    root_name = collection.get(OUTLINE_ROOT_PROPERTY)
+    outline_name = collection.get(OUTLINE_OBJECT_PROPERTY)
+    if not root_name or not outline_name:
+        return False
+
+    outline_obj = bpy.data.objects.get(outline_name)
+    return bool(
+        outline_obj
+        and outline_obj.get(OUTLINE_SOURCE_PROPERTY) == collection.name
+        and outline_obj.get(OUTLINE_ROOT_PROPERTY) == root_name
+        and is_cycles_tooner_outline_object(outline_obj)
+    )
+
+
+def is_disabled_by_object_collections(
+    obj,
+    ignored_source_collections=(),
+    collections=None,
+):
+    """Preserve direct viewport-hidden membership without counting Source links."""
+    collections = collections if collections is not None else obj.users_collection
+    visible_collections = [
+        collection
+        for collection in collections
+        if not is_internal_outline_source_collection(
+            collection,
+            ignored_source_collections,
+        )
+    ]
+    return bool(visible_collections) and all(
+        collection.hide_viewport for collection in visible_collections
+    )
+
+
+def collect_render_enabled_collections(scene_collection, ignored_source_collections=()):
+    """Collect collections reachable through at least one render-enabled path.
+
+    Collections may have more than one parent.  Do not use a global ``visited``
+    set: reaching a child through a hidden path must not prevent evaluating its
+    independent visible path.
+    """
+    enabled_collections = set()
+
+    def visit(collection, ancestors_enabled, path):
+        if collection in path:
+            return
+
+        if is_internal_outline_source_collection(
+            collection,
+            ignored_source_collections,
+        ):
+            return
+
+        collection_enabled = ancestors_enabled and not collection.hide_render
+        if collection_enabled:
+            enabled_collections.add(collection)
+
+        path.add(collection)
+        for child in collection.children:
+            visit(child, collection_enabled, path)
+        path.remove(collection)
+
+    visit(scene_collection, True, set())
+    return enabled_collections
+
+
+def collect_scene_collections(scene_collection):
+    """Collect the collections that are reachable from this Scene only."""
+    collections = set()
+
+    def visit(collection, path):
+        if collection in path:
+            return
+        collections.add(collection)
+        path.add(collection)
+        for child in collection.children:
+            visit(child, path)
+        path.remove(collection)
+
+    visit(scene_collection, set())
+    return collections
 
 
 def find_object_parent_collection(obj, preferred_collection, scene_collection):
@@ -150,11 +253,18 @@ def unlink_collection_child(parent_collection, child_collection):
 
 def find_collection_parents(target_collection, scene_collection):
     parents = []
-    if any(collection == target_collection for collection in scene_collection.children):
-        parents.append(scene_collection)
-    for collection in bpy.data.collections:
-        if any(child == target_collection for child in collection.children):
-            parents.append(collection)
+
+    def visit(collection, path):
+        if collection in path:
+            return
+        path.add(collection)
+        for child in collection.children:
+            if child == target_collection and collection not in parents:
+                parents.append(collection)
+            visit(child, path)
+        path.remove(collection)
+
+    visit(scene_collection, set())
     return parents
 
 
@@ -170,42 +280,106 @@ def clear_collection_objects(collection):
         collection.objects.unlink(obj)
 
 
-def ensure_root_model_collection(root_obj, parent_collection):
+def get_or_create_outline_hidden_collection(
+    root_obj,
+    model_collection,
+    hide_viewport,
+    hide_render,
+):
+    """Create a local preservation collection for root-hierarchy objects only."""
+    for collection in bpy.data.collections:
+        if (
+            collection.get(OUTLINE_HIDDEN_COLLECTION_PROPERTY) == root_obj.name
+            and bool(collection.get(OUTLINE_HIDDEN_VIEWPORT_PROPERTY)) == hide_viewport
+            and bool(collection.get(OUTLINE_HIDDEN_RENDER_PROPERTY)) == hide_render
+        ):
+            collection.hide_viewport = hide_viewport
+            collection.hide_render = hide_render
+            link_collection_once(model_collection, collection)
+            return collection
+
+    name = get_outline_hidden_collection_name(root_obj, hide_viewport, hide_render)
+    collection = bpy.data.collections.new(name)
+    collection[OUTLINE_HIDDEN_COLLECTION_PROPERTY] = root_obj.name
+    collection[OUTLINE_HIDDEN_VIEWPORT_PROPERTY] = hide_viewport
+    collection[OUTLINE_HIDDEN_RENDER_PROPERTY] = hide_render
+    collection.hide_viewport = hide_viewport
+    collection.hide_render = hide_render
+    link_collection_once(model_collection, collection)
+    return collection
+
+
+def ensure_root_model_collection(
+    root_obj,
+    parent_collection,
+    scene_collection=None,
+    ignored_source_collections=(),
+):
+    scene_collection = scene_collection or bpy.context.scene.collection
     model_name = get_model_collection_name(root_obj)
     model_collection = get_or_create_collection(model_name)
-    link_collection_once(parent_collection, model_collection)
 
     hierarchy_objects = collect_root_hierarchy_objects(root_obj)
-    # Keep collections that provide global viewport hiding intact. Linking their
-    # objects directly to the visible model collection would make rig helpers
-    # appear, even though their original collection has its monitor disabled.
-    disabled_collections = {
-        collection
-        for obj in hierarchy_objects
-        if is_disabled_by_object_collections(obj)
-        for collection in obj.users_collection
-        if collection.hide_viewport
-    }
+    scene_collections = collect_scene_collections(scene_collection)
+    render_enabled_collections = collect_render_enabled_collections(
+        scene_collection,
+        ignored_source_collections,
+    )
 
-    for collection in disabled_collections:
-        link_collection_once(model_collection, collection)
-        for collection_parent in find_collection_parents(collection, bpy.context.scene.collection):
-            if collection_parent != model_collection:
-                unlink_collection_child(collection_parent, collection)
+    # A model collection below a render-hidden parent would also hide unrelated
+    # visible model parts linked directly to it.  The model collection is owned
+    # by CyclesTooner, so it can safely be reparented without moving the user's
+    # higher-level collection DAG.
+    model_parent = (
+        parent_collection
+        if parent_collection in render_enabled_collections
+        else scene_collection
+    )
+    link_collection_once(model_parent, model_collection)
+    if model_parent != parent_collection:
+        for collection_parent in find_collection_parents(model_collection, scene_collection):
+            if collection_parent != model_parent:
+                unlink_collection_child(collection_parent, model_collection)
 
     for obj in hierarchy_objects:
-        preserved_collections = {
-            collection for collection in obj.users_collection
-            if collection in disabled_collections
-        }
-        has_visible_collection = any(
-            not collection.hide_viewport
+        object_scene_collections = {
+            collection
             for collection in obj.users_collection
+            if collection in scene_collections
+            and not is_internal_outline_source_collection(
+                collection,
+                ignored_source_collections,
+            )
+        }
+
+        # Do not pull an object that belongs only to another Scene into this
+        # Scene.  It has no current-scene collection structure to reorganize.
+        if not object_scene_collections:
+            continue
+
+        render_hidden = not any(
+            collection in render_enabled_collections
+            for collection in object_scene_collections
         )
-        if (not preserved_collections or has_visible_collection) and obj.name not in model_collection.objects:
-            model_collection.objects.link(obj)
-        for collection in list(obj.users_collection):
-            if collection == model_collection or collection in preserved_collections:
+        viewport_hidden = is_disabled_by_object_collections(
+            obj,
+            ignored_source_collections,
+            object_scene_collections,
+        )
+        if render_hidden or viewport_hidden:
+            target_collection = get_or_create_outline_hidden_collection(
+                root_obj,
+                model_collection,
+                viewport_hidden,
+                render_hidden,
+            )
+        else:
+            target_collection = model_collection
+
+        if obj.name not in target_collection.objects:
+            target_collection.objects.link(obj)
+        for collection in object_scene_collections:
+            if collection == target_collection:
                 continue
             collection.objects.unlink(obj)
 
@@ -504,30 +678,52 @@ def set_outline_thickness(mod, thickness):
     return True
 
 
-def is_outline_excluded_object(obj):
+def is_outline_excluded_object(obj, render_enabled_collections=None):
     if obj.type != 'MESH':
         return True
     if obj.name.endswith("_Outline"):
         return True
     if obj.hide_render:
         return True
+    if render_enabled_collections is not None:
+        if not any(
+            collection in render_enabled_collections
+            for collection in obj.users_collection
+        ):
+            return True
     return False
 
 
-def collect_renderable_outline_objects(target_collection):
+def collect_renderable_outline_objects(
+    target_collection,
+    scene_collection,
+    ignored_source_collections=(),
+):
+    render_enabled_collections = collect_render_enabled_collections(
+        scene_collection,
+        ignored_source_collections,
+    )
     objects = []
     for obj in target_collection.all_objects:
-        if is_outline_excluded_object(obj):
+        if is_outline_excluded_object(obj, render_enabled_collections):
             continue
         objects.append(obj)
     return objects
 
 
-def collect_renderable_root_outline_objects(root_obj):
+def collect_renderable_root_outline_objects(
+    root_obj,
+    scene_collection,
+    ignored_source_collections=(),
+):
+    render_enabled_collections = collect_render_enabled_collections(
+        scene_collection,
+        ignored_source_collections,
+    )
     objects = []
 
     def visit(obj):
-        if not is_outline_excluded_object(obj):
+        if not is_outline_excluded_object(obj, render_enabled_collections):
             objects.append(obj)
         for child in obj.children:
             visit(child)
@@ -545,8 +741,17 @@ def link_outline_source_objects(source_collection, source_objects):
     return linked_count
 
 
-def create_filtered_outline_collection(target_collection, parent_collection):
-    source_objects = collect_renderable_outline_objects(target_collection)
+def create_filtered_outline_collection(
+    target_collection,
+    parent_collection,
+    scene_collection,
+    ignored_source_collections=(),
+):
+    source_objects = collect_renderable_outline_objects(
+        target_collection,
+        scene_collection,
+        ignored_source_collections,
+    )
     if not source_objects:
         return None, 0
 
@@ -560,12 +765,26 @@ def create_filtered_outline_collection(target_collection, parent_collection):
     return source_collection, linked_count
 
 
-def create_root_outline_collections(root_obj, parent_collection):
-    source_objects = collect_renderable_root_outline_objects(root_obj)
+def create_root_outline_collections(
+    root_obj,
+    parent_collection,
+    scene_collection,
+    ignored_source_collections=(),
+):
+    source_objects = collect_renderable_root_outline_objects(
+        root_obj,
+        scene_collection,
+        ignored_source_collections,
+    )
     if not source_objects:
         return None, 0
 
-    model_collection = ensure_root_model_collection(root_obj, parent_collection)
+    model_collection = ensure_root_model_collection(
+        root_obj,
+        parent_collection,
+        scene_collection,
+        ignored_source_collections,
+    )
     container_name = get_outline_container_collection_name(root_obj)
     container_collection = get_or_create_collection(container_name)
     link_collection_once(model_collection, container_collection)
@@ -671,6 +890,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         source_collection, source_count = create_root_outline_collections(
             root_obj,
             parent_collection,
+            context.scene.collection,
         )
 
         if source_count == 0:
@@ -1039,10 +1259,29 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
 
         root_name = target_collection.get(OUTLINE_ROOT_PROPERTY)
         root_obj = bpy.data.objects.get(root_name) if root_name else None
+        source_name = outline_obj.get(OUTLINE_SOURCE_PROPERTY)
+        known_source_collection = bpy.data.collections.get(source_name) if source_name else None
+        ignored_source_collections = (
+            (known_source_collection,)
+            if known_source_collection
+            else (
+                (target_collection,)
+                if is_internal_outline_source_collection(target_collection)
+                else ()
+            )
+        )
         source_objects = (
-            collect_renderable_root_outline_objects(root_obj)
+            collect_renderable_root_outline_objects(
+                root_obj,
+                context.scene.collection,
+                ignored_source_collections,
+            )
             if root_obj
-            else collect_renderable_outline_objects(target_collection)
+            else collect_renderable_outline_objects(
+                target_collection,
+                context.scene.collection,
+                ignored_source_collections,
+            )
         )
         if not source_objects:
             self.report({'WARNING'}, "アウトライン対象のレンダー対象メッシュが見つかりませんでした。既存の対象は維持しました。")
@@ -1053,12 +1292,16 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
             source_collection, source_count = create_root_outline_collections(
                 root_obj,
                 parent_collection,
+                context.scene.collection,
+                ignored_source_collections,
             )
         else:
             parent_collection = find_parent_collection(target_collection, context.scene.collection)
             source_collection, source_count = create_filtered_outline_collection(
                 target_collection,
                 parent_collection,
+                context.scene.collection,
+                ignored_source_collections,
             )
         if not source_collection:
             self.report({'WARNING'}, "アウトライン対象のレンダー対象メッシュが見つかりませんでした。既存の対象は維持しました。")

@@ -104,6 +104,14 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.26.1</span><strong>レンダー状態に応じたアウトライン対象判定</strong><time datetime="2026-09-20">2026年9月20日</time></summary>
+          <ul>
+            <li>オブジェクト、所属コレクション、親コレクションのいずれかでレンダー無効なメッシュを除外し、viewportだけで非表示のメッシュは引き続きアウトライン対象にします。</li>
+            <li>現在のScene内にあるすべてのコレクション経路を評価し、別Sceneや内部Outline Sourceを数えず、レンダー有効な経路があれば対象に含めます。</li>
+            <li>無関係なユーザーコレクションを移動せず、非表示のRig用オブジェクトをモデル階層内で保持してAddとRefreshの結果を安定させました。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.26.0</span><strong>Unitypackage Importerのマテリアル変換に対応</strong><time datetime="2026-09-19">2026年9月19日</time></summary>
           <ul>
             <li>Unitypackage ImporterのUnityToon v1グループと、Unlitラベル付きEmissionマテリアルをToon BSDFへ直接変換できるようにしました。</li>
@@ -141,13 +149,6 @@
             <li>有効なMaterial Outputに接続されたVRToonシェーダーグループを直接変換できるようにしました。</li>
             <li>対応するベースカラー、テクスチャAlpha、Normal、マテリアルOpacityの経路を保持します。</li>
             <li>変換後のAdd Outlineで使えるよう、VRToonのアウトラインウェイトと太さを準備します。</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.23.3</span><strong>Blender対応条件を統一</strong><time datetime="2026-08-29">2026年8月29日</time></summary>
-          <ul>
-            <li>アドオンが宣言するBlenderの最低バージョンを、実際の対応環境に合わせました。</li>
-            <li>Webサイトとドキュメントに記載するBlenderの動作要件を統一しました。</li>
           </ul>
         </details>
       </div>

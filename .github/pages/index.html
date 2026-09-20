@@ -104,6 +104,14 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.26.1</span><strong>Render-aware outline sources</strong><time datetime="2026-09-20">September 20, 2026</time></summary>
+          <ul>
+            <li>Excludes meshes hidden from rendering by their object, collection, or parent collection while keeping viewport-only hidden meshes eligible for outlines.</li>
+            <li>Evaluates every current-scene collection path so a render-enabled path keeps a mesh eligible without counting other scenes or the internal outline source.</li>
+            <li>Preserves hidden rig helpers inside the model hierarchy across Add and Refresh without moving unrelated user collections.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.26.0</span><strong>Unitypackage Importer material conversion</strong><time datetime="2026-09-19">September 19, 2026</time></summary>
           <ul>
             <li>Converts Unitypackage Importer UnityToon v1 groups and labelled Unlit Emission materials directly to Toon BSDF.</li>
@@ -141,13 +149,6 @@
             <li>Adds direct conversion for VRToon shader groups connected to the active Material Output.</li>
             <li>Preserves supported base color, texture alpha, normal, and material opacity paths.</li>
             <li>Prepares VRToon outline weights and thickness for use with Add Outline after conversion.</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.23.3</span><strong>Blender compatibility alignment</strong><time datetime="2026-08-29">August 29, 2026</time></summary>
-          <ul>
-            <li>Aligns the declared minimum Blender version with the add-on's supported environment.</li>
-            <li>Updates the website and documentation to show consistent Blender requirements.</li>
           </ul>
         </details>
       </div>
