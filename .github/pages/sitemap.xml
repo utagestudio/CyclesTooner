@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://utagestudio.github.io/CyclesTooner/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://utagestudio.github.io/CyclesTooner/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://utagestudio.github.io/CyclesTooner/ja/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://utagestudio.github.io/CyclesTooner/" />
+  </url>
+  <url>
+    <loc>https://utagestudio.github.io/CyclesTooner/ja/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://utagestudio.github.io/CyclesTooner/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://utagestudio.github.io/CyclesTooner/ja/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://utagestudio.github.io/CyclesTooner/" />
+  </url>
+</urlset>
