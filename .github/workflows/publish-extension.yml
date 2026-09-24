@@ -63,6 +63,11 @@ jobs:
       - name: Add custom landing pages
         run: cp -R .github/pages/. dist/
 
+      - name: Inject Google Tag Manager
+        env:
+          GTM_ID: ${{ vars.GTM_ID }}
+        run: python3 .github/scripts/inject_gtm.py dist
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
