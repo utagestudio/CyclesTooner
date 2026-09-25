@@ -104,6 +104,14 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.26.2</span><strong>Stable transparent material previews</strong><time datetime="2026-09-25">September 25, 2026</time></summary>
+          <ul>
+            <li>Fixes surfaces appearing inside out in Material Preview and EEVEE when nearly opaque materials, such as opacity 0.999, are converted.</li>
+            <li>Uses Dithered rendering during conversion and opacity updates to avoid Blended face-order artifacts.</li>
+            <li>Preserves configured opacity and Cycles shader transparency; existing converted materials adopt the setting on their next opacity change.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.26.1</span><strong>Render-aware outline sources</strong><time datetime="2026-09-20">September 20, 2026</time></summary>
           <ul>
             <li>Excludes meshes hidden from rendering by their object, collection, or parent collection while keeping viewport-only hidden meshes eligible for outlines.</li>
@@ -141,14 +149,6 @@
             <li>Preserves MToon base-color multiplication, texture UV chains, and linked normals from MToon and MMD materials.</li>
             <li>Collects unknown disconnected nodes safely and arranges converted nodes by connection depth.</li>
             <li>Cleans up dangling reroutes and unused shader combiners without breaking connected shader paths.</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.24.0</span><strong>VRToon conversion support</strong><time datetime="2026-09-03">September 3, 2026</time></summary>
-          <ul>
-            <li>Adds direct conversion for VRToon shader groups connected to the active Material Output.</li>
-            <li>Preserves supported base color, texture alpha, normal, and material opacity paths.</li>
-            <li>Prepares VRToon outline weights and thickness for use with Add Outline after conversion.</li>
           </ul>
         </details>
       </div>

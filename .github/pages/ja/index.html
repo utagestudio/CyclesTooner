@@ -104,6 +104,14 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.26.2</span><strong>半透明マテリアルのプレビュー表示を安定化</strong><time datetime="2026-09-25">2026年9月25日</time></summary>
+          <ul>
+            <li>不透明度0.999などのほぼ不透明なマテリアルを変換した際、Material PreviewやEEVEEで面が裏返ったように見える問題を修正しました。</li>
+            <li>変換時とOpacity変更時にDitheredを使用し、Blendedによる面の描画順序の乱れを防ぎます。</li>
+            <li>設定済みの不透明度とCyclesシェーダーの透明度を保持します。既存の変換済みマテリアルには、次回のOpacity変更時に新設定が適用されます。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.26.1</span><strong>レンダー状態に応じたアウトライン対象判定</strong><time datetime="2026-09-20">2026年9月20日</time></summary>
           <ul>
             <li>オブジェクト、所属コレクション、親コレクションのいずれかでレンダー無効なメッシュを除外し、viewportだけで非表示のメッシュは引き続きアウトライン対象にします。</li>
@@ -141,14 +149,6 @@
             <li>MToonのベースカラー乗算、テクスチャのUV経路、MToon・MMDのNormal接続を保持するようにしました。</li>
             <li>不明な未接続ノードを安全にまとめ、変換後のノードを接続の深さに応じて整列するようにしました。</li>
             <li>接続済みのシェーダー経路を壊さず、不要なRerouteやシェーダー合成ノードを整理するようにしました。</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.24.0</span><strong>VRToon変換に対応</strong><time datetime="2026-09-03">2026年9月3日</time></summary>
-          <ul>
-            <li>有効なMaterial Outputに接続されたVRToonシェーダーグループを直接変換できるようにしました。</li>
-            <li>対応するベースカラー、テクスチャAlpha、Normal、マテリアルOpacityの経路を保持します。</li>
-            <li>変換後のAdd Outlineで使えるよう、VRToonのアウトラインウェイトと太さを準備します。</li>
           </ul>
         </details>
       </div>

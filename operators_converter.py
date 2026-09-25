@@ -157,10 +157,10 @@ def sync_material_smooth_property(mat, smooth):
 
 
 def _set_material_blend_settings(mat, opacity):
-    if hasattr(mat, "blend_method"):
-        mat.blend_method = 'BLEND' if opacity < 1.0 else 'OPAQUE'
-    if hasattr(mat, "show_transparent_back"):
-        mat.show_transparent_back = True
+    # Blended transparency does not sort faces within a mesh in EEVEE.
+    # Keep even nearly opaque materials stable in Material Preview without
+    # changing the shader opacity used by Cycles.
+    mat.surface_render_method = 'DITHERED'
 
 
 def ensure_cycles_material_output_target(output_node):
