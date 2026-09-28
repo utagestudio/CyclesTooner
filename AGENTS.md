@@ -62,10 +62,10 @@ Before committing or amending, complete these steps in order:
   - `python3 -m py_compile __init__.py operators_converter.py operators_outline.py ui.py`
   - `git diff --check`
 - Remove generated `__pycache__/` after running `py_compile`.
-- For Blender runtime changes, run a relevant check with local Blender in background mode (`blender -b --factory-startup --python <script>` or `--python-expr`). Load the add-on from the current working tree so the check uses the changed files.
-- Use temporary files for Blender verification artifacts and leave them out of commits.
-- Background mode can verify operators, material conversion, outline hierarchy, and scene state, but cannot confirm visual UI behavior. Report any UI behavior that still needs an interactive Blender check.
-- If local Blender cannot run, report why Blender-side verification was not completed.
+- For Blender runtime changes, verify the relevant behavior in Blender with the add-on loaded from the current working tree. Follow `AGENTS.local.md` for machine-specific commands when it exists.
+- Keep Blender verification artifacts temporary and out of commits.
+- Verify operators, material conversion, outline hierarchy, and scene state as relevant. Report any visual UI behavior that still needs an interactive Blender check.
+- If Blender-side verification cannot run, report the reason and the remaining unverified behavior.
 
 ## Material Conversion Rules
 
