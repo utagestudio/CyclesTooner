@@ -26,5 +26,6 @@ paths_exclude_pattern = [
   "/AGENTS.md",
   "/AGENTS.local.md",
   "/CLAUDE.md",
+  "/docs/",
   "/VERSIONING.md",
 ]
