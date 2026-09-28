@@ -1,6 +1,11 @@
 import bpy
 import statistics
 
+if __package__:
+    from .translations import report_message
+else:
+    from translations import report_message
+
 OUTLINE_SOURCE_SUFFIX = "_Outline_Source"
 OUTLINE_CONTAINER_SUFFIX = "_Outline_Collection"
 MODEL_COLLECTION_SUFFIX = "_Collection"
@@ -861,11 +866,12 @@ def resolve_outline_target_collection(context, selected_objects):
 
 class OBJECT_OT_AddOutline(bpy.types.Operator):
     """
-    選択したコレクションのアウトライン用メッシュを作成・設定するオペレーター
-    Cycleレンダラー向けの背面法アウトラインを実現します。
+    選択オブジェクトの最上位の親をルートとして、モデル全体のアウトラインを作成するオペレーター
+    Cyclesレンダラー向けの背面法アウトラインを実現します。
     """
     bl_idname = "object.add_toon_outline"
     bl_label = "Add Outline"
+    bl_description = "Create an inverted-hull outline for the model that contains the selected object. Intended for models converted by CyclesTooner"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -876,14 +882,14 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         selected_objects = list(context.selected_objects)
         active_obj = context.active_object
         if not selected_objects or active_obj not in selected_objects:
-            self.report({'WARNING'}, "アウトライン対象のオブジェクトを選択してください。")
+            self.report({'WARNING'}, report_message("Select an object to outline."))
             return {'CANCELLED'}
 
         root_obj = get_root_object(active_obj)
         parent_collection = find_object_parent_collection(root_obj, context.collection, context.scene.collection)
         outline_name = f"{root_obj.name}_Outline"
         if bpy.data.objects.get(outline_name):
-            self.report({'WARNING'}, "このルートオブジェクトのアウトラインは既に存在します。Refresh Outlineを使用してください。")
+            self.report({'WARNING'}, report_message("An outline already exists for this root object. Use Refresh Outline instead."))
             return {'CANCELLED'}
         remove_unused_outline_data_blocks(root_obj.name)
 
@@ -894,7 +900,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         )
 
         if source_count == 0:
-            self.report({'WARNING'}, "アウトライン対象のレンダー対象メッシュが見つかりませんでした。")
+            self.report({'WARNING'}, report_message("No render-visible mesh was found for the outline."))
             return {'CANCELLED'}
 
         # 1. アウトライン用メッシュとオブジェクトの作成
@@ -941,7 +947,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         mod.node_group = node_group
         
         if not set_modifier_input(mod, 'Collection', source_collection):
-            self.report({'WARNING'}, "アウトラインのCollection入力を設定できませんでした。")
+            self.report({'WARNING'}, report_message("Could not set the outline Collection input."))
             bpy.data.objects.remove(obj, do_unlink=True)
             if mat.users == 0 and is_outline_material(mat):
                 bpy.data.materials.remove(mat)
@@ -986,8 +992,21 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
             root_obj.select_set(True)
             context.view_layer.objects.active = root_obj
         
-        migration = f", VRToon移行 {migrated_count}/{removed_count}" if migrated_count or removed_count else ""
-        self.report({'INFO'}, f"ルートオブジェクト '{root_obj.name}' のアウトラインを作成しました。({source_count} meshes{migration})")
+        if migrated_count or removed_count:
+            message = report_message(
+                "Created an outline for root object '{name}' ({count} mesh(es), VRToon migration {migrated}/{removed}).",
+                name=root_obj.name,
+                count=source_count,
+                migrated=migrated_count,
+                removed=removed_count,
+            )
+        else:
+            message = report_message(
+                "Created an outline for root object '{name}' ({count} mesh(es)).",
+                name=root_obj.name,
+                count=source_count,
+            )
+        self.report({'INFO'}, message)
         return {'FINISHED'}
 
     def _setup_outline_material(self, mat, color=DEFAULT_OUTLINE_COLOR):
@@ -1155,10 +1174,12 @@ class OBJECT_OT_SetOutlineColor(bpy.types.Operator):
     """選択中のモデルに対応するアウトライン色を変更します。"""
     bl_idname = "object.set_toon_outline_color"
     bl_label = "Apply Outline Color"
+    bl_description = "Apply the outline color to the selected model's outline"
     bl_options = {'REGISTER', 'UNDO'}
 
     color: bpy.props.FloatVectorProperty(
         name="Outline Color",
+        description="Color applied to the selected model's outline",
         subtype='COLOR',
         size=4,
         min=0.0,
@@ -1174,7 +1195,7 @@ class OBJECT_OT_SetOutlineColor(bpy.types.Operator):
         target_collection = resolve_outline_target_collection(context, list(context.selected_objects))
         outline_obj = find_outline_object(target_collection) if target_collection else None
         if not outline_obj:
-            self.report({'WARNING'}, "選択中のモデルに対応するアウトラインが見つかりませんでした。")
+            self.report({'WARNING'}, report_message("No outline was found for the selected model."))
             return {'CANCELLED'}
 
         updated_count = sum(
@@ -1182,10 +1203,10 @@ class OBJECT_OT_SetOutlineColor(bpy.types.Operator):
             if is_outline_material(mat) and set_outline_material_color(mat, self.color)
         )
         if updated_count == 0:
-            self.report({'WARNING'}, "アウトライン用マテリアルが見つかりませんでした。")
+            self.report({'WARNING'}, report_message("The outline material was not found."))
             return {'CANCELLED'}
 
-        self.report({'INFO'}, "アウトライン色を変更しました。")
+        self.report({'INFO'}, report_message("Changed the outline color."))
         return {'FINISHED'}
 
 
@@ -1193,6 +1214,7 @@ class OBJECT_OT_SetOutlineThickness(bpy.types.Operator):
     """選択中のモデルに対応するアウトラインの太さを変更します。"""
     bl_idname = "object.set_toon_outline_thickness"
     bl_label = "Apply Outline Thickness"
+    bl_description = "Apply the base thickness to the selected model's outline"
     bl_options = {'REGISTER', 'UNDO'}
 
     thickness: bpy.props.FloatProperty(
@@ -1214,14 +1236,14 @@ class OBJECT_OT_SetOutlineThickness(bpy.types.Operator):
         outline_obj = find_outline_object(target_collection) if target_collection else None
         mod = find_outline_modifier(outline_obj) if outline_obj else None
         if not mod:
-            self.report({'WARNING'}, "選択中のモデルに対応するアウトラインが見つかりませんでした。")
+            self.report({'WARNING'}, report_message("No outline was found for the selected model."))
             return {'CANCELLED'}
         if not set_outline_thickness(mod, self.thickness):
-            self.report({'WARNING'}, "アウトラインのThickness入力を更新できませんでした。")
+            self.report({'WARNING'}, report_message("Could not update the outline Thickness input."))
             return {'CANCELLED'}
         context.view_layer.update()
 
-        self.report({'INFO'}, "アウトラインの太さを変更しました。")
+        self.report({'INFO'}, report_message("Changed the outline thickness."))
         return {'FINISHED'}
 
 
@@ -1231,6 +1253,7 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
     """
     bl_idname = "object.refresh_toon_outline"
     bl_label = "Refresh Outline"
+    bl_description = "Rebuild the outline sources from the model's current render visibility"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -1241,20 +1264,20 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
         selected_objects = list(context.selected_objects)
         target_collection = resolve_outline_target_collection(context, selected_objects)
         if not target_collection:
-            self.report({'WARNING'}, "更新対象のコレクションが見つかりませんでした。")
+            self.report({'WARNING'}, report_message("No collection to refresh was found."))
             return {'CANCELLED'}
 
         outline_obj = find_outline_object(target_collection)
         if not outline_obj:
-            self.report({'WARNING'}, "更新対象のアウトラインが見つかりませんでした。先にAdd Outlineを実行してください。")
+            self.report({'WARNING'}, report_message("No outline to refresh was found. Run Add Outline first."))
             return {'CANCELLED'}
 
         mod = find_outline_modifier(outline_obj)
         if not mod:
-            self.report({'WARNING'}, "アウトラインのGeometry Nodesモディファイアが見つかりませんでした。")
+            self.report({'WARNING'}, report_message("The outline Geometry Nodes modifier was not found."))
             return {'CANCELLED'}
         if not get_node_group_input_identifier(mod.node_group, 'Collection'):
-            self.report({'WARNING'}, "アウトラインのCollection入力が見つかりませんでした。")
+            self.report({'WARNING'}, report_message("The outline Collection input was not found."))
             return {'CANCELLED'}
 
         root_name = target_collection.get(OUTLINE_ROOT_PROPERTY)
@@ -1284,7 +1307,7 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
             )
         )
         if not source_objects:
-            self.report({'WARNING'}, "アウトライン対象のレンダー対象メッシュが見つかりませんでした。既存の対象は維持しました。")
+            self.report({'WARNING'}, report_message("No render-visible mesh was found for the outline. The existing sources were kept."))
             return {'CANCELLED'}
 
         if root_obj:
@@ -1304,7 +1327,7 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
                 ignored_source_collections,
             )
         if not source_collection:
-            self.report({'WARNING'}, "アウトライン対象のレンダー対象メッシュが見つかりませんでした。既存の対象は維持しました。")
+            self.report({'WARNING'}, report_message("No render-visible mesh was found for the outline. The existing sources were kept."))
             return {'CANCELLED'}
         if root_obj:
             source_collection[OUTLINE_OBJECT_PROPERTY] = outline_obj.name
@@ -1312,10 +1335,14 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
             outline_obj[OUTLINE_ROOT_PROPERTY] = root_obj.name
 
         if not set_modifier_input(mod, 'Collection', source_collection):
-            self.report({'WARNING'}, "アウトラインのCollection入力を更新できませんでした。")
+            self.report({'WARNING'}, report_message("Could not update the outline Collection input."))
             return {'CANCELLED'}
 
-        self.report({'INFO'}, f"コレクション '{target_collection.name}' のアウトライン対象を更新しました。({source_count} meshes)")
+        self.report({'INFO'}, report_message(
+            "Refreshed the outline sources for collection '{name}' ({count} mesh(es)).",
+            name=target_collection.name,
+            count=source_count,
+        ))
         return {'FINISHED'}
 
 
@@ -1325,6 +1352,7 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
     """
     bl_idname = "object.remove_toon_outline"
     bl_label = "Remove Outline"
+    bl_description = "Remove the selected model's outline and its unused data"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -1356,7 +1384,7 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
                 objects_to_delete.append(target_obj)
         
         if not objects_to_delete:
-            self.report({'WARNING'}, "削除対象のアウトラインが見つかりませんでした。")
+            self.report({'WARNING'}, report_message("No outline to remove was found."))
             return {'CANCELLED'}
 
         # クリーンアップ対象のリソースを特定
@@ -1431,5 +1459,12 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
         for root_name in root_names_to_check:
             remove_unused_outline_data_blocks(root_name)
 
-        self.report({'INFO'}, f"アウトラインを削除しました。(Cleanup: Container={remove_count_container}, Src={remove_count_src}, Mesh={remove_count_mesh}, NG={remove_count_ng}, Mat={remove_count_mat})")
+        self.report({'INFO'}, report_message(
+            "Removed the outline (cleanup: Container={containers}, Src={sources}, Mesh={meshes}, NG={groups}, Mat={materials}).",
+            containers=remove_count_container,
+            sources=remove_count_src,
+            meshes=remove_count_mesh,
+            groups=remove_count_ng,
+            materials=remove_count_mat,
+        ))
         return {'FINISHED'}

@@ -1,5 +1,10 @@
 import bpy
 
+if __package__:
+    from .translations import report_message
+else:
+    from translations import report_message
+
 CYCLES_TOONER_OPACITY_PROP = "cyclestooner_opacity"
 CYCLES_TOONER_SMOOTH_PROP = "cyclestooner_smooth"
 CYCLES_TOONER_OPACITY_NODE = "CyclesTooner_Opacity"
@@ -1133,6 +1138,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
     """
     bl_idname = "object.to_toon_converter"
     bl_label = "Convert"
+    bl_description = "Convert the materials of the selected objects and their descendants to Toon BSDF for Cycles"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -1150,7 +1156,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         # レンダーエンジンがEEVEE系ならCyclesに変更
         if context.scene.render.engine in ['BLENDER_EEVEE', 'BLENDER_EEVEE_NEXT']:
             context.scene.render.engine = 'CYCLES'
-            self.report({'INFO'}, "Render Engine switched to Cycles")
+            self.report({'INFO'}, report_message("Switched the render engine to Cycles."))
 
         # 処理対象のオブジェクトを収集（選択オブジェクト + その子孫すべて）
         objects_to_process = collect_selected_objects_recursive(context.selected_objects)
@@ -1168,8 +1174,13 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         prepared_count = operators_outline.prepare_vrtoon_outlines(objects_to_process)
         
         # 処理結果を情報エリアに報告
-        suffix = f" VRToonアウトライン情報を{prepared_count}個退避しました。Add Outlineで再作成できます。" if prepared_count else ""
-        self.report({'INFO'}, f"{len(objects_to_process)} 個のオブジェクトのマテリアルを Toon 化しました。{suffix}")
+        message = report_message("Converted materials on {count} object(s) to Toon BSDF.", count=len(objects_to_process))
+        if prepared_count:
+            message += " " + report_message(
+                "Saved outline data from {count} VRToon outline(s). Use Add Outline to recreate them.",
+                count=prepared_count,
+            )
+        self.report({'INFO'}, message)
         return {'FINISHED'}
 
     def process_material(self, mat):
@@ -1471,6 +1482,7 @@ class OBJECT_OT_ToonReverter(bpy.types.Operator):
     """
     bl_idname = "object.to_toon_reverter"
     bl_label = "Revert"
+    bl_description = "Restore converted materials to Principled BSDF. Materials converted from other shaders become a simplified Principled BSDF"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -1487,7 +1499,7 @@ class OBJECT_OT_ToonReverter(bpy.types.Operator):
             if self.revert_material(mat):
                 processed_count += 1
         
-        self.report({'INFO'}, f"{len(objects_to_process)} 個のオブジェクトのマテリアルを元に戻しました。")
+        self.report({'INFO'}, report_message("Reverted materials on {count} object(s).", count=len(objects_to_process)))
         return {'FINISHED'}
 
     def revert_material(self, mat):
@@ -1600,10 +1612,12 @@ class OBJECT_OT_SetToonOpacity(bpy.types.Operator):
     """
     bl_idname = "object.set_toon_opacity"
     bl_label = "Apply Opacity"
+    bl_description = "Apply the opacity to the converted materials of the selected objects and their descendants"
     bl_options = {'REGISTER', 'UNDO'}
 
     opacity: bpy.props.FloatProperty(
         name="Opacity",
+        description="Opacity applied to selected toon materials",
         min=0.0,
         max=1.0,
         default=1.0,
@@ -1622,7 +1636,7 @@ class OBJECT_OT_SetToonOpacity(bpy.types.Operator):
             if self.apply_opacity_to_material(mat, self.opacity):
                 processed_count += 1
 
-        self.report({'INFO'}, f"{processed_count} 個のマテリアルに透明度を適用しました。")
+        self.report({'INFO'}, report_message("Applied opacity to {count} material(s).", count=processed_count))
         return {'FINISHED'}
 
     def apply_opacity_to_material(self, mat, opacity):
@@ -1661,10 +1675,12 @@ class OBJECT_OT_SetToonSmooth(bpy.types.Operator):
     """
     bl_idname = "object.set_toon_smooth"
     bl_label = "Apply Smooth"
+    bl_description = "Apply the Smooth value to the converted materials of the selected objects and their descendants"
     bl_options = {'REGISTER', 'UNDO'}
 
     smooth: bpy.props.FloatProperty(
         name="Smooth",
+        description="Smooth value applied to selected toon materials",
         min=0.0,
         max=1.0,
         default=DEFAULT_TOON_SMOOTH,
@@ -1683,5 +1699,5 @@ class OBJECT_OT_SetToonSmooth(bpy.types.Operator):
             if set_material_smooth(mat, self.smooth):
                 processed_count += 1
 
-        self.report({'INFO'}, f"{processed_count} 個のマテリアルにSmoothを適用しました。")
+        self.report({'INFO'}, report_message("Applied Smooth to {count} material(s).", count=processed_count))
         return {'FINISHED'}

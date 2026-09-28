@@ -14,6 +14,7 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
     """
     # パネルの上部に表示されるラベル
     bl_label = "CyclesTooner"
+    bl_description = "Convert toon materials to Toon BSDF and manage outlines for Cycles"
     # クラスID（一意である必要がある）
     bl_idname = "VIEW3D_PT_cyclestooner"
     # 表示されるスペース（3Dビューポート）
