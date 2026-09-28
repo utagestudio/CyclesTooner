@@ -1,135 +1,139 @@
-# CyclesTooner - Blender Toon Shader Assistant
+# CyclesTooner
 
-CyclesTooner is a Blender add-on that streamlines toon (cel-shaded) rendering by converting Principled BSDF, MMD (mmd_shader), VRM (MToon), VRToon, and Unitypackage Importer's UnityToon shaders into a Toon BSDF usable in Cycles.
-It also includes automatic outline generation using the "inverted hull" (backfacing) method, which renders cleanly in the Cycles renderer.
+English | [日本語](README.md)
 
-## Features
+CyclesTooner is a Blender add-on that **lets avatar models set up with EEVEE-oriented toon shaders, such as VRM, MMD, VRToon, and UnityToon, render with a toon look in Cycles**.
 
-### 1. Material Converter
-Automatically converts materials for selected objects (and all their children recursively).
+The MToon, VRToon, and UnityToon shaders build their shading with the EEVEE-only `Shader to RGB` node, so they do not look as intended when rendered in Cycles. MMD (MMDShaderDev) materials are also designed for EEVEE display. CyclesTooner replaces these materials with Blender's built-in **Toon BSDF**, carrying over textures, colors, normals, and transparency where possible. It also generates inverted-hull outlines with Geometry Nodes that work in Cycles.
 
-*   **Convert**:
-    *   Replaces `Principled BSDF` with `Toon BSDF` (Size: 0.8 / Smooth: 0.2).
-    *   Directly converts MMD Tools `MMDShaderDev` / `mmd_shader` materials to `Toon BSDF`.
-    *   Directly converts VRM Add-on for Blender `MToon` materials to `Toon BSDF`.
-    *   Directly converts output-connected `VRToon*` shader groups from VRToon Shader Manager.
-    *   Directly converts output-connected `UnityToon` v1 shader groups created by Unitypackage Importer.
-    *   When a VRToon outline is present, stores its per-vertex weights in `CT_Outline` and its base Thickness on the model root before removing the legacy Solidify setup and outline materials. No new outline is created until you click **Add Outline**.
-    *   Preserves a linked `Base Color` source, or copies the socket color when it is unlinked. `Normal` connections are also preserved.
-    *   For MToon and MMD materials, preserves upstream base-texture UV transformations and normal-map nodes where supported.
-    *   Automatically adds opacity control nodes (Mix Shader + Transparent BSDF).
-    *   If there is an `Alpha` connection, both the Alpha input and Opacity setting are applied.
-    *   Automatically arranges the converted graph by connection order. Unknown disconnected nodes are collected in a `CyclesTooner Preserved Nodes` frame, while dangling reroutes, fully unlinked Mix/Add Shader nodes, and empty frames are removed.
-    *   Automatically switches the render engine to **Cycles** if EEVEE is currently selected.
-*   **Revert**:
-    *   Restores materials converted by CyclesTooner back to `Principled BSDF`.
-*   **Opacity**:
-    *   Applies opacity in bulk to toon materials on selected objects and their children from the sidebar slider.
-    *   Allows per-material opacity adjustment when the active object's material has been converted by CyclesTooner.
-    *   `1.0` is fully opaque, and `0.0` is fully transparent.
-*   **Smooth**:
-    *   Applies Toon Smooth in bulk to toon materials on selected objects and their children from the sidebar slider.
-    *   Allows per-material Smooth adjustment when the active object's material has been converted by CyclesTooner.
+Use it when you want toon characters in scenes that rely on Cycles reflections, refraction, volumetrics, or fisheye lenses.
 
-### 2. Outline Generator
-Generates outline meshes using the "inverted hull" method via Geometry Nodes, ideal for toon shading in Cycles.
+## What It Does
 
-*   **Add Outline**:
-    *   Creates an outline object from meshes under the selected object's topmost parent, including Empty roots.
-    *   Creates a root management collection containing every object under the root and the outline management collection.
-    *   Uses **Geometry Nodes** to slightly extrude the model along its normals and display backfaces.
-    *   Hidden mesh objects are excluded from the outline source.
-    *   **Thickness Control**:
-        *   Automatically creates a `CT_Outline` vertex group on each source mesh with every vertex initialized to `0.5`.
-        *   Preserves all weights when a `CT_Outline` vertex group already exists.
-        *   Automatically configures the Geometry Nodes `Weight` input to use the `CT_Outline` attribute.
-        *   Adjust the base thickness from **Outline Thickness** in the tool panel or the Modifier setting (`Thickness`).
-    *   Automatically excludes the internal `~_Outline_Source` collection from the active View Layer.
-    *   Automatically disables viewport selection (Selectable: OFF) and Cycles Ray Visibility (Diffuse/Shadow: OFF).
-*   **Remove Outline**:
-    *   Deletes the generated outline mesh.
-    *   Automatically cleans up unused Geometry Node groups and materials created by the add-on.
-*   **Refresh Outline**:
-    *   Updates an existing outline source to match the current visibility state only while a model part or generated outline is selected.
+- **Material conversion**: Converts MToon (VRM Add-on for Blender), MMDShaderDev (MMD Tools), VRToon (VRToon Shader Manager), UnityToon and Unlit (Unitypackage Importer), and Principled BSDF materials to Toon BSDF.
+- **Outline generation**: Creates an inverted-hull outline around the whole model. Vertex weights control the thickness of each part.
+- **Batch adjustment**: Changes Opacity and Smooth (softness of the shading boundary) across converted materials at once.
+
+## Requirements
+
+- Blender 5.2 LTS (recommended) / 4.5 LTS or later
+- Renderer: Cycles (outlines are tuned for Cycles)
 
 ## Installation
 
-### From the Extension Repository (Recommended, Blender 4.5 LTS+)
+### From the Extension Repository (Recommended)
 
-Registering the remote repository lets Blender detect updates on startup so you can update with one click.
+Once the repository is registered, Blender detects new versions at startup and you can update in place.
 
-1.  Open Blender and go to `Edit` > `Preferences` > `Get Extensions`.
-2.  From the `Repositories` dropdown in the top right, choose `[+]` > `Add Remote Repository`.
-3.  Enter the following URL:
-    ```
-    https://utagestudio.github.io/CyclesTooner/index.json
-    ```
-4.  Enable **Check for Updates on Startup** and add the repository.
-5.  Find **CyclesTooner** in the extension list and click `Install`.
-6.  From now on, new releases are detected when Blender starts, and you can update from the `Get Extensions` page.
+1. In Blender, open `Edit` > `Preferences` > `Get Extensions`.
+2. From the `Repositories` dropdown in the top right, choose `[+]` > `Add Remote Repository`.
+3. Enter the following URL:
+   ```
+   https://utagestudio.github.io/CyclesTooner/index.json
+   ```
+4. Enable `Check for Updates on Startup` and add the repository.
+5. Click `Install` next to **CyclesTooner** in the list.
 
-### Manual installation from a ZIP file
+### From a ZIP File
 
-1.  Download this repository as a ZIP file.
-2.  Open Blender and go to `Edit` > `Preferences` > `Add-ons`.
-3.  Click `Install` and select the downloaded ZIP file.
-4.  Check the box for **"Material: CyclesTooner"** to enable it.
+Use this method when you cannot register the repository, for example on an offline machine.
 
-## Usage
+1. Download the `cycles_tooner-<version>.zip` named in the `archive_url` field of [index.json](https://utagestudio.github.io/CyclesTooner/index.json). Its URL is the file name appended to `https://utagestudio.github.io/CyclesTooner/`.
+2. In Blender, open `Edit` > `Preferences` > `Get Extensions`.
+3. From the `⌄` menu in the top right, choose `Install from Disk...` and select the downloaded ZIP.
 
-The **CyclesTooner** panel is located in the **Tool** tab of the 3D Viewport Sidebar (press N).
+Do not install the source code from GitHub's "Download ZIP"; it contains development files. This method does not update automatically.
 
-### Converting Materials
-1.  Select the object(s) you want to convert.
-2.  Click the **Convert** button to apply toon shading.
-3.  Adjust the **Opacity** / **Smooth** sliders and click **Apply Opacity** / **Apply Smooth** to update selected toon materials in bulk.
-4.  If the active material has been converted by CyclesTooner, use the **Material** fields for per-material Opacity/Smooth adjustment.
-5.  Click the **Revert** button to restore the original materials.
+## Quick Start
 
-#### Direct MMDShaderDev Conversion
-Materials loaded by MMD Tools with `mmd_shader` can be converted directly with **Convert**.
+The **CyclesTooner** panel is in the **Tool** tab of the 3D Viewport sidebar (press `N`).
 
-CyclesTooner preserves `mmd_base_tex` image color/alpha, UV transformations, normal connections, and MMD Diffuse Color where possible. MMD material Alpha is folded into the initial **Opacity** value. The conversion removes `MMDShaderDev` nodes, so **Revert** restores a simplified `Principled BSDF` material rather than the original MMDShaderDev node setup. Exact Sphere/Toon texture compositing is not preserved.
+1. **Save your .blend file before converting.** (See [Before You Convert](#before-you-convert).)
+2. Select the model's **root** (the topmost parent, such as an Armature or Empty) and click **Convert**. Materials on the selected object and all of its descendants are converted.
+3. Select any object in the model and click **Add Outline**.
+4. Render with Cycles. Adjust Smooth, Opacity, and the outline color and thickness as needed.
 
-#### Direct MToon Conversion
-Materials loaded by VRM Add-on for Blender with `MToon` can be converted directly with **Convert**.
+## Before You Convert
 
-CyclesTooner preserves base texture color/alpha, UV transformations, normal connections, and MToon Base Color where possible. MToon Alpha is folded into the initial **Opacity** value. The conversion removes `MToon` nodes, so **Revert** restores a simplified `Principled BSDF` material rather than the original MToon node setup. Exact MToon Shade Color, MatCap, Rim, Emission, and Outline effects are not preserved.
+Convert and Add Outline modify scene data directly. Save your .blend file first if you might need the original state.
 
-#### Direct VRToon Conversion
-Shader groups whose names start with `VRToon` from [VRToon Shader Manager](https://kafuji.github.io/Sakura-Creative-Suite/en/addons/VRToon_Shader_Manager/) can be converted directly when connected to an active Material Output.
+- **Convert removes the original shader.** Materials converted from MToon, MMDShaderDev, VRToon, UnityToon, or Unlit do not return to the original shader on **Revert**; they become a simplified Principled BSDF material.
+- **Not every effect of the original shader is reproduced.** Shade colors, MatCap, rim lighting, specular, and emission are not reproduced by Toon BSDF. (See [Supported Shaders](#supported-shaders).)
+- **Convert removes VRToon outlines.** Their thickness is saved, so clicking **Add Outline** rebuilds them as CyclesTooner outlines.
+- **Add Outline changes collection membership.** Every object in the model hierarchy moves into a newly created `<root name>_Collection`.
+- **The render engine switches to Cycles.** Clicking Convert while EEVEE is active changes the engine to Cycles automatically.
+- Ordinary Emission nodes and other unsupported shaders are left unchanged.
 
-CyclesTooner preserves the `Base Color` value or connection, the `Normal` connection, and `Alpha` plus `Material Alpha` where possible. VRToon-specific shading, specular, rim, AO, and mask effects are not reproduced exactly.
+## Supported Shaders
 
-When a `vrt_outline` setup is present, **Convert** stores `vrt_outline_thick × vrt_outline_mask` as `CT_Outline` and saves the Solidify Thickness on the model root. Only after that preparation succeeds does it remove the old `vrt_outline` Solidify modifier and `vrt_outline_mat` material slots. The outline is therefore intentionally absent immediately after conversion. Select an object in the model and click **Add Outline** to create the CyclesTooner outline from the saved weights and Thickness. Existing `CT_Outline` weights are never overwritten.
+| Source | Created by | Carried over | Not reproduced |
+| --- | --- | --- | --- |
+| Principled BSDF | Built into Blender | Base Color (color and texture), Normal, Alpha | Metallic, roughness, specular, and similar surface properties |
+| MToon | [VRM Add-on for Blender](https://vrm-addon-for-blender.info/en-us/) | Base texture color and alpha, UV transforms, Normal, Base Color, Alpha | Shade Color, MatCap, Rim, Emission, Outline |
+| MMDShaderDev | [MMD Tools](https://extensions.blender.org/add-ons/mmd-tools/) | `mmd_base_tex` color and alpha, UV transforms, Normal, Diffuse Color, Alpha | Sphere textures, Toon textures |
+| VRToon | [VRToon Shader Manager](https://kafuji.github.io/Sakura-Creative-Suite/en/addons/VRToon_Shader_Manager/) | Base Color (color and texture), Normal, Alpha and Material Alpha, outline thickness | Shading, specular, rim, AO, masks |
+| UnityToon (v1) | [Unitypackage Importer](https://utagestudio.github.io/unitypackage_loader/) | Base Color (including texture, tint, and UV transforms), Normal, Alpha | Shadows, MatCap, rim, emission |
+| Unlit | [Unitypackage Importer](https://utagestudio.github.io/unitypackage_loader/) | Color, texture, Alpha | — |
 
-#### Direct UnityToon Conversion
+- Converted Toon BSDF nodes start with `Size: 0.8` and `Smooth: 0.2`.
+- None of these add-ons are bundled with CyclesTooner. Some color and transparency values are read from each add-on's material settings, so keep the add-on that imported the model enabled while converting.
+- VRToon is converted when a shader group whose name starts with `VRToon` is connected to the Material Output. UnityToon and Unlit are converted only when their setup was created by Unitypackage Importer.
 
-When a `UnityToon` v1 group created by [Unitypackage Importer](https://github.com/utagestudio/unitypackage_loader) is directly connected to an active Material Output, **Convert** can replace it with a Toon BSDF for Cycles.
+## Feature Details
 
-The `Base Color` connection (including the base texture, tint, and UV mapping), `Normal` connection, and `Alpha` value or connection are preserved. Alpha is integrated into the shared CyclesTooner Opacity flow. UnityToon-specific shadowing, MatCap, rim lighting, and emission are not reproduced by Toon BSDF. The UnityToon group is removed during conversion, so **Revert** performs only the usual simplified restoration to Principled BSDF; it cannot reconstruct the original UnityToon setup.
+### Material Conversion
 
-### Creating Outlines
-1.  Select an object inside the model you want to outline.
-2.  Click the **Add Outline** button.
-    *   The selected object's topmost parent is used as the outline root, and only that hierarchy is targeted.
-    *   A collection named `~_Collection` is created beside the root, and every object under the root is moved into it.
-    *   A collection named `~_Outline_Collection` is created inside `~_Collection`.
-    *   The generated `~_Outline` object and internal `~_Outline_Source` collection are created inside `~_Outline_Collection`.
-    *   The internal `~_Outline_Source` collection is automatically excluded from the active View Layer.
-3.  If you show or hide model parts, select a target part or the generated outline and click **Refresh Outline** to update the outline source.
-4.  To change the outline color, choose **Outline Color** and click **Apply Outline Color**. To change its base thickness, set **Outline Thickness** and click **Apply Outline Thickness**.
-5.  Each source mesh automatically receives a `CT_Outline` vertex group with every vertex initialized to `0.5`. The `ToonOutlineGN` modifier is configured to use this attribute, so edit its vertex weights to control thickness per vertex. Existing `CT_Outline` weights are preserved.
-    *   For converted VRToon models, the prepared `CT_Outline` weights and saved Thickness are used instead.
-6.  To remove it, select either the outline object or the original collection and click **Remove Outline**.
+- **Convert**: Converts materials on the selected objects and their descendants.
+  - Transparency is controlled by one shared setup that mixes Toon BSDF with Transparent BSDF through a Mix Shader. The original material's alpha (texture or value) is carried into this setup.
+  - Sets the material render method to `Dithered` so that EEVEE and Material Preview display correctly. This does not affect the Cycles result.
+  - Converted nodes are arranged by connection order. Disconnected nodes whose purpose cannot be determined are kept in a `CyclesTooner Preserved Nodes` frame instead of being deleted.
+- **Revert**: Returns converted materials to Principled BSDF. Materials converted from anything other than Principled BSDF become a simplified Principled BSDF material, not the original shader.
+- **Opacity / Apply Opacity**: Sets opacity on converted materials of the selected objects and their descendants. `1.0` is opaque and `0.0` is fully transparent.
+- **Smooth / Apply Smooth**: Sets Toon BSDF Smooth for the same range. Higher values soften the shading boundary.
+- **Material fields**: When the active material has been converted, change Opacity and Smooth for that material only.
 
-## Requirements
-*   Blender 5.2 LTS (Recommended) / 4.5 LTS+
-*   Recommended Renderer: **Cycles** (The outline feature is optimized for Cycles)
+### Outlines
 
-## Development
+- **Add Outline**: Uses the topmost parent of the selected object (including Empty roots) as the root and creates an outline for the whole model with this structure:
 
-See [VERSIONING.md](VERSIONING.md) for the versioning, commit, and release workflow.
+  ```text
+  <root name>_Collection
+  ├─ <root name> (and all descendants)
+  └─ <root name>_Outline_Collection
+     ├─ <root name>_Outline          … the outline object
+     └─ <root name>_Outline_Source   … outline source meshes (excluded from the View Layer)
+  ```
+
+  - Only meshes that render are outline sources. Meshes disabled for rendering on the object or a collection are excluded. Meshes hidden only in the viewport are included.
+  - Each model gets its own outline material, so each model can have its own outline color.
+  - The outline is set as unselectable and does not appear in Cycles diffuse reflections or shadows.
+- **Thickness**
+  - Change the overall thickness with **Outline Thickness** and **Apply Outline Thickness** (default `0.002`), or with `Thickness` on the `ToonOutlineGN` modifier.
+  - Each source mesh receives a `CT_Outline` vertex group with every vertex weighted `0.5`. Paint the weights to vary thickness by area.
+  - An existing `CT_Outline` group keeps its weights.
+  - Models converted from VRToon use the thickness and weights saved during Convert.
+- **Outline Color / Apply Outline Color**: Changes the outline color of the selected model.
+- **Refresh Outline**: Rebuilds the outline sources after you show or hide model parts. Select an object in the model or the outline object first. Color and thickness settings are kept.
+- **Remove Outline**: Deletes the outline object, its source collection, and outline data that is no longer used. Select an object in the model or the outline object first.
+
+## Troubleshooting
+
+The panel currently shows its messages in Japanese; the English meaning is given in parentheses.
+
+| Symptom | Solution |
+| --- | --- |
+| Some materials do not change after Convert | Only the selected objects and their descendants are converted, so select the model root. Unsupported shaders are not converted. (See [Supported Shaders](#supported-shaders).) |
+| "このルートオブジェクトのアウトラインは既に存在します" (an outline already exists for this root) | The outline already exists. Update its sources with **Refresh Outline**, or delete it with **Remove Outline** and create it again. |
+| "アウトライン対象のレンダー対象メッシュが見つかりませんでした" (no renderable outline source mesh was found) | The model hierarchy has no mesh that renders. Check the render visibility of the objects and collections. |
+| The outline remains after hiding a part | Click **Refresh Outline**. |
+| A VRToon outline disappeared after Convert | This is expected. Click **Add Outline** to rebuild it with the saved thickness. |
+| Revert does not restore the original look | Conversions from shaders other than Principled BSDF cannot be restored. Use the .blend file you saved before converting. |
+
+## For Developers
+
+- Add-on behavior specification: [docs/behavior.md](docs/behavior.md)
+- Versioning, branch, commit, and release workflow: [VERSIONING.md](VERSIONING.md)
 
 ## License
+
 [GPL-3.0-or-later](LICENSE)

@@ -1,4 +1,4 @@
-# Versioning and Commit Policy
+# Versioning, Commit, and Release Policy
 
 CyclesTooner uses Semantic Versioning with a development prerelease suffix:
 
@@ -60,6 +60,12 @@ ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 version = "1.22.0"
 ```
 
+## Branches and pull requests
+
+- Start every implementation task on a new topic branch from the latest `main`; do not commit task work directly on `main`.
+- Name branches by purpose: `feature/<topic>` for features, `fix/<topic>` for bug fixes, and `docs/<topic>` for documentation-only work.
+- Merge completed branches into `main` through a GitHub pull request. Pushing to `main` publishes the extension repository and GitHub Pages.
+
 ## Commit rules
 
 - Prefer small commits centered on one behavior or purpose.
@@ -74,20 +80,32 @@ version = "1.22.0"
 
 Parallel development branches may select the same `dev.N`. Resolve this before integration by rebasing or assigning the next available development number so the integrated history has an unambiguous sequence.
 
+## Release history
+
+The GitHub Pages landing pages carry the user-facing release history. When preparing a completed development branch for merge into `main`, update it as part of the release commit; do not limit the release to changing version numbers.
+
+- Add one entry for the final release version to both `.github/pages/index.html` and `.github/pages/ja/index.html`, with the release date, a concise title, and a list of the user-visible fixes and features developed on that branch.
+- Derive the entry from the branch's actual commits and resulting behavior. Consolidate related implementation commits instead of copying commit subjects.
+- Write each item from the user's point of view: what now works differently in Blender. Leave out internal mechanisms such as function names, data paths, and evaluation order.
+- Keep the English and Japanese entries equivalent, place the newest release first, and leave only the newest entry expanded by default.
+- Keep no more than six entries on each page. When adding a seventh, remove the oldest entry from both pages.
+- Documentation-only or GitHub Pages-only branches do not require an entry unless they are part of an add-on release.
+
 ## Commit checklist
 
 Before committing or amending:
 
 1. Classify the commit as a program change, a non-program change, or the final release commit.
-2. Update or preserve the version as required above.
-3. Run:
+2. Update or preserve the version as required above, keeping `__init__.py` and `blender_manifest.toml` synchronized.
+3. For a final release commit, add the bilingual release-history entry.
+4. Run:
 
    ```bash
-   python3 -m py_compile __init__.py operators_converter.py operators_outline.py ui.py
+   python3 -m py_compile *.py
    git diff --check
    ```
 
-4. Remove the generated `__pycache__/`.
-5. Stage only intended files; exclude `_temp/`, `__pycache__/`, screenshots, and local verification artifacts.
-6. Run `git diff --cached --check`.
-7. Re-check all staged version values before committing.
+5. Remove the generated `__pycache__/`.
+6. Stage only intended files; exclude `_temp/`, `__pycache__/`, screenshots, and local verification artifacts.
+7. Run `git diff --cached --check`.
+8. Re-check the staged core version, prerelease suffix, manifest version, and release-history entry before committing.

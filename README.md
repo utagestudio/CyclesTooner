@@ -1,135 +1,137 @@
-# CyclesTooner - Blender Toon Shader Assistant
+# CyclesTooner
 
-CyclesToonerは、Principled BSDF、MMD（mmd_shader）、VRM（MToon）、VRToon、Unitypackage Importer の UnityToon といったシェーダーを、Cyclesで扱える Toon BSDF に簡易変換し、トゥーンレンダリング（セルルック）表現を効率的に行うためのBlenderアドオンです。
-あわせて、Cyclesレンダラーでも綺麗に表示できる「背面法」によるアウトライン自動生成機能も備えています。
+[English](README_en.md) | 日本語
 
-## 機能概要
+VRM、MMD、VRToon、UnityToon などの **EEVEE 向けトゥーンシェーダーが設定されたアバターモデルを、Cycles でもトゥーン調にレンダリングできるようにする** Blender アドオンです。
 
-### 1. マテリアル変換 (Material Converter)
-選択したオブジェクト（およびその子階層の全オブジェクト）のマテリアルを自動的に変換します。
+MToon、VRToon、UnityToon のシェーダーは、EEVEE 専用の `Shader to RGB` ノードで陰影を作っているため、Cycles でレンダリングすると意図した見た目になりません。MMD（MMDShaderDev）も EEVEE での表示を前提に作られています。CyclesTooner は、これらのマテリアルを Blender 標準の **Toon BSDF** に置き換えます。テクスチャ・色・法線・透明度はできる限り引き継ぎます。さらに、Cycles で使える背面法のアウトラインを Geometry Nodes で生成します。
 
-*   **Convert**:
-    *   `Principled BSDF` を `Toon BSDF` (Size: 0.8 / Smooth: 0.2) に置き換えます。
-    *   MMD Tools の `MMDShaderDev` / `mmd_shader` 構成も直接 `Toon BSDF` に変換できます。
-    *   VRM Add-on for Blender の `MToon` 構成も直接 `Toon BSDF` に変換できます。
-    *   VRToon Shader Manager の出力接続済み `VRToon*` シェーダーグループも直接変換できます。
-    *   Unitypackage Importer の出力接続済み `UnityToon` v1 シェーダーグループも直接変換できます。
-    *   VRToonアウトラインがある場合、頂点ごとの太さを `CT_Outline` へ、基準Thicknessをモデルルートへ退避してから旧Solidifyとアウトライン材を削除します。アウトライン自体は **Add Outline** を押すまで作成されません。
-    *   `Base Color` は、接続ノードがある場合は接続を維持し、未接続の場合はソケットに設定された色を引き継ぎます。`Normal` の接続も維持されます。
-    *   MToon / MMDでは、ベーステクスチャのUV変換とNormal Mapの上流ノードも可能な範囲で維持します。
-    *   透明度調整用のノードを自動で追加します（Mix Shader + Transparent BSDF）。
-    *   `Alpha` に接続がある場合、Alpha入力とOpacity設定の両方を反映します。
-    *   変換後のノードを接続順に自動整列します。用途を確定できない未接続ノードは `CyclesTooner Preserved Nodes` Frameへまとめ、孤立したReroute、完全未接続のMix/Add Shader、空Frameは削除します。
-    *   実行時、レンダリングエンジンが EEVEE の場合は自動的に **Cycles** に切り替わります。
-*   **Revert**:
-    *   CyclesToonerによって変換されたマテリアルを、元の `Principled BSDF` に戻します。
-*   **Opacity**:
-    *   サイドバーのスライダーから、選択オブジェクト（および子階層）のToon化済みマテリアルへ透明度を一括適用できます。
-    *   アクティブオブジェクトのマテリアルがToon化済みの場合、マテリアル単位でも透明度を個別調整できます。
-    *   `1.0` は不透明、`0.0` は完全透明です。
-*   **Smooth**:
-    *   サイドバーのスライダーから、選択オブジェクト（および子階層）のToon Smooth値を一括適用できます。
-    *   アクティブオブジェクトのマテリアルがToon化済みの場合、マテリアル単位でもSmoothを個別調整できます。
+Cycles の反射、屈折、ボリューム、魚眼レンズなどを使ったシーンに、トゥーン調のキャラクターを置きたい場合に向いています。
 
-### 2. アウトライン生成 (Outline Generator)
-Cyclesレンダラーでのトゥーン表現に最適な「背面法」を用いたアウトライン用メッシュを自動生成します。
+## できること
 
-*   **Add Outline**:
-    *   選択中オブジェクトの最上位親（Emptyを含む）配下のメッシュを参照するアウトライン用オブジェクトを作成します。
-    *   ルート用コレクションを作成し、その中にルート配下の全オブジェクトとアウトライン管理コレクションを配置します。
-    *   **Geometry Nodes** を使用し、元のモデルを法線方向にわずかに押し出して裏面を表示する仕組みです。
-    *   非表示のメッシュオブジェクトはアウトライン対象から除外されます。
-    *   アウトライン用マテリアルはアウトラインごとに作成されるため、モデルごとにアウトライン色を個別に変更できます。
-    *   **太さの調整**:
-        *   各対象メッシュに頂点グループ `CT_Outline` を自動作成し、全頂点の初期ウェイトを `0.5` に設定します。
-        *   `CT_Outline` が既に存在する場合、そのウェイトは変更されません。
-        *   Geometry Nodesの `Weight` 入力は、自動的に `CT_Outline` 属性を使用します。
-        *   基本の太さはツールパネルの **Outline Thickness**、またはモディファイア設定 (`Thickness`) で調整できます。
-    *   内部用の `～_Outline_Source` コレクションは、アクティブなView Layerから自動的に除外されます。
-    *   ビューポートでの選択不可（Selectable OFF）、CyclesのRay Visibility（Diffuse/Shadow OFF）設定も自動で行います。
-*   **Remove Outline**:
-    *   作成したアウトラインメッシュを削除します。
-    *   不要になったGeometry Nodeグループやマテリアルも自動的にクリーンアップします。
-*   **Refresh Outline**:
-    *   モデルパーツ、または生成済みアウトラインを選択した状態でのみ、既存アウトラインの対象メッシュを現在の表示状態に合わせて更新します。
-
-## インストール方法
-
-### 拡張機能リポジトリからインストール（推奨・Blender 4.5 LTS以降）
-
-リモートリポジトリとして登録すると、Blender起動時に更新が自動検出され、ワンクリックでアップデートできます。
-
-1.  Blenderを開き、`編集 (Edit)` > `プリファレンス (Preferences)` > `エクステンションを入手 (Get Extensions)` を開きます。
-2.  右上の `リポジトリ (Repositories)` ドロップダウンから `[+]` > `リモートリポジトリを追加 (Add Remote Repository)` を選択します。
-3.  URLに以下を入力します:
-    ```
-    https://utagestudio.github.io/CyclesTooner/index.json
-    ```
-4.  **起動時に更新をチェック (Check for Updates on Startup)** にチェックを入れて追加します。
-5.  拡張機能一覧に表示された **CyclesTooner** の `インストール (Install)` を押します。
-6.  以降、新しいバージョンが公開されるとBlender起動時に検出され、`Get Extensions` 画面から `アップデート (Update)` できます。
-
-### ZIPファイルから手動インストール
-
-1.  このリポジトリのファイルをZIP形式でダウンロードするか、フォルダごと用意します。
-2.  Blenderを開き、`編集 (Edit)` > `プリファレンス (Preferences)` > `アドオン (Add-ons)` を開きます。
-3.  `インストール (Install)` ボタンを押し、アドオンのファイル（またはZIP）を選択します。
-4.  リストに表示された **"Material: CyclesTooner"** にチェックを入れて有効化します。
-
-## 使い方
-
-3Dビューポートのサイドバー（Nキー）にある **Tool** タブ内に **CyclesTooner** パネルが表示されます。
-
-### マテリアルの変換
-1.  変換したいオブジェクトを選択します（複数選択可）。
-2.  **Convert** ボタンを押すと、マテリアルがトゥーン調に変換されます。
-3.  **Opacity** / **Smooth** スライダーを調整し、**Apply Opacity** / **Apply Smooth** を押すと選択範囲のToonマテリアルへ一括適用されます。
-4.  アクティブマテリアルがToon化済みの場合は、表示される **Material** 欄から個別にOpacity/Smoothを変更できます。
-5.  元に戻したい場合は **Revert** ボタンを押します。
-
-#### MMDShaderDev からの直接変換
-MMD Tools で読み込まれた `mmd_shader` マテリアルは、**Convert** ボタンで直接 CyclesTooner 形式へ変換できます。
-
-`mmd_base_tex` の画像色とAlpha、UV変換、Normal接続、MMDマテリアルのDiffuse Colorを可能な範囲で引き継ぎます。MMDマテリアルのAlphaはCyclesToonerの **Opacity** 初期値として統合されます。変換時に `MMDShaderDev` 用ノードは削除されるため、**Revert** は簡易的な `Principled BSDF` への復元になり、元のMMDShaderDev構成は復元しません。Sphere/Toon texture合成の完全再現も対象外です。
-
-#### MToon からの直接変換
-VRM Add-on for Blender で読み込まれた `MToon` マテリアルは、**Convert** ボタンで直接 CyclesTooner 形式へ変換できます。
-
-ベーステクスチャの画像色とAlpha、UV変換、Normal接続、MToonのBase Colorを可能な範囲で引き継ぎます。MToonのAlphaはCyclesToonerの **Opacity** 初期値として統合されます。変換時に `MToon` 用ノードは削除されるため、**Revert** は簡易的な `Principled BSDF` への復元になり、元のMToon構成は復元しません。Shade Color、MatCap、Rim、Emission、OutlineなどのMToon固有表現の完全再現は対象外です。
-
-#### VRToon からの直接変換
-[VRToon Shader Manager](https://kafuji.github.io/Sakura-Creative-Suite/ja/addons/VRToon_Shader_Manager/) の `VRToon` で始まるシェーダーグループが有効なMaterial Outputへ接続されている場合、**Convert** ボタンで直接 CyclesTooner 形式へ変換できます。
-
-`Base Color` の値または接続、`Normal` の接続、`Alpha` と `Material Alpha` を可能な範囲で引き継ぎます。VRToon固有の陰影、スペキュラー、リム、AO、マスクなどの完全再現は対象外です。
-
-VRToonの `vrt_outline` アウトラインがある場合、**Convert** は `vrt_outline_thick × vrt_outline_mask` を `CT_Outline` として保存し、SolidifyのThicknessもモデルルートへ退避します。退避に成功してから旧 `vrt_outline` Solidifyと `vrt_outline_mat` マテリアルスロットを削除するため、Convert直後はアウトラインが表示されません。続けてモデル内のオブジェクトを選択し、**Add Outline** を押すと、保存したウェイトとThicknessを使ってCyclesToonerアウトラインを作成できます。既存の `CT_Outline` は上書きされません。
-
-#### Unitypackage Importer の UnityToon からの直接変換
-[Unitypackage Importer](https://github.com/utagestudio/unitypackage_loader) が作成した `UnityToon` v1 グループが有効な Material Output へ直接接続されている場合、**Convert** で Cycles 用の Toon BSDF へ変換できます。
-
-`Base Color` の接続（ベーステクスチャ、Tint、UV変換を含む）、`Normal` の接続、`Alpha` の値または接続を引き継ぎ、透明度は CyclesTooner の共通 Opacity フローへ統合されます。UnityToon 固有の影、MatCap、リム、Emission は Toon BSDF では再現されません。変換時に UnityToon グループは削除されるため、**Revert** は簡易的な Principled BSDF への復元になり、元の UnityToon 構成は復元しません。
-
-### アウトラインの作成
-1.  アウトラインを作成したいモデル内のオブジェクトを選択します。
-2.  **Add Outline** ボタンを押します。
-    *   選択オブジェクトの最上位親をルートとして、その配下だけがアウトライン対象になります。
-    *   ルートと同じ階層に `～_Collection` が生成され、その中にルート配下の全オブジェクトが移動します。
-    *   `～_Collection` の中に `～_Outline_Collection` が生成されます。
-    *   `～_Outline_Collection` の中に `～_Outline` オブジェクトと、非表示メッシュを除外するための `～_Outline_Source` コレクションが作成されます。
-    *   `～_Outline_Source` は、アクティブなView Layerから自動的に除外されます。
-3.  モデルパーツの表示・非表示を切り替えた場合は、対象パーツまたは生成済みアウトラインを選択して **Refresh Outline** ボタンでアウトライン対象を更新します。
-4.  アウトライン色は **Outline Color** を選んで **Apply Outline Color**、基本の太さは **Outline Thickness** を設定して **Apply Outline Thickness** を押すと変更できます。
-5.  各対象メッシュには、全頂点の初期ウェイトを `0.5` とした頂点グループ `CT_Outline` が自動作成されます。`ToonOutlineGN` の `Weight` 入力にもこの属性が自動設定されるため、頂点ウェイトを編集するとアウトラインの太さを頂点ごとに調整できます。既存の `CT_Outline` のウェイトは変更されません。
-    *   VRToonから変換済みの場合は、Convert時に退避した `CT_Outline` とThicknessが使用されます。
-6.  削除したい場合は、生成されたアウトラインオブジェクト、または元のコレクションを選択して **Remove Outline** ボタンを押します。
+- **マテリアル変換**：MToon（VRM Add-on for Blender）、MMDShaderDev（MMD Tools）、VRToon（VRToon Shader Manager）、UnityToon と Unlit（Unitypackage Importer）、Principled BSDF を Toon BSDF に変換します。
+- **アウトライン生成**：モデル全体を囲む背面法アウトラインを作成します。頂点ウェイトで部分ごとの太さを調整できます。
+- **一括調整**：変換済みマテリアルの Opacity（不透明度）と Smooth（陰影境界のぼかし）をまとめて変更できます。
 
 ## 動作環境
-*   Blender 5.2 LTS (推奨) / 4.5 LTS以上
-*   推奨レンダラー: **Cycles** (アウトライン機能はCyclesの仕様に最適化されています)
 
-## 開発について
+- Blender 5.2 LTS（推奨）／ 4.5 LTS 以上
+- レンダラー：Cycles（アウトラインは Cycles 向けに調整されています）
 
-開発時のバージョニング、コミット、リリース運用については [VERSIONING.md](VERSIONING.md) を参照してください。
+## インストール
 
-## LICENSE
+### 拡張機能リポジトリから（推奨）
+
+リポジトリを登録すると、新しいバージョンが Blender 起動時に自動で検出され、そのまま更新できます。
+
+1. Blender で `編集 (Edit)` > `プリファレンス (Preferences)` > `エクステンションを入手 (Get Extensions)` を開きます。
+2. 右上の `リポジトリ (Repositories)` ドロップダウンから `[+]` > `リモートリポジトリを追加 (Add Remote Repository)` を選びます。
+3. URL に次を入力します。
+   ```
+   https://utagestudio.github.io/CyclesTooner/index.json
+   ```
+4. `起動時に更新チェック (Check for Updates on Startup)` をオンにして追加します。
+5. 一覧に表示された **CyclesTooner** の `インストール (Install)` を押します。
+
+### ZIP ファイルから
+
+オフライン環境などでリポジトリを登録できない場合の方法です。
+
+1. [index.json](https://utagestudio.github.io/CyclesTooner/index.json) の `archive_url` に書かれた `cycles_tooner-<バージョン>.zip` をダウンロードします（`https://utagestudio.github.io/CyclesTooner/` の後ろにファイル名を付けた URL です）。
+2. Blender で `編集 (Edit)` > `プリファレンス (Preferences)` > `エクステンションを入手 (Get Extensions)` を開きます。
+3. 右上の `⌄` メニューから `ディスクからインストール... (Install from Disk...)` を選び、ダウンロードした ZIP を選びます。
+
+GitHub の「Download ZIP」で取得したソースコードは、開発用のファイルを含むため、インストールには使わないでください。この方法では自動更新されません。
+
+## クイックスタート
+
+3D ビューポートのサイドバー（`N` キー）の **Tool** タブに **CyclesTooner** パネルがあります。
+
+1. **変換前に .blend ファイルを保存します。**（[注意事項](#注意事項)を参照）
+2. モデルの**ルート**（Armature や Empty など、一番上の親）を選び、**Convert** を押します。選んだオブジェクトとその子孫すべてのマテリアルが変換されます。
+3. モデル内のどれか 1 つのオブジェクトを選び、**Add Outline** を押します。
+4. Cycles でレンダリングします。必要に応じて Smooth、Opacity、アウトラインの色と太さを調整します。
+
+## 注意事項
+
+Convert と Add Outline は、シーンのデータを直接書き換えます。元の状態に戻す必要がありそうなら、事前に .blend ファイルを保存してください。
+
+- **Convert は元のシェーダーを削除します。** MToon、MMDShaderDev、VRToon、UnityToon、Unlit から変換したマテリアルは、**Revert** しても元のシェーダーには戻らず、簡易的な Principled BSDF になります。
+- **元のシェーダーの表現をすべて再現するわけではありません。** 陰影色、MatCap、リムライト、スペキュラー、発光などは Toon BSDF では再現されません（[対応シェーダー](#対応シェーダー)を参照）。
+- **VRToon のアウトラインは Convert で削除されます。** 太さの情報は保存されるので、**Add Outline** を押すと CyclesTooner のアウトラインとして作り直せます。
+- **Add Outline はオブジェクトの所属コレクションを変更します。** モデルの階層にあるすべてのオブジェクトが、新しく作られる `<ルート名>_Collection` に移動します。
+- **レンダーエンジンは Cycles に切り替わります。** EEVEE を使っている状態で Convert を押すと、自動で Cycles に変更されます。
+- 通常の Emission ノードや、Principled BSDF 以外の未対応のシェーダーは変換しません。
+
+## 対応シェーダー
+
+| 変換元 | 作成するアドオン | 引き継ぐもの | 再現しないもの |
+| --- | --- | --- | --- |
+| Principled BSDF | Blender 標準 | Base Color（色・テクスチャ）、Normal、Alpha | 金属・粗さ・スペキュラーなどの質感 |
+| MToon | [VRM Add-on for Blender](https://vrm-addon-for-blender.info/ja-jp/) | ベーステクスチャの色と Alpha、UV 変換、Normal、Base Color、Alpha | Shade Color、MatCap、Rim、Emission、Outline |
+| MMDShaderDev | [MMD Tools](https://extensions.blender.org/add-ons/mmd-tools/) | `mmd_base_tex` の色と Alpha、UV 変換、Normal、Diffuse Color、Alpha | Sphere テクスチャ、Toon テクスチャ |
+| VRToon | [VRToon Shader Manager](https://kafuji.github.io/Sakura-Creative-Suite/ja/addons/VRToon_Shader_Manager/) | Base Color（色・テクスチャ）、Normal、Alpha と Material Alpha、アウトラインの太さ | 陰影、スペキュラー、リム、AO、マスク |
+| UnityToon（v1） | [Unitypackage Importer](https://utagestudio.github.io/unitypackage_loader/ja/) | Base Color（テクスチャ・Tint・UV 変換を含む）、Normal、Alpha | 影、MatCap、リム、Emission |
+| Unlit | [Unitypackage Importer](https://utagestudio.github.io/unitypackage_loader/ja/) | 色、テクスチャ、Alpha | — |
+
+- 変換後の Toon BSDF は `Size: 0.8`、`Smooth: 0.2` で作成されます。
+- 各アドオンは CyclesTooner に同梱されていません。色や透明度の一部は各アドオンのマテリアル設定から読み取るため、変換するときは、読み込みに使ったアドオンを有効にしておくことをおすすめします。
+- VRToon は、名前が `VRToon` で始まるシェーダーグループが Material Output に接続されている場合に変換されます。UnityToon と Unlit は、Unitypackage Importer が作成した構成の場合だけ変換されます。
+
+## 機能の詳細
+
+### マテリアル変換
+
+- **Convert**：選択したオブジェクトとその子孫のマテリアルを変換します。
+  - 透明度は、Toon BSDF と Transparent BSDF を Mix Shader で合成する共通の仕組みで制御します。元のマテリアルの Alpha（テクスチャ・値）は、この仕組みに引き継がれます。
+  - EEVEE とマテリアルプレビューでの表示が乱れないよう、マテリアルのレンダーメソッドを `Dithered` に設定します。Cycles の見た目には影響しません。
+  - 変換後のノードは接続順に自動整列されます。用途を判断できない未接続のノードは削除せず、`CyclesTooner Preserved Nodes` フレームにまとめます。
+- **Revert**：変換したマテリアルを Principled BSDF に戻します。変換元が Principled BSDF 以外の場合は、元のシェーダーではなく簡易的な Principled BSDF になります。
+- **Opacity / Apply Opacity**：選択したオブジェクトとその子孫の変換済みマテリアルに、不透明度をまとめて設定します。`1.0` で不透明、`0.0` で完全に透明です。
+- **Smooth / Apply Smooth**：同じ範囲の Toon BSDF の Smooth をまとめて設定します。値を上げると陰影の境界がやわらかくなります。
+- **Material 欄**：アクティブなマテリアルが変換済みの場合、そのマテリアルだけの Opacity と Smooth を変更できます。
+
+### アウトライン
+
+- **Add Outline**：選択したオブジェクトの一番上の親（Empty を含む）をルートとして、モデル全体のアウトラインを作成します。次の構成が作られます。
+
+  ```text
+  <ルート名>_Collection
+  ├─ <ルート名>（と子孫すべて）
+  └─ <ルート名>_Outline_Collection
+     ├─ <ルート名>_Outline          … アウトライン本体
+     └─ <ルート名>_Outline_Source   … アウトラインの対象メッシュ（ビューレイヤーから除外）
+  ```
+
+  - アウトラインの対象は、レンダリングされるメッシュだけです。オブジェクトやコレクションでレンダー無効にしたメッシュは対象外です。ビューポートだけで非表示にしたメッシュは対象に含まれます。
+  - アウトライン用のマテリアルはモデルごとに作られるので、モデルごとに色を変えられます。
+  - アウトラインは選択できない設定になり、Cycles のディフューズ反射と影には写りません。
+- **太さの調整**
+  - 全体の太さは **Outline Thickness** と **Apply Outline Thickness** で変更します（初期値 `0.002`）。モディファイア `ToonOutlineGN` の `Thickness` でも変更できます。
+  - 対象の各メッシュには頂点グループ `CT_Outline` が作られ、全頂点のウェイトが `0.5` に設定されます。ウェイトを塗り替えると、部分ごとに太さを変えられます。
+  - `CT_Outline` がすでにある場合、そのウェイトは変更されません。
+  - VRToon から変換したモデルでは、Convert 時に保存した太さとウェイトが使われます。
+- **Outline Color / Apply Outline Color**：選択したモデルのアウトラインの色を変更します。
+- **Refresh Outline**：モデルのパーツの表示・非表示を切り替えたあと、アウトラインの対象を作り直します。モデル内のオブジェクトか、アウトライン本体を選んでから押してください。色や太さの設定は保持されます。
+- **Remove Outline**：アウトライン本体、対象コレクション、使われなくなったアウトライン用のデータを削除します。モデル内のオブジェクトか、アウトライン本体を選んでから押してください。
+
+## トラブルシューティング
+
+| 症状 | 対処 |
+| --- | --- |
+| Convert しても一部のマテリアルが変わらない | 変換されるのは選択したオブジェクトとその子孫だけです。モデルのルートを選んでください。未対応のシェーダーは変換されません（[対応シェーダー](#対応シェーダー)を参照）。 |
+| 「このルートオブジェクトのアウトラインは既に存在します」と表示される | アウトラインは作成済みです。**Refresh Outline** で対象を更新するか、**Remove Outline** で削除してから作り直してください。 |
+| 「アウトライン対象のレンダー対象メッシュが見つかりませんでした」と表示される | モデルの階層に、レンダリングされるメッシュがありません。オブジェクトとコレクションのレンダー表示設定を確認してください。 |
+| パーツを非表示にしてもアウトラインが残る | **Refresh Outline** を押してください。 |
+| VRToon のアウトラインが Convert 後に消えた | 仕様です。**Add Outline** を押すと、保存された太さで作り直されます。 |
+| Revert しても元の見た目に戻らない | Principled BSDF 以外からの変換は、元のシェーダーに戻せません。変換前に保存した .blend ファイルを使ってください。 |
+
+## 開発者向け
+
+- アドオンの動作仕様：[docs/behavior.md](docs/behavior.md)
+- バージョン、ブランチ、コミット、リリースの運用：[VERSIONING.md](VERSIONING.md)
+
+## ライセンス
+
 [GPL-3.0-or-later](LICENSE)

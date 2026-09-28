@@ -1,7 +1,7 @@
 
 # Version target and development identifier. The manifest stores the complete
 # SemVer string; Blender's bl_info accepts only the integer core tuple.
-ADDON_VERSION = (1, 26, 2)
+ADDON_VERSION = (1, 26, 3)
 ADDON_VERSION_PRERELEASE = ""
 ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 if ADDON_VERSION_PRERELEASE:
@@ -10,13 +10,13 @@ if ADDON_VERSION_PRERELEASE:
 # アドオン情報
 bl_info = {
     "name": "CyclesTooner",
-    "author": "Codex",
+    "author": "utagestudio",
     # Keep the core version synchronized with ADDON_VERSION_STRING and
     # blender_manifest.toml. See VERSIONING.md for the release workflow.
     "version": ADDON_VERSION,
     "blender": (4, 5, 0),
     "location": "View3D > Sidebar > Tool",
-    "description": "Convert Principled BSDF to Toon BSDF",
+    "description": "Convert EEVEE toon avatars to Toon BSDF for Cycles",
     "category": "Material",
 }
 

@@ -2,13 +2,13 @@ schema_version = "1.0.0"
 
 id = "cycles_tooner"
 # Keep in sync with ADDON_VERSION_STRING in __init__.py
-version = "1.26.2"
+version = "1.26.3"
 name = "CyclesTooner"
-tagline = "Convert Principled BSDF to Toon BSDF"
+tagline = "Convert EEVEE toon avatars to Toon BSDF for Cycles"
 maintainer = "utagestudio"
 type = "add-on"
-website = "https://github.com/utagestudio/CyclesTooner"
-tags = ["Material"]
+website = "https://utagestudio.github.io/CyclesTooner/"
+tags = ["Material", "Render"]
 blender_version_min = "4.5.0"
 license = ["SPDX:GPL-3.0-or-later"]
 
@@ -22,4 +22,10 @@ paths_exclude_pattern = [
   "/.codex/",
   "/.github/",
   "/.gitignore",
+  "/.claude/",
+  "/AGENTS.md",
+  "/AGENTS.local.md",
+  "/CLAUDE.md",
+  "/docs/",
+  "/VERSIONING.md",
 ]
