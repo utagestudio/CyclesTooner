@@ -118,13 +118,13 @@ Convert and Add Outline modify scene data directly. Save your .blend file first 
 
 ## Troubleshooting
 
-The panel currently shows its messages in Japanese; the English meaning is given in parentheses.
+Messages and tooltips follow Blender's language setting and appear in English or Japanese.
 
 | Symptom | Solution |
 | --- | --- |
 | Some materials do not change after Convert | Only the selected objects and their descendants are converted, so select the model root. Unsupported shaders are not converted. (See [Supported Shaders](#supported-shaders).) |
-| "このルートオブジェクトのアウトラインは既に存在します" (an outline already exists for this root) | The outline already exists. Update its sources with **Refresh Outline**, or delete it with **Remove Outline** and create it again. |
-| "アウトライン対象のレンダー対象メッシュが見つかりませんでした" (no renderable outline source mesh was found) | The model hierarchy has no mesh that renders. Check the render visibility of the objects and collections. |
+| "An outline already exists for this root object." | The outline already exists. Update its sources with **Refresh Outline**, or delete it with **Remove Outline** and create it again. |
+| "No render-visible mesh was found for the outline." | The model hierarchy has no mesh that renders. Check the render visibility of the objects and collections. |
 | The outline remains after hiding a part | Click **Refresh Outline**. |
 | A VRToon outline disappeared after Convert | This is expected. Click **Add Outline** to rebuild it with the saved thickness. |
 | Revert does not restore the original look | Conversions from shaders other than Principled BSDF cannot be restored. Use the .blend file you saved before converting. |

@@ -1,7 +1,7 @@
 
 # Version target and development identifier. The manifest stores the complete
 # SemVer string; Blender's bl_info accepts only the integer core tuple.
-ADDON_VERSION = (1, 26, 3)
+ADDON_VERSION = (1, 27, 0)
 ADDON_VERSION_PRERELEASE = ""
 ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 if ADDON_VERSION_PRERELEASE:
@@ -25,7 +25,7 @@ import sys
 import importlib
 
 # サブモジュールの名前リスト (New structure)
-modules_names = ['operators_converter', 'operators_outline', 'ui']
+modules_names = ['translations', 'operators_converter', 'operators_outline', 'ui']
 
 # サブモジュールのリロードとインポート
 # パッケージ名が解決できる場合（正規のアドオンとして読み込まれた場合）
@@ -35,15 +35,18 @@ if __package__:
         if full_name in sys.modules:
             importlib.reload(sys.modules[full_name])
             
+    from . import translations
     from . import operators_converter
     from . import operators_outline
     from . import ui
 
 # パッケージとして解決できない場合（テキストエディタで直接実行した場合など）
 else:
+    import translations
     import operators_converter
     import operators_outline
     import ui
+    importlib.reload(translations)
     importlib.reload(operators_converter)
     importlib.reload(operators_outline)
     importlib.reload(ui)
@@ -66,6 +69,8 @@ def register():
     """
     アドオン有効化時の登録処理
     """
+    translations.register(__name__)
+
     for cls in classes:
         bpy.utils.register_class(cls)
 
@@ -141,6 +146,8 @@ def unregister():
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
+
+    translations.unregister(__name__)
 
 if __name__ == "__main__":
     register()
