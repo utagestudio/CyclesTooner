@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CyclesTooner - Blender Toon Shader Assistant for Cycles</title>
-  <meta name="description" content="Convert Principled BSDF, MMDShaderDev, VRM MToon, VRToon, and Unitypackage Importer UnityToon materials to Toon BSDF, then generate clean Geometry Nodes outlines for Cycles toon rendering in Blender.">
+  <meta name="description" content="Render avatars built with EEVEE toon shaders in Cycles. CyclesTooner converts VRM MToon, MMDShaderDev, VRToon, Unitypackage Importer UnityToon, and Principled BSDF materials to Toon BSDF, then generates clean Geometry Nodes outlines.">
   <link rel="canonical" href="https://utagestudio.github.io/CyclesTooner/">
   <link rel="alternate" hreflang="en" href="https://utagestudio.github.io/CyclesTooner/">
   <link rel="alternate" hreflang="ja" href="https://utagestudio.github.io/CyclesTooner/ja/">
@@ -14,9 +14,14 @@
   <meta property="og:title" content="CyclesTooner - Blender Toon Shader Assistant for Cycles">
   <meta property="og:description" content="Convert Principled, MMD, MToon, VRToon, and UnityToon materials to Toon BSDF and generate clean Cycles outlines with Geometry Nodes.">
   <meta property="og:site_name" content="CyclesTooner">
+  <meta property="og:image" content="https://utagestudio.github.io/CyclesTooner/assets/cycles-water.png">
+  <meta property="og:image:width" content="1440">
+  <meta property="og:image:height" content="900">
+  <meta property="og:image:alt" content="Toon character beside reflective water rendered in Cycles">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CyclesTooner - Blender Toon Shader Assistant for Cycles">
   <meta name="twitter:description" content="A Blender add-on for Cycles toon rendering, Toon BSDF conversion, MMD/VRM/VRToon/UnityToon material support, and Geometry Nodes outlines.">
+  <meta name="twitter:image" content="https://utagestudio.github.io/CyclesTooner/assets/cycles-water.png">
   <link rel="stylesheet" href="assets/site.css">
   <script type="application/ld+json">
   {
@@ -45,6 +50,7 @@
     </a>
     <nav class="top-nav" aria-label="Primary navigation">
       <a href="#features">Features</a>
+      <a href="#quick-start">Quick Start</a>
       <a href="#updates">Updates</a>
       <a href="#install">Install</a>
       <a href="https://github.com/utagestudio/CyclesTooner" target="_blank" rel="noopener noreferrer">GitHub</a>
@@ -58,9 +64,10 @@
         <p class="eyebrow">Blender toon shader assistant for Cycles</p>
         <h1>Cycles toon rendering, without rebuilding every material.</h1>
         <p class="hero-lede">
-          Convert Principled BSDF, MMDShaderDev, VRM MToon, VRToon, and
-          <a href="https://utagestudio.github.io/unitypackage_loader/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a> UnityToon materials to Toon BSDF,
-          then add clean inverted-hull outlines powered by Geometry Nodes.
+          VRM MToon, VRToon, and UnityToon shade with EEVEE-only nodes, so avatars lose their toon look in Cycles.
+          CyclesTooner converts them, along with MMDShaderDev,
+          <a href="https://utagestudio.github.io/unitypackage_loader/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a> Unlit, and Principled BSDF materials, to Toon BSDF,
+          then adds clean inverted-hull outlines powered by Geometry Nodes.
         </p>
         <div class="hero-actions">
           <a class="button primary" href="#install">Add Extension Repository</a>
@@ -114,9 +121,9 @@
         <details class="update-entry">
           <summary><span class="update-version">v1.26.1</span><strong>Render-aware outline sources</strong><time datetime="2026-09-20">September 20, 2026</time></summary>
           <ul>
-            <li>Excludes meshes hidden from rendering by their object, collection, or parent collection while keeping viewport-only hidden meshes eligible for outlines.</li>
-            <li>Evaluates every current-scene collection path so a render-enabled path keeps a mesh eligible without counting other scenes or the internal outline source.</li>
-            <li>Preserves hidden rig helpers inside the model hierarchy across Add and Refresh without moving unrelated user collections.</li>
+            <li>Outlines now skip meshes disabled for rendering on the object or any of its collections, while meshes hidden only in the viewport still get outlines.</li>
+            <li>A mesh linked to several collections keeps its outline as long as any collection in the current scene renders it.</li>
+            <li>Add Outline and Refresh Outline no longer move unrelated collections, and keep hidden rig helpers inside the model hierarchy.</li>
           </ul>
         </details>
         <details class="update-entry">
@@ -124,7 +131,7 @@
           <ul>
             <li>Converts Unitypackage Importer UnityToon v1 groups and labelled Unlit Emission materials directly to Toon BSDF.</li>
             <li>Preserves linked base colors, UnityToon normals, and texture or constant alpha through CyclesTooner's shared opacity flow.</li>
-            <li>Keeps ordinary Emission materials untouched and links the feature overview to the Unitypackage Importer product pages.</li>
+            <li>Leaves ordinary Emission materials unchanged.</li>
           </ul>
         </details>
         <details class="update-entry">
@@ -175,14 +182,14 @@
             <li>MMDShaderDev / mmd_shader conversion</li>
             <li>VRM MToon conversion</li>
             <li>VRToon conversion with outline weight preparation</li>
-            <li><a href="https://utagestudio.github.io/unitypackage_loader/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a> UnityToon v1 conversion</li>
+            <li><a href="https://utagestudio.github.io/unitypackage_loader/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a> UnityToon v1 and Unlit conversion</li>
           </ul>
         </article>
         <article class="feature-card">
           <h3>Generate clean Cycles outlines</h3>
           <p>
             Build inverted-hull outline objects from the selected model root using Geometry Nodes,
-            excluding hidden meshes and keeping internal source collections out of the active View Layer.
+            excluding meshes disabled for rendering and keeping internal source collections out of the active View Layer.
             Converted VRToon models reuse the weights and Thickness prepared during conversion.
           </p>
           <ul>
@@ -202,6 +209,34 @@
             <li>Batch opacity slider</li>
             <li>Batch Smooth slider</li>
             <li>Per-material adjustment</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="quick-start" class="section" aria-labelledby="quick-start-title">
+      <div class="section-heading">
+        <p class="eyebrow">Quick start</p>
+        <h2 id="quick-start-title">Convert a model in four steps.</h2>
+        <p class="section-lede">Open the <strong>CyclesTooner</strong> panel in the <strong>Tool</strong> tab of the 3D Viewport sidebar (press N).</p>
+      </div>
+      <div class="guide-layout">
+        <div class="install-steps">
+          <ol>
+            <li><strong>Save your .blend file</strong> before converting.</li>
+            <li>Select the model's root, such as its Armature or Empty, and click <strong>Convert</strong>. The selected object and all of its descendants are converted.</li>
+            <li>Select any object in the model and click <strong>Add Outline</strong>.</li>
+            <li>Render with Cycles, then adjust Smooth, Opacity, and the outline color and thickness as needed.</li>
+          </ol>
+        </div>
+        <article class="feature-card">
+          <h3>Before you convert</h3>
+          <ul>
+            <li>Convert removes the original shader. For MToon, MMDShaderDev, VRToon, UnityToon, and Unlit materials, Revert creates a simplified Principled BSDF instead of the original setup.</li>
+            <li>Shade colors, MatCap, rim lighting, specular, and emission are not reproduced by Toon BSDF.</li>
+            <li>Convert removes VRToon outlines but saves their thickness, so Add Outline can rebuild them.</li>
+            <li>Add Outline moves every object in the model hierarchy into a new <code>&lt;root&gt;_Collection</code>.</li>
+            <li>Convert switches the render engine from EEVEE to Cycles.</li>
           </ul>
         </article>
       </div>
@@ -237,7 +272,7 @@
         <p class="eyebrow">Cycles-native looks</p>
         <h2 id="cycles-looks-title">Bring toon characters into Cycles-rich scenes.</h2>
         <p class="section-lede">
-          Preserve the toon look of MMD, VRM, and VRToon-style characters while combining them
+          Preserve the toon look of MMD, VRM, VRToon, and UnityToon characters while combining them
           with Cycles lighting, lenses, reflections, and atmosphere.
         </p>
       </div>
@@ -335,6 +370,7 @@
         <li><span>MMD Tools:</span> <code>MMDShaderDev</code> / <code>mmd_shader</code> materials from <a href="https://extensions.blender.org/add-ons/mmd-tools/" target="_blank" rel="noopener noreferrer">MMD Tools on Blender Extensions</a>.</li>
         <li><span>VRM:</span> <code>MToon</code> materials from <a href="https://vrm-addon-for-blender.info/en-us/" target="_blank" rel="noopener noreferrer">VRM Add-on for Blender</a>.</li>
         <li><span>VRToon:</span> <code>VRToon*</code> shader groups from <a href="https://kafuji.github.io/Sakura-Creative-Suite/en/addons/VRToon_Shader_Manager/" target="_blank" rel="noopener noreferrer">VRToon Shader Manager</a>.</li>
+        <li><span>Unitypackage Importer:</span> <code>UnityToon</code> v1 groups and <code>Unlit</code> materials from <a href="https://utagestudio.github.io/unitypackage_loader/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a>.</li>
       </ul>
     </section>
 

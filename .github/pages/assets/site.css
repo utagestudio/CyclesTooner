@@ -556,6 +556,13 @@ code {
   align-items: start;
 }
 
+.guide-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
 .install-steps {
   padding: 1.4rem;
 }
@@ -664,8 +671,9 @@ code {
 @media (max-width: 900px) {
   .hero,
   .requirements,
-  .install-layout {
-    grid-template-columns: 1fr;
+  .install-layout,
+  .guide-layout {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .hero {
