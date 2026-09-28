@@ -62,10 +62,10 @@ Before committing or amending, complete these steps in order:
   - `python3 -m py_compile __init__.py operators_converter.py operators_outline.py ui.py`
   - `git diff --check`
 - Remove generated `__pycache__/` after running `py_compile`.
-- If Blender runtime behavior is changed, mention that local Python checks passed but Blender UI verification still needs Blender-side testing unless it was actually tested in Blender.
-- When Blender MCP is available, use it for runtime verification where Blender-side behavior needs to be checked, especially for UI, operators, material conversion, outline hierarchy, and scene state.
-- When Blender MCP is connected during development and program files change, update the CyclesTooner add-on installed in the connected Blender through MCP before Blender-side verification. Create a timestamped backup inside the installed add-on directory before overwriting files, reload/re-enable the add-on, then verify against the updated installed copy.
-- If Blender MCP tools are unavailable or the connection appears inactive, report that Blender-side verification could not be completed and refer to `AGENTS.local.md` when it exists.
+- For Blender runtime changes, run a relevant check with local Blender in background mode (`blender -b --factory-startup --python <script>` or `--python-expr`). Load the add-on from the current working tree so the check uses the changed files.
+- Use temporary files for Blender verification artifacts and leave them out of commits.
+- Background mode can verify operators, material conversion, outline hierarchy, and scene state, but cannot confirm visual UI behavior. Report any UI behavior that still needs an interactive Blender check.
+- If local Blender cannot run, report why Blender-side verification was not completed.
 
 ## Material Conversion Rules
 
