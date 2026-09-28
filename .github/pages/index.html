@@ -111,6 +111,15 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.26.3</span><strong>Cleaner package and clearer documentation</strong><time datetime="2026-09-29">September 29, 2026</time></summary>
+          <ul>
+            <li>The extension package no longer includes development-only files, so installs contain only the add-on, its README, and the license.</li>
+            <li>The extension listing now describes CyclesTooner as a tool for rendering EEVEE toon avatars in Cycles, adds the Render tag, and links to this documentation site.</li>
+            <li>The add-on metadata now credits utagestudio as its author.</li>
+            <li>The README and this site were reorganized around a quick start, a supported-shader table, cautions before converting, and troubleshooting, and now document Unitypackage Importer Unlit conversion.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.26.2</span><strong>Stable transparent material previews</strong><time datetime="2026-09-25">September 25, 2026</time></summary>
           <ul>
             <li>Fixes surfaces appearing inside out in Material Preview and EEVEE when nearly opaque materials, such as opacity 0.999, are converted.</li>
@@ -148,14 +157,6 @@
           <ul>
             <li>Raises the minimum supported version to Blender 4.5 LTS after Blender 4.2 LTS reached end of life.</li>
             <li>Recommends Blender 5.2 LTS across the extension metadata, documentation, and website.</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.24.1</span><strong>More reliable material conversion</strong><time datetime="2026-09-03">September 3, 2026</time></summary>
-          <ul>
-            <li>Preserves MToon base-color multiplication, texture UV chains, and linked normals from MToon and MMD materials.</li>
-            <li>Collects unknown disconnected nodes safely and arranges converted nodes by connection depth.</li>
-            <li>Cleans up dangling reroutes and unused shader combiners without breaking connected shader paths.</li>
           </ul>
         </details>
       </div>

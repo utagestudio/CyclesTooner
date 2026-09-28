@@ -111,6 +111,15 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.26.3</span><strong>パッケージの整理とドキュメントの改善</strong><time datetime="2026-09-29">2026年9月29日</time></summary>
+          <ul>
+            <li>拡張機能のパッケージから開発用のファイルを除き、インストールされるのはアドオン本体、README、ライセンスだけになりました。</li>
+            <li>拡張機能の紹介文を「EEVEE向けトゥーンアバターをCyclesで使うためのツール」という内容に改め、Renderタグを追加し、Webサイトのリンク先をこのドキュメントサイトにしました。</li>
+            <li>アドオンのメタデータの作者表記をutagestudioにしました。</li>
+            <li>READMEとこのサイトを、クイックスタート、対応シェーダーの表、変換前の注意事項、トラブルシューティングを中心に再構成し、Unitypackage ImporterのUnlit変換についても記載しました。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.26.2</span><strong>半透明マテリアルのプレビュー表示を安定化</strong><time datetime="2026-09-25">2026年9月25日</time></summary>
           <ul>
             <li>不透明度0.999などのほぼ不透明なマテリアルを変換した際、Material PreviewやEEVEEで面が裏返ったように見える問題を修正しました。</li>
@@ -148,14 +157,6 @@
           <ul>
             <li>Blender 4.2 LTSのサポート終了に伴い、最低対応バージョンをBlender 4.5 LTSへ引き上げました。</li>
             <li>拡張機能メタデータ、ドキュメント、Webサイトの推奨環境をBlender 5.2 LTSへ更新しました。</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.24.1</span><strong>マテリアル変換の安定性を向上</strong><time datetime="2026-09-03">2026年9月3日</time></summary>
-          <ul>
-            <li>MToonのベースカラー乗算、テクスチャのUV経路、MToon・MMDのNormal接続を保持するようにしました。</li>
-            <li>不明な未接続ノードを安全にまとめ、変換後のノードを接続の深さに応じて整列するようにしました。</li>
-            <li>接続済みのシェーダー経路を壊さず、不要なRerouteやシェーダー合成ノードを整理するようにしました。</li>
           </ul>
         </details>
       </div>
