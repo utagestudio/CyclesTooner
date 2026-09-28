@@ -49,6 +49,12 @@ User-facing explanations belong in `README.md`, `README_en.md`, and the GitHub P
 - Remove dangling Reroute nodes, fully unlinked Mix Shader and Add Shader nodes, and empty Frames during converted-node cleanup. Preserve shader combiners that retain any input or output connection.
 - Arrange converted material nodes by their connection depth. Keep reachable nodes outside legacy source Frames and consolidate preserved disconnected components without breaking their internal links.
 
+## User Interface Text
+
+- Write every operator report, tooltip (`bl_description`), and property description in English, and add its Japanese translation to `translations.py`.
+- Translate a report with `report_message()` before filling in its values; never pass an f-string to `self.report`.
+- Keep button and panel labels (`bl_label` and layout `text=`) in English so that they match the READMEs and GitHub Pages.
+
 ## Outline
 
 ### Add Outline

@@ -31,6 +31,7 @@ CyclesTooner is a Blender add-on that makes avatar models set up with EEVEE-orie
 - Keep the English and Japanese GitHub Pages equivalent. Apply every change to both.
 - Write user documentation for Blender users: explain what happens in Blender and what users must watch for. Keep implementation details in `docs/behavior.md`.
 - When a change adds or alters user-visible behavior, update the READMEs and Pages feature descriptions on the same branch.
+- Write new operator messages, tooltips, and property descriptions in English and add the Japanese translation to `translations.py` (see `docs/behavior.md`).
 
 ## Verification
 
