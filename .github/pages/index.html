@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CyclesTooner - Blender Toon Shader Assistant for Cycles</title>
-  <meta name="description" content="Render avatars built with EEVEE toon shaders in Cycles. CyclesTooner converts VRM MToon, MMDShaderDev, VRToon, Unitypackage Importer UnityToon, and Principled BSDF materials to Toon BSDF, then generates clean Geometry Nodes outlines.">
+  <meta name="description" content="A Blender add-on for rendering VRM and MMD avatars with a toon look in Cycles. It replaces EEVEE-oriented shaders such as MToon and MMDShaderDev with Blender's built-in Toon BSDF and adds outlines that render in Cycles.">
   <link rel="canonical" href="https://utagestudio.github.io/CyclesTooner/">
   <link rel="alternate" hreflang="en" href="https://utagestudio.github.io/CyclesTooner/">
   <link rel="alternate" hreflang="ja" href="https://utagestudio.github.io/CyclesTooner/ja/">
@@ -12,7 +12,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://utagestudio.github.io/CyclesTooner/">
   <meta property="og:title" content="CyclesTooner - Blender Toon Shader Assistant for Cycles">
-  <meta property="og:description" content="Convert Principled, MMD, MToon, VRToon, and UnityToon materials to Toon BSDF and generate clean Cycles outlines with Geometry Nodes.">
+  <meta property="og:description" content="Bring your VRM and MMD avatars into the light and shadow of Cycles. A Blender add-on that converts their materials to Toon BSDF and adds Cycles-ready outlines.">
   <meta property="og:site_name" content="CyclesTooner">
   <meta property="og:image" content="https://utagestudio.github.io/CyclesTooner/assets/og-image-en.png">
   <meta property="og:image:width" content="1200">
@@ -20,7 +20,7 @@
   <meta property="og:image:alt" content="CyclesTooner: Cycles toon rendering, without rebuilding every material.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CyclesTooner - Blender Toon Shader Assistant for Cycles">
-  <meta name="twitter:description" content="A Blender add-on for Cycles toon rendering, Toon BSDF conversion, MMD/VRM/VRToon/UnityToon material support, and Geometry Nodes outlines.">
+  <meta name="twitter:description" content="Bring your VRM and MMD avatars into the light and shadow of Cycles. A Blender add-on that converts their materials to Toon BSDF and adds Cycles-ready outlines.">
   <meta name="twitter:image" content="https://utagestudio.github.io/CyclesTooner/assets/og-image-en.png">
   <link rel="stylesheet" href="assets/site.css">
   <script type="application/ld+json">
@@ -61,13 +61,11 @@
   <main>
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Blender toon shader assistant for Cycles</p>
+        <p class="eyebrow">For VRM and MMD avatars in Cycles</p>
         <h1>Cycles toon rendering, without rebuilding every material.</h1>
         <p class="hero-lede">
-          VRM MToon, VRToon, and UnityToon shade with EEVEE-only nodes, so avatars lose their toon look in Cycles.
-          CyclesTooner converts them, along with MMDShaderDev,
-          <a href="https://utagestudio.github.io/unitypackage_loader/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a> Unlit, and Principled BSDF materials, to Toon BSDF,
-          then adds clean inverted-hull outlines powered by Geometry Nodes.
+          Water reflections, dappled sunlight, fisheye lenses. Bring your VRM and MMD avatars into the light and shadow of Cycles.
+          Press a button to convert their materials to a toon look and add outlines. The finishing touches are yours.
         </p>
         <div class="hero-actions">
           <a class="button primary" href="#install">Add Extension Repository</a>
@@ -78,26 +76,32 @@
           <code>https://utagestudio.github.io/CyclesTooner/index.json</code>
         </div>
       </div>
-      <div class="hero-visual" aria-label="CyclesTooner Blender interface preview">
-        <div class="viewport-frame image-loading">
-          <div class="viewport-toolbar">
-            <span></span><span></span><span></span>
+      <div class="hero-visual">
+        <figure class="hero-compare">
+          <div class="viewport-frame ba-frame">
+            <div class="viewport-toolbar">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="ba" style="--pos: 50%">
+              <img class="ba-before" src="assets/hero-eevee.webp" srcset="assets/hero-eevee-960.webp 960w, assets/hero-eevee.webp 1920w" sizes="(max-width: 900px) 100vw, 560px" width="1920" height="1249" alt="An avatar rendered in EEVEE. The character keeps its MToon look, but the background has no sunlight">
+              <img class="ba-after" src="assets/hero-cycles.webp" srcset="assets/hero-cycles-960.webp 960w, assets/hero-cycles.webp 1920w" sizes="(max-width: 900px) 100vw, 560px" width="1920" height="1249" alt="The same avatar converted with CyclesTooner and rendered in Cycles, with dappled sunlight falling on the face and body">
+              <span class="ba-label ba-label-before">EEVEE · MToon</span>
+              <span class="ba-label ba-label-after">Cycles · CyclesTooner</span>
+              <input class="ba-range" type="range" min="0" max="100" value="50" aria-label="Slider comparing the EEVEE and Cycles renders">
+              <span class="ba-handle" aria-hidden="true"><span class="ba-hint">← Drag to see Cycles</span></span>
+            </div>
           </div>
-          <picture>
-            <source srcset="assets/material-converter.png" type="image/png">
-            <img src="assets/material-converter.png" alt="CyclesTooner material converter panel in Blender" onload="this.closest('.viewport-frame').classList.remove('image-loading');" onerror="this.closest('.viewport-frame').classList.add('image-error'); this.remove();">
-          </picture>
-          <div class="screenshot-placeholder">
-            <span>Preview unavailable</span>
-            <strong>Material Converter Panel</strong>
-          </div>
-        </div>
+          <figcaption>
+            Drag to compare EEVEE with Cycles (converted with CyclesTooner). Both renders include some manual adjustments.
+            <span class="credit">Model: AvatarSample_B (VRoid)</span>
+          </figcaption>
+        </figure>
       </div>
     </section>
 
     <section class="proof-strip" aria-label="Key capabilities">
       <div><strong>Toon BSDF</strong><span>Cycles-ready material conversion</span></div>
-      <div><strong>MMD / VRM / VRToon / UnityToon</strong><span>Direct shader path support</span></div>
+      <div><strong>VRM / MMD</strong><span>Converts MToon, MMDShaderDev, and more</span></div>
       <div><strong>Geometry Nodes</strong><span>Inverted-hull outline generation</span></div>
       <div><strong>Blender Extensions</strong><span>Install and update from repository</span></div>
     </section>
@@ -167,6 +171,11 @@
       <div class="section-heading">
         <p class="eyebrow">Designed for character and cel-look workflows</p>
         <h2>Move from imported materials to Cycles toon shading faster.</h2>
+        <p class="section-lede">
+          MToon, VRToon, and UnityToon build their shading with the EEVEE-only Shader to RGB node, so they lose their toon look when rendered in Cycles.
+          MMD (MMDShaderDev) materials are also designed for EEVEE display. CyclesTooner replaces these materials with Blender's built-in Toon BSDF,
+          carrying over textures, colors, normals, and transparency where possible.
+        </p>
       </div>
       <div class="feature-grid">
         <article class="feature-card">
@@ -274,8 +283,8 @@
         <p class="eyebrow">Cycles-native looks</p>
         <h2 id="cycles-looks-title">Bring toon characters into Cycles-rich scenes.</h2>
         <p class="section-lede">
-          Preserve the toon look of MMD, VRM, VRToon, and UnityToon characters while combining them
-          with Cycles lighting, lenses, reflections, and atmosphere.
+          Place VRM and MMD avatars with a toon look into Cycles lighting, lenses, reflections,
+          and atmosphere.
         </p>
       </div>
       <div class="cycles-look-grid">
@@ -369,10 +378,10 @@
         These tools are independent projects and are not bundled with CyclesTooner.
       </p>
       <ul>
-        <li><span>MMD Tools:</span> <code>MMDShaderDev</code> / <code>mmd_shader</code> materials from <a href="https://extensions.blender.org/add-ons/mmd-tools/" target="_blank" rel="noopener noreferrer">MMD Tools on Blender Extensions</a>.</li>
         <li><span>VRM:</span> <code>MToon</code> materials from <a href="https://vrm-addon-for-blender.info/en-us/" target="_blank" rel="noopener noreferrer">VRM Add-on for Blender</a>.</li>
+        <li><span>MMD:</span> <code>MMDShaderDev</code> / <code>mmd_shader</code> materials from <a href="https://extensions.blender.org/add-ons/mmd-tools/" target="_blank" rel="noopener noreferrer">MMD Tools on Blender Extensions</a>.</li>
+        <li><span>Unitypackage Importer:</span> <code>UnityToon</code> v1 groups and <code>Unlit</code> materials from <a href="https://utagestudio.github.io/unitypackage_loader/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a>. CyclesTooner cannot convert lilToon or Poiyomi, which many VRChat avatars use, directly; it converts the materials after Unitypackage Importer has imported the avatar.</li>
         <li><span>VRToon:</span> <code>VRToon*</code> shader groups from <a href="https://kafuji.github.io/Sakura-Creative-Suite/en/addons/VRToon_Shader_Manager/" target="_blank" rel="noopener noreferrer">VRToon Shader Manager</a>.</li>
-        <li><span>Unitypackage Importer:</span> <code>UnityToon</code> v1 groups and <code>Unlit</code> materials from <a href="https://utagestudio.github.io/unitypackage_loader/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a>.</li>
       </ul>
     </section>
 
@@ -383,7 +392,9 @@
         Please refer to each source page for the latest license and usage terms.
       </p>
       <ul>
-        <li><span>Character models:</span> Tohoku Zunko, Tohoku Kiritan, and Zundamon from <a href="https://zunko.jp/con_illust.html" target="_blank" rel="noopener noreferrer">ZunZun Project illustration / 3D data</a>.</li>
+        <li><span>Character model (hero image):</span> <a href="https://hub.vroid.com/characters/7939147878897061040/models/2292219474373673889" target="_blank" rel="noopener noreferrer">AvatarSample_B</a> from VRoid.</li>
+        <li><span>Character models (other showcase images):</span> Tohoku Zunko, Tohoku Kiritan, and Zundamon from <a href="https://zunko.jp/con_illust.html" target="_blank" rel="noopener noreferrer">ZunZun Project illustration / 3D data</a>.</li>
+        <li><span>Scene asset (hero image):</span> <a href="https://www.blendkit.com/asset-gallery-detail/9cb181dc-d05a-42c0-880c-5949918ce392/" target="_blank" rel="noopener noreferrer">Forgotten Industrial Warehouse</a> from BlendKit.</li>
         <li><span>Scene asset:</span> <a href="https://www.blendkit.com/asset-gallery-detail/93521daa-0e2b-4f97-b959-feb7bc019ba5/" target="_blank" rel="noopener noreferrer">Lakeside Cabin in the Mountains</a> from BlendKit.</li>
         <li><span>Scene asset:</span> <a href="https://www.blendkit.com/asset-gallery-detail/f87cf4ab-eb35-4e06-b4ce-f8dd0f4a4ac3/" target="_blank" rel="noopener noreferrer">Wooden Plank Pathway</a> from BlendKit.</li>
         <li><span>Scene asset:</span> <a href="https://www.blendkit.com/asset-gallery-detail/bda016a4-4f01-4b1c-aa8f-95e9dd09c607/" target="_blank" rel="noopener noreferrer">Stairs</a> from BlendKit.</li>
@@ -397,5 +408,6 @@
     <a href="https://github.com/utagestudio/CyclesTooner" target="_blank" rel="noopener noreferrer">GitHub</a>
     <a href="ja/" lang="ja">日本語</a>
   </footer>
+  <script src="assets/site.js"></script>
 </body>
 </html>

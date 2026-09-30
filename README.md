@@ -2,7 +2,7 @@
 
 [English](README_en.md) | 日本語
 
-VRM、MMD、VRToon、UnityToon などの **EEVEE 向けトゥーンシェーダーが設定されたアバターモデルを、Cycles でもトゥーン調にレンダリングできるようにする** Blender アドオンです。
+**VRM や MMD のアバターなど、EEVEE 向けのシェーダーが設定されたアバターモデルを、Cycles でもトゥーン調にレンダリングできるようにする** Blender アドオンです。
 
 MToon、VRToon、UnityToon のシェーダーは、EEVEE 専用の `Shader to RGB` ノードで陰影を作っているため、Cycles でレンダリングすると意図した見た目になりません。MMD（MMDShaderDev）も EEVEE での表示を前提に作られています。CyclesTooner は、これらのマテリアルを Blender 標準の **Toon BSDF** に置き換えます。テクスチャ・色・法線・透明度はできる限り引き継ぎます。さらに、Cycles で使える背面法のアウトラインを Geometry Nodes で生成します。
 
@@ -78,6 +78,7 @@ Convert と Add Outline は、シーンのデータを直接書き換えます�
 - 変換後の Toon BSDF は `Size: 0.8`、`Smooth: 0.2` で作成されます。
 - 各アドオンは CyclesTooner に同梱されていません。色や透明度の一部は各アドオンのマテリアル設定から読み取るため、変換するときは、読み込みに使ったアドオンを有効にしておくことをおすすめします。
 - VRToon は、名前が `VRToon` で始まるシェーダーグループが Material Output に接続されている場合に変換されます。UnityToon と Unlit は、Unitypackage Importer が作成した構成の場合だけ変換されます。
+- VRChat 向けアバターでよく使われる lilToon や Poiyomi は、直接は変換できません。Unitypackage Importer で読み込んだあとのマテリアル（UnityToon・Unlit）が変換の対象です。
 
 ## 機能の詳細
 

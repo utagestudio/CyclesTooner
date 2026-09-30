@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン</title>
-  <meta name="description" content="EEVEE向けトゥーンシェーダーのアバターをCyclesでレンダリングするためのBlenderアドオンです。VRM MToon、MMDShaderDev、VRToon、Unitypackage ImporterのUnityToon、Principled BSDFのマテリアルをToon BSDFへ変換し、Geometry Nodesのアウトラインを生成します。">
+  <meta name="description" content="VRMやMMDのアバターを、Cyclesでトゥーン調にレンダリングするためのBlenderアドオンです。MToonやMMDShaderDevなどEEVEE向けのシェーダーをBlender標準のToon BSDFに置き換え、Cycles向けのアウトラインを作ります。">
   <link rel="canonical" href="https://utagestudio.github.io/CyclesTooner/ja/">
   <link rel="alternate" hreflang="en" href="https://utagestudio.github.io/CyclesTooner/">
   <link rel="alternate" hreflang="ja" href="https://utagestudio.github.io/CyclesTooner/ja/">
@@ -12,7 +12,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://utagestudio.github.io/CyclesTooner/ja/">
   <meta property="og:title" content="CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン">
-  <meta property="og:description" content="Toon BSDF変換、MMD/VRM/VRToon/UnityToon素材対応、Geometry Nodesアウトライン生成をまとめたBlenderアドオンです。">
+  <meta property="og:description" content="VRMやMMDのアバターを、Cyclesの光と影の中へ。マテリアルをToon BSDFに変換し、Cycles向けのアウトラインを作るBlenderアドオンです。">
   <meta property="og:site_name" content="CyclesTooner">
   <meta property="og:image" content="https://utagestudio.github.io/CyclesTooner/assets/og-image-ja.png">
   <meta property="og:image:width" content="1200">
@@ -20,7 +20,7 @@
   <meta property="og:image:alt" content="CyclesTooner: マテリアルを作り直さず、Cyclesでトゥーン表現へ。">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="CyclesTooner - Blender Cycles向けトゥーンシェーダー補助アドオン">
-  <meta name="twitter:description" content="Cycles向けのToon BSDF変換、MMD/VRM/VRToon/UnityToon素材対応、Geometry Nodesアウトライン生成をまとめたBlenderアドオンです。">
+  <meta name="twitter:description" content="VRMやMMDのアバターを、Cyclesの光と影の中へ。マテリアルをToon BSDFに変換し、Cycles向けのアウトラインを作るBlenderアドオンです。">
   <meta name="twitter:image" content="https://utagestudio.github.io/CyclesTooner/assets/og-image-ja.png">
   <link rel="stylesheet" href="../assets/site.css">
   <script type="application/ld+json">
@@ -61,14 +61,9 @@
   <main>
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">BlenderのCycles向けトゥーンシェーダー補助アドオン</p>
+        <p class="eyebrow">VRM・MMDのアバターを、Cyclesで</p>
         <h1><span class="hero-heading-phrase">マテリアルを</span><wbr><span class="hero-heading-phrase">作り直さず、</span><wbr><span class="hero-heading-phrase">Cyclesで</span><wbr><span class="hero-heading-phrase">トゥーン表現へ。</span></h1>
-        <p class="hero-lede">
-          VRM MToon、VRToon、UnityToonはEEVEE専用のノードで陰影を作るため、Cyclesではトゥーン調の見た目が崩れます。
-          CyclesToonerは、これらとMMDShaderDev、
-          <a href="https://utagestudio.github.io/unitypackage_loader/ja/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a> のUnlit、Principled BSDFをToon BSDFへ変換し、
-          Geometry Nodesによる背面法アウトラインもまとめて扱えます。
-        </p>
+        <p class="hero-lede"><span class="hero-lede-phrase">水面の反射も、</span><wbr><span class="hero-lede-phrase">木漏れ日も、</span><wbr><span class="hero-lede-phrase">魚眼レンズも。</span><wbr><span class="hero-lede-phrase">VRMやMMDのアバターを、</span><wbr><span class="hero-lede-phrase">Cyclesの光と影の中へ</span><wbr><span class="hero-lede-phrase">連れていけます。</span><wbr><span class="hero-lede-phrase">ボタンを押すだけで</span><wbr><span class="hero-lede-phrase">トゥーン調のマテリアルと</span><wbr><span class="hero-lede-phrase">アウトラインに変換。</span><wbr><span class="hero-lede-phrase">仕上げは、</span><wbr><span class="hero-lede-phrase">お好みで。</span></p>
         <div class="hero-actions">
           <a class="button primary" href="#install">拡張機能リポジトリを追加</a>
           <a class="button secondary" href="https://github.com/utagestudio/CyclesTooner" target="_blank" rel="noopener noreferrer">GitHubを見る</a>
@@ -78,26 +73,32 @@
           <code>https://utagestudio.github.io/CyclesTooner/index.json</code>
         </div>
       </div>
-      <div class="hero-visual" aria-label="CyclesToonerのBlender画面プレビュー">
-        <div class="viewport-frame image-loading">
-          <div class="viewport-toolbar">
-            <span></span><span></span><span></span>
+      <div class="hero-visual">
+        <figure class="hero-compare">
+          <div class="viewport-frame ba-frame">
+            <div class="viewport-toolbar">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="ba" style="--pos: 50%">
+              <img class="ba-before" src="../assets/hero-eevee.webp" srcset="../assets/hero-eevee-960.webp 960w, ../assets/hero-eevee.webp 1920w" sizes="(max-width: 900px) 100vw, 560px" width="1920" height="1249" alt="EEVEEでレンダリングしたアバター。キャラクターはMToonの見た目だが、背景に日差しが出ていない">
+              <img class="ba-after" src="../assets/hero-cycles.webp" srcset="../assets/hero-cycles-960.webp 960w, ../assets/hero-cycles.webp 1920w" sizes="(max-width: 900px) 100vw, 560px" width="1920" height="1249" alt="CyclesToonerで変換してCyclesでレンダリングしたアバター。木漏れ日が顔や体にも落ちている">
+              <span class="ba-label ba-label-before">EEVEE・MToon</span>
+              <span class="ba-label ba-label-after">Cycles・CyclesTooner</span>
+              <input class="ba-range" type="range" min="0" max="100" value="50" aria-label="EEVEEとCyclesの見た目を見比べるスライダー">
+              <span class="ba-handle" aria-hidden="true"><span class="ba-hint">← ドラッグして Cycles で見る</span></span>
+            </div>
           </div>
-          <picture>
-            <source srcset="../assets/material-converter.png" type="image/png">
-            <img src="../assets/material-converter.png" alt="Blender上のCyclesToonerマテリアル変換パネル" onload="this.closest('.viewport-frame').classList.remove('image-loading');" onerror="this.closest('.viewport-frame').classList.add('image-error'); this.remove();">
-          </picture>
-          <div class="screenshot-placeholder">
-            <span>プレビューを表示できません</span>
-            <strong>Material Converter Panel</strong>
-          </div>
-        </div>
+          <figcaption>
+            左右にドラッグして、EEVEEとCycles（CyclesToonerで変換）を見比べられます。どちらも見やすさのために多少調整しています。
+            <span class="credit">モデル：AvatarSample_B（VRoid）</span>
+          </figcaption>
+        </figure>
       </div>
     </section>
 
     <section class="proof-strip" aria-label="主な機能">
       <div><strong>Toon BSDF</strong><span>Cycles向けマテリアル変換</span></div>
-      <div><strong>MMD / VRM / VRToon / UnityToon</strong><span>主要なインポート素材に対応</span></div>
+      <div><strong>VRM / MMD</strong><span>MToon・MMDShaderDevなどを変換</span></div>
       <div><strong>Geometry Nodes</strong><span>背面法アウトライン生成</span></div>
       <div><strong>Blender Extensions</strong><span>リポジトリから導入・更新</span></div>
     </section>
@@ -167,6 +168,11 @@
       <div class="section-heading">
         <p class="eyebrow">キャラクター制作とセルルック向け</p>
         <h2>読み込んだ素材を、Cyclesのトゥーン表現へ素早く寄せる。</h2>
+        <p class="section-lede">
+          MToon、VRToon、UnityToonはEEVEE専用のShader to RGBノードで陰影を作るため、Cyclesでレンダリングするとトゥーン調の見た目が崩れます。
+          MMD（MMDShaderDev）もEEVEEでの表示を前提に作られています。CyclesToonerは、これらのマテリアルをBlender標準のToon BSDFに置き換え、
+          テクスチャ・色・法線・透明度をできる限り引き継ぎます。
+        </p>
       </div>
       <div class="feature-grid">
         <article class="feature-card">
@@ -273,7 +279,7 @@
         <p class="eyebrow">Cyclesだからできる表現</p>
         <h2 id="cycles-looks-title">トゥーンモデルを、Cyclesらしい画作りの中へ。</h2>
         <p class="section-lede">
-          MMD/VRM/VRToon/UnityToon系トゥーンモデルの見た目を保ったまま、水面の反射、魚眼レンズ、
+          VRMやMMDのアバターを、トゥーン調の見た目で、水面の反射、魚眼レンズ、
           ボリュームライトなどのCycles表現と組み合わせられます。
         </p>
       </div>
@@ -287,7 +293,7 @@
             </div>
           </div>
           <h3>水面表現</h3>
-          <p>反射、透明感、水面の揺らぎを表現しながら、キャラクターはトゥーン調のままなじませます。</p>
+          <p>反射、透明感、水面の揺らぎの中に、トゥーン調のキャラクターをなじませます。</p>
         </article>
         <article class="look-card">
           <div class="image-shell image-loading">
@@ -309,7 +315,7 @@
             </div>
           </div>
           <h3>ボリュームライト</h3>
-          <p>霧、逆光、光芒を加えて、セルルックのまま映像的な空気感を作れます。</p>
+          <p>霧、逆光、光芒を加えて、セルルックのキャラクターに映像的な空気感を加えられます。</p>
         </article>
       </div>
     </section>
@@ -368,10 +374,10 @@
         各ツールはCyclesToonerとは独立したプロジェクトであり、本アドオンには同梱されません。
       </p>
       <ul>
-        <li><span>MMD Tools:</span> <a href="https://extensions.blender.org/add-ons/mmd-tools/" target="_blank" rel="noopener noreferrer">Blender ExtensionsのMMD Tools</a>による <code>MMDShaderDev</code> / <code>mmd_shader</code> マテリアル。</li>
         <li><span>VRM:</span> <a href="https://vrm-addon-for-blender.info/ja-jp/" target="_blank" rel="noopener noreferrer">VRM Add-on for Blender</a>による <code>MToon</code> マテリアル。</li>
+        <li><span>MMD:</span> <a href="https://extensions.blender.org/add-ons/mmd-tools/" target="_blank" rel="noopener noreferrer">Blender ExtensionsのMMD Tools</a>による <code>MMDShaderDev</code> / <code>mmd_shader</code> マテリアル。</li>
+        <li><span>Unitypackage Importer:</span> <a href="https://utagestudio.github.io/unitypackage_loader/ja/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a>による <code>UnityToon</code> v1グループと <code>Unlit</code> マテリアル。VRChat向けアバターでよく使われるlilToonやPoiyomiは、CyclesToonerでは直接変換できません。Unitypackage Importerで読み込んだあとのマテリアルが対象です。</li>
         <li><span>VRToon:</span> <a href="https://kafuji.github.io/Sakura-Creative-Suite/ja/addons/VRToon_Shader_Manager/" target="_blank" rel="noopener noreferrer">VRToon Shader Manager</a>による <code>VRToon*</code> シェーダーグループ。</li>
-        <li><span>Unitypackage Importer:</span> <a href="https://utagestudio.github.io/unitypackage_loader/ja/" target="_blank" rel="noopener noreferrer">Unitypackage Importer</a>による <code>UnityToon</code> v1グループと <code>Unlit</code> マテリアル。</li>
       </ul>
     </section>
 
@@ -382,7 +388,9 @@
         最新のライセンスや利用条件は各配布元ページを確認してください。
       </p>
       <ul>
-        <li><span>キャラクターモデル:</span> 東北ずん子、東北きりたん、ずんだもん / <a href="https://zunko.jp/con_illust.html" target="_blank" rel="noopener noreferrer">ずんずんPJイラスト・3Dデータ</a>。</li>
+        <li><span>キャラクターモデル（ヒーロー画像）:</span> VRoid <a href="https://hub.vroid.com/characters/7939147878897061040/models/2292219474373673889" target="_blank" rel="noopener noreferrer">AvatarSample_B</a>。</li>
+        <li><span>キャラクターモデル（その他の紹介画像）:</span> 東北ずん子、東北きりたん、ずんだもん / <a href="https://zunko.jp/con_illust.html" target="_blank" rel="noopener noreferrer">ずんずんPJイラスト・3Dデータ</a>。</li>
+        <li><span>シーン素材（ヒーロー画像）:</span> BlendKit <a href="https://www.blendkit.com/asset-gallery-detail/9cb181dc-d05a-42c0-880c-5949918ce392/" target="_blank" rel="noopener noreferrer">Forgotten Industrial Warehouse</a>。</li>
         <li><span>シーン素材:</span> BlendKit <a href="https://www.blendkit.com/asset-gallery-detail/93521daa-0e2b-4f97-b959-feb7bc019ba5/" target="_blank" rel="noopener noreferrer">Lakeside Cabin in the Mountains</a>。</li>
         <li><span>シーン素材:</span> BlendKit <a href="https://www.blendkit.com/asset-gallery-detail/f87cf4ab-eb35-4e06-b4ce-f8dd0f4a4ac3/" target="_blank" rel="noopener noreferrer">Wooden Plank Pathway</a>。</li>
         <li><span>シーン素材:</span> BlendKit <a href="https://www.blendkit.com/asset-gallery-detail/bda016a4-4f01-4b1c-aa8f-95e9dd09c607/" target="_blank" rel="noopener noreferrer">Stairs</a>。</li>
@@ -396,5 +404,6 @@
     <a href="https://github.com/utagestudio/CyclesTooner" target="_blank" rel="noopener noreferrer">GitHub</a>
     <a href="../" lang="en">English</a>
   </footer>
+  <script src="../assets/site.js"></script>
 </body>
 </html>

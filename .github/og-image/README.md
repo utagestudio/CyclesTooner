@@ -5,7 +5,7 @@
 - `.github/pages/assets/og-image-en.png` (English page)
 - `.github/pages/assets/og-image-ja.png` (Japanese page)
 
-It reuses `.github/pages/assets/site.css` and the hero image, so update the images whenever the landing-page heading, tagline, or hero image changes. Keep the English and Japanese images equivalent.
+It reuses `.github/pages/assets/site.css` and the two hero slider images (`hero-eevee.webp` and `hero-cycles.webp`), so update the images whenever the landing-page heading, tagline, or hero images change. Keep the English and Japanese images equivalent.
 
 Regenerate both images at 1200 × 630 from the repository root:
 
