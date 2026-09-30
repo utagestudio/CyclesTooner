@@ -2,7 +2,7 @@
 
 English | [日本語](README.md)
 
-CyclesTooner is a Blender add-on that **lets avatar models set up with EEVEE-oriented toon shaders, such as VRM, MMD, VRToon, and UnityToon, render with a toon look in Cycles**.
+CyclesTooner is a Blender add-on that **lets avatar models set up with EEVEE-oriented shaders, such as VRM and MMD avatars, render with a toon look in Cycles**.
 
 The MToon, VRToon, and UnityToon shaders build their shading with the EEVEE-only `Shader to RGB` node, so they do not look as intended when rendered in Cycles. MMD (MMDShaderDev) materials are also designed for EEVEE display. CyclesTooner replaces these materials with Blender's built-in **Toon BSDF**, carrying over textures, colors, normals, and transparency where possible. It also generates inverted-hull outlines with Geometry Nodes that work in Cycles.
 
@@ -78,6 +78,7 @@ Convert and Add Outline modify scene data directly. Save your .blend file first 
 - Converted Toon BSDF nodes start with `Size: 0.8` and `Smooth: 0.2`.
 - None of these add-ons are bundled with CyclesTooner. Some color and transparency values are read from each add-on's material settings, so keep the add-on that imported the model enabled while converting.
 - VRToon is converted when a shader group whose name starts with `VRToon` is connected to the Material Output. UnityToon and Unlit are converted only when their setup was created by Unitypackage Importer.
+- lilToon and Poiyomi, which many VRChat avatars use, cannot be converted directly. CyclesTooner converts the materials (UnityToon and Unlit) after Unitypackage Importer has imported the avatar.
 
 ## Feature Details
 
