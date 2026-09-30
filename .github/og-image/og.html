@@ -75,19 +75,20 @@
     }
 
     .og-lede strong {
-      color: var(--lime);
+      color: var(--magenta);
     }
 
     .og .viewport-frame {
       min-height: 0;
     }
 
-    .og .viewport-frame img {
-      display: block;
-      width: 100%;
-      height: 330px;
-      object-fit: cover;
-      object-position: center top;
+    /* A still of the hero slider at its initial 50% position. */
+    .og .ba-hint {
+      display: none;
+    }
+
+    .og .ba-label {
+      font-size: 0.85rem;
     }
   </style>
 </head>
@@ -99,15 +100,21 @@
     </div>
     <div class="og-body">
       <div>
-        <p class="eyebrow" data-en="Blender toon shader assistant for Cycles" data-ja="BlenderのCycles向けトゥーンシェーダー補助アドオン"></p>
+        <p class="eyebrow" data-en="For VRM and MMD avatars in Cycles" data-ja="VRM・MMDのアバターを、Cyclesで"></p>
         <h1 data-en="&lt;span&gt;Cycles toon rendering,&lt;/span&gt;&lt;span&gt;without rebuilding&lt;/span&gt;&lt;span&gt;every material.&lt;/span&gt;" data-ja="&lt;span&gt;マテリアルを作り直さず、&lt;/span&gt;&lt;span&gt;Cyclesでトゥーン表現へ。&lt;/span&gt;"></h1>
-        <p class="og-lede" data-en="Convert EEVEE toon avatars from &lt;strong&gt;VRM, MMD, VRToon, and UnityToon&lt;/strong&gt; to Toon BSDF, and add outlines for Cycles." data-ja="&lt;strong&gt;VRM・MMD・VRToon・UnityToon&lt;/strong&gt;の&lt;wbr&gt;EEVEE向けトゥーンアバターを&lt;wbr&gt;Toon BSDFへ変換し、&lt;wbr&gt;Cycles向けのアウトラインも生成。"></p>
+        <p class="og-lede" data-en="Water reflections, dappled sunlight, fisheye lenses. Bring your &lt;strong&gt;VRM and MMD&lt;/strong&gt; avatars into the light and shadow of Cycles." data-ja="水面の反射も、&lt;wbr&gt;木漏れ日も、&lt;wbr&gt;魚眼レンズも。&lt;wbr&gt;&lt;strong&gt;VRMやMMD&lt;/strong&gt;のアバターを、&lt;wbr&gt;Cyclesの光と影の中へ。"></p>
       </div>
       <div class="viewport-frame">
         <div class="viewport-toolbar">
           <span></span><span></span><span></span>
         </div>
-        <img src="../pages/assets/material-converter.png" alt="">
+        <div class="ba" style="--pos: 50%">
+          <img class="ba-before" src="../pages/assets/hero-eevee.webp" alt="">
+          <img class="ba-after" src="../pages/assets/hero-cycles.webp" alt="">
+          <span class="ba-label ba-label-before">EEVEE · MToon</span>
+          <span class="ba-label ba-label-after">Cycles · CyclesTooner</span>
+          <span class="ba-handle"></span>
+        </div>
       </div>
     </div>
   </div>
@@ -116,6 +123,10 @@
     document.documentElement.lang = lang;
     for (const element of document.querySelectorAll("[data-en]")) {
       element.innerHTML = element.dataset[lang];
+    }
+    if (lang === "ja") {
+      document.querySelector(".ba-label-before").textContent = "EEVEE・MToon";
+      document.querySelector(".ba-label-after").textContent = "Cycles・CyclesTooner";
     }
   </script>
 </body>

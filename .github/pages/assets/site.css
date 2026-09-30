@@ -115,7 +115,8 @@ a {
   grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.98fr);
   gap: clamp(2rem, 5vw, 4rem);
   align-items: center;
-  min-height: calc(100svh - 70px);
+  /* Fill the first screen, but stop growing on very tall displays. */
+  min-height: min(calc(100svh - 70px), 920px);
   padding: clamp(3rem, 8vw, 6rem) 0 3rem;
 }
 
@@ -165,6 +166,11 @@ h3 {
   overflow-wrap: normal;
   text-wrap: balance;
   word-break: auto-phrase;
+}
+
+.hero h1 {
+  font-size: clamp(2.4rem, 3.8vw, 4rem);
+  line-height: 1;
 }
 
 :lang(ja) .hero h1 {
