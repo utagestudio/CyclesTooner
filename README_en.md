@@ -132,7 +132,7 @@ Messages and tooltips follow Blender's language setting and appear in English or
 
 ## Contact
 
-Bug reports, requests, and questions can be sent through the [contact form](https://tally.so/r/KYqY78?product=CyclesTooner) (no account required).
+Bug reports, requests, and questions can be sent through the [contact form](https://tally.so/r/KYqY78?product=CyclesTooner).
 If you have a GitHub account, [Issues](https://github.com/utagestudio/CyclesTooner/issues) works as well.
 
 ## For Developers
