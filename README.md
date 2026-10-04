@@ -130,6 +130,11 @@ Convert と Add Outline は、シーンのデータを直接書き換えます�
 | VRToon のアウトラインが Convert 後に消えた | 仕様です。**Add Outline** を押すと、保存された太さで作り直されます。 |
 | Revert しても元の見た目に戻らない | Principled BSDF 以外からの変換は、元のシェーダーに戻せません。変換前に保存した .blend ファイルを使ってください。 |
 
+## お問い合わせ
+
+不具合の報告、要望、質問は[お問い合わせフォーム](https://tally.so/r/kdVdDR?product=CyclesTooner)から送れます（アカウントの登録は要りません）。
+GitHub のアカウントをお持ちなら、[Issues](https://github.com/utagestudio/CyclesTooner/issues) に書いていただいてもかまいません。
+
 ## 開発者向け
 
 - アドオンの動作仕様：[docs/behavior.md](docs/behavior.md)

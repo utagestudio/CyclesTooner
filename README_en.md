@@ -130,6 +130,11 @@ Messages and tooltips follow Blender's language setting and appear in English or
 | A VRToon outline disappeared after Convert | This is expected. Click **Add Outline** to rebuild it with the saved thickness. |
 | Revert does not restore the original look | Conversions from shaders other than Principled BSDF cannot be restored. Use the .blend file you saved before converting. |
 
+## Contact
+
+Bug reports, requests, and questions can be sent through the [contact form](https://tally.so/r/KYqY78?product=CyclesTooner) (no account required).
+If you have a GitHub account, [Issues](https://github.com/utagestudio/CyclesTooner/issues) works as well.
+
 ## For Developers
 
 - Add-on behavior specification: [docs/behavior.md](docs/behavior.md)
