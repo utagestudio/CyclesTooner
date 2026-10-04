@@ -765,6 +765,10 @@ code {
   margin-bottom: 0.7rem;
 }
 
+.asset-credits p:last-child {
+  margin-bottom: 0;
+}
+
 .asset-credits ul {
   display: grid;
   gap: 0.25rem;
