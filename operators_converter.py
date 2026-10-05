@@ -14,6 +14,9 @@ CYCLES_TOONER_MIX_NODE = "CyclesTooner_OpacityMix"
 CYCLES_TOONER_TRANSPARENT_NODE = "CyclesTooner_Transparent"
 CYCLES_TOONER_SHADOW_TRANSPARENCY_NODE = "CyclesTooner_ShadowTransparency"
 CYCLES_TOONER_LIGHT_PATH_NODE = "CyclesTooner_LightPath"
+CYCLES_TOONER_EMISSION_NODE = "CyclesTooner_Emission"
+CYCLES_TOONER_EMISSION_MIX_NODE = "CyclesTooner_EmissionMix"
+DEFAULT_EMISSION_FACTOR = 0.5
 CYCLES_TOONER_SOURCE_SHADER_PROP = "cyclestooner_source_shader"
 CYCLES_TOONER_MMD_BASE_TEX = "CyclesTooner_MMDBaseTex"
 CYCLES_TOONER_MMD_DIFFUSE_MULTIPLY = "CyclesTooner_MMDDiffuseMultiply"
@@ -89,6 +92,28 @@ def update_material_no_shadow_property(self, context):
     if is_outline_material(self):
         return
     refresh_material_opacity_flow(self)
+
+
+def update_material_emission_property(self, context):
+    if is_outline_material(self):
+        return
+    refresh_material_opacity_flow(self)
+
+
+def update_material_emission_factor_property(self, context):
+    if is_outline_material(self) or not self.use_nodes or not self.node_tree:
+        return
+    emission_mix_node = self.node_tree.nodes.get(CYCLES_TOONER_EMISSION_MIX_NODE)
+    if is_emission_mix_node(emission_mix_node):
+        emission_mix_node.inputs['Fac'].default_value = get_material_emission_factor(self)
+
+
+def get_material_emission_factor(mat):
+    return max(0.0, min(1.0, float(getattr(mat, "cyclestooner_emission_factor", DEFAULT_EMISSION_FACTOR))))
+
+
+def is_emission_mix_node(node):
+    return bool(node and node.type == 'MIX_SHADER' and node.name == CYCLES_TOONER_EMISSION_MIX_NODE)
 
 
 def set_material_opacity(mat, opacity):
@@ -268,6 +293,8 @@ def find_toon_node_from_root(root_node):
     for index in (1, 2):
         if len(root_node.inputs) > index and root_node.inputs[index].is_linked:
             node = root_node.inputs[index].links[0].from_node
+            if is_emission_mix_node(node) and node.inputs[1].is_linked:
+                node = node.inputs[1].links[0].from_node
             if node.type == 'BSDF_TOON':
                 return node
 
@@ -1104,6 +1131,49 @@ def setup_no_shadow_nodes(mat, transparency_node):
     return shadow_node.outputs['Value']
 
 
+def setup_emission_nodes(mat, toon_node):
+    """Add or remove the emission nodes and return the socket that feeds the opacity mix."""
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    emission_node = nodes.get(CYCLES_TOONER_EMISSION_NODE)
+    if emission_node and emission_node.type != 'EMISSION':
+        emission_node = None
+    emission_mix_node = nodes.get(CYCLES_TOONER_EMISSION_MIX_NODE)
+    if not is_emission_mix_node(emission_mix_node):
+        emission_mix_node = None
+
+    if not getattr(mat, "cyclestooner_emission", False):
+        remove_nodes_if_present(nodes, [node for node in (emission_node, emission_mix_node) if node])
+        return toon_node.outputs['BSDF']
+
+    if not emission_node:
+        emission_node = nodes.new(type='ShaderNodeEmission')
+        emission_node.name = CYCLES_TOONER_EMISSION_NODE
+        emission_node.label = "CyclesTooner Emission"
+    emission_node.location = (toon_node.location.x, toon_node.location.y - 380)
+
+    if not emission_mix_node:
+        emission_mix_node = nodes.new(type='ShaderNodeMixShader')
+        emission_mix_node.name = CYCLES_TOONER_EMISSION_MIX_NODE
+        emission_mix_node.label = "CyclesTooner Emission Mix"
+    emission_mix_node.location = (toon_node.location.x + 220, toon_node.location.y - 40)
+    emission_mix_node.inputs['Fac'].default_value = get_material_emission_factor(mat)
+
+    # The emission shows the same color as the Toon BSDF, without its shading.
+    toon_color_input = toon_node.inputs['Color']
+    emission_color_input = emission_node.inputs['Color']
+    if toon_color_input.is_linked:
+        _replace_input_link(links, emission_color_input, toon_color_input.links[0].from_socket)
+    else:
+        for link in list(emission_color_input.links):
+            links.remove(link)
+        emission_color_input.default_value = tuple(toon_color_input.default_value)
+
+    _replace_input_link(links, emission_mix_node.inputs[1], toon_node.outputs['BSDF'])
+    _replace_input_link(links, emission_mix_node.inputs[2], emission_node.outputs['Emission'])
+    return emission_mix_node.outputs['Shader']
+
+
 def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opacity=1.0):
     tree = mat.node_tree
     nodes = tree.nodes
@@ -1159,7 +1229,7 @@ def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opa
     _replace_input_link(links, transparency_node.inputs[1], effective_opacity_socket)
 
     _replace_input_link(links, mix_node.inputs['Fac'], setup_no_shadow_nodes(mat, transparency_node))
-    _replace_input_link(links, mix_node.inputs[1], toon_node.outputs['BSDF'])
+    _replace_input_link(links, mix_node.inputs[1], setup_emission_nodes(mat, toon_node))
     _replace_input_link(links, mix_node.inputs[2], transparent_node.outputs['BSDF'])
     _replace_input_link(links, output_node.inputs['Surface'], mix_node.outputs['Shader'])
 
@@ -1627,6 +1697,15 @@ class OBJECT_OT_ToonReverter(bpy.types.Operator):
             # Toonノードを探す
             if len(mix_node.inputs) > 1 and mix_node.inputs[1].is_linked:
                 possible_toon = mix_node.inputs[1].links[0].from_node
+                if is_emission_mix_node(possible_toon):
+                    emission_mix_node = possible_toon
+                    nodes_to_remove.append(emission_mix_node)
+                    if emission_mix_node.inputs[2].is_linked:
+                        emission_node = emission_mix_node.inputs[2].links[0].from_node
+                        if emission_node.name == CYCLES_TOONER_EMISSION_NODE:
+                            nodes_to_remove.append(emission_node)
+                    if emission_mix_node.inputs[1].is_linked:
+                        possible_toon = emission_mix_node.inputs[1].links[0].from_node
                 if possible_toon.type == 'BSDF_TOON':
                     toon_node = possible_toon
                     nodes_to_remove.append(toon_node)
@@ -1694,6 +1773,8 @@ class OBJECT_OT_ToonReverter(bpy.types.Operator):
         sync_material_smooth_property(mat, DEFAULT_TOON_SMOOTH)
         if getattr(mat, "cyclestooner_no_shadow", False):
             mat.cyclestooner_no_shadow = False
+        if getattr(mat, "cyclestooner_emission", False):
+            mat.cyclestooner_emission = False
             
         return True
 

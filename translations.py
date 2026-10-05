@@ -71,6 +71,10 @@ JAPANESE = {
     "Smooth value for this CyclesTooner material": "このCyclesToonerマテリアルのSmoothの値",
     "Stop this CyclesTooner material from casting shadows in Cycles":
         "このCyclesToonerマテリアルがCyclesで影を落とさないようにします",
+    "Mix an Emission shader into this CyclesTooner material so that it keeps its color in shade":
+        "このCyclesToonerマテリアルにEmissionを混ぜて、陰の中でも色が沈まないようにします",
+    "How much of the Emission shader is mixed in. 0 keeps the Toon shading and 1 shows the unshaded color":
+        "Emissionを混ぜる割合。0でToonの陰影のまま、1で陰影のない色になります",
 }
 
 TRANSLATIONS = {

@@ -26,6 +26,8 @@ User-facing explanations belong in `README.md`, `README_en.md`, and the GitHub P
 - Helpers that walk the flow from the Material Output, such as finding the Toon BSDF or the source alpha, must look through the optional nodes.
 - A toggle must not change a material that has no `CyclesTooner_Opacity` node.
 - `No Shadow` (`cyclestooner_no_shadow`) inserts the `CyclesTooner_ShadowTransparency` Math node (`MAXIMUM`) between `CyclesTooner_Transparency` and the `CyclesTooner_OpacityMix` factor, with the `Is Shadow Ray` output of the `CyclesTooner_LightPath` node as its second input. Enabling it also enables the material's Transparent Shadows setting, because Cycles otherwise ignores shader transparency for shadow rays.
+- `Emission` (`cyclestooner_emission`) inserts the `CyclesTooner_EmissionMix` Mix Shader between the Toon BSDF and the first shader input of `CyclesTooner_OpacityMix`, with the Toon BSDF as its first shader and the `CyclesTooner_Emission` node as its second. Its factor is the material's `cyclestooner_emission_factor` (default `0.5`): `0` matches the toggle being off and `1` shows the unshaded color. The UI shows the factor only while the toggle is on.
+- On every rebuild, connect the Emission `Color` to the same source socket as the Toon BSDF `Color`, or copy the Toon BSDF color value when it is unlinked. Leave the Emission `Strength` as it is; the add-on controls the look through the mix factor only.
 - Revert removes the optional nodes and turns the toggles off.
 
 ### Source Shader Classification

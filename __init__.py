@@ -2,7 +2,7 @@
 # Version target and development identifier. The manifest stores the complete
 # SemVer string; Blender's bl_info accepts only the integer core tuple.
 ADDON_VERSION = (1, 28, 0)
-ADDON_VERSION_PRERELEASE = "dev.2"
+ADDON_VERSION_PRERELEASE = "dev.3"
 ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 if ADDON_VERSION_PRERELEASE:
     ADDON_VERSION_STRING = f"{ADDON_VERSION_STRING}-{ADDON_VERSION_PRERELEASE}"
@@ -132,6 +132,21 @@ def register():
         default=False,
         update=operators_converter.update_material_no_shadow_property,
     )
+    bpy.types.Material.cyclestooner_emission = bpy.props.BoolProperty(
+        name="Emission",
+        description="Mix an Emission shader into this CyclesTooner material so that it keeps its color in shade",
+        default=False,
+        update=operators_converter.update_material_emission_property,
+    )
+    bpy.types.Material.cyclestooner_emission_factor = bpy.props.FloatProperty(
+        name="Emission Factor",
+        description="How much of the Emission shader is mixed in. 0 keeps the Toon shading and 1 shows the unshaded color",
+        min=0.0,
+        max=1.0,
+        default=operators_converter.DEFAULT_EMISSION_FACTOR,
+        subtype='FACTOR',
+        update=operators_converter.update_material_emission_factor_property,
+    )
 
 def unregister():
     """
@@ -143,6 +158,10 @@ def unregister():
         del bpy.types.Material.cyclestooner_smooth
     if hasattr(bpy.types.Material, "cyclestooner_no_shadow"):
         del bpy.types.Material.cyclestooner_no_shadow
+    if hasattr(bpy.types.Material, "cyclestooner_emission"):
+        del bpy.types.Material.cyclestooner_emission
+    if hasattr(bpy.types.Material, "cyclestooner_emission_factor"):
+        del bpy.types.Material.cyclestooner_emission_factor
     if hasattr(bpy.types.Scene, "cyclestooner_batch_opacity"):
         del bpy.types.Scene.cyclestooner_batch_opacity
     if hasattr(bpy.types.Scene, "cyclestooner_batch_smooth"):
