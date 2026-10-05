@@ -1,10 +1,7 @@
 import bpy
 import statistics
 
-if __package__:
-    from .translations import report_message
-else:
-    from translations import report_message
+from .translations import report_message
 
 OUTLINE_SOURCE_SUFFIX = "_Outline_Source"
 OUTLINE_CONTAINER_SUFFIX = "_Outline_Collection"
