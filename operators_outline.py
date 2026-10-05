@@ -1,7 +1,7 @@
 import bpy
 import statistics
 
-from .translations import report_message
+from .translations import LABEL_CONTEXT, report_message
 
 OUTLINE_SOURCE_SUFFIX = "_Outline_Source"
 OUTLINE_CONTAINER_SUFFIX = "_Outline_Collection"
@@ -923,6 +923,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
     """
     bl_idname = "object.add_toon_outline"
     bl_label = "Add Outline"
+    bl_translation_context = LABEL_CONTEXT
     bl_description = "Create an inverted-hull outline for the model that contains the selected object. Intended for models converted by CyclesTooner"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1228,11 +1229,13 @@ class OBJECT_OT_SetOutlineColor(bpy.types.Operator):
     """選択中のモデルに対応するアウトライン色を変更します。"""
     bl_idname = "object.set_toon_outline_color"
     bl_label = "Apply Outline Color"
+    bl_translation_context = LABEL_CONTEXT
     bl_description = "Apply the outline color to the selected model's outline"
     bl_options = {'REGISTER', 'UNDO'}
 
     color: bpy.props.FloatVectorProperty(
         name="Outline Color",
+        translation_context=LABEL_CONTEXT,
         description="Color applied to the selected model's outline",
         subtype='COLOR',
         size=4,
@@ -1268,11 +1271,13 @@ class OBJECT_OT_SetOutlineThickness(bpy.types.Operator):
     """選択中のモデルに対応するアウトラインの太さを変更します。"""
     bl_idname = "object.set_toon_outline_thickness"
     bl_label = "Apply Outline Thickness"
+    bl_translation_context = LABEL_CONTEXT
     bl_description = "Apply the base thickness to the selected model's outline"
     bl_options = {'REGISTER', 'UNDO'}
 
     thickness: bpy.props.FloatProperty(
         name="Outline Thickness",
+        translation_context=LABEL_CONTEXT,
         description="Base outline thickness in Blender units",
         subtype='DISTANCE',
         min=0.0,
@@ -1307,6 +1312,7 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
     """
     bl_idname = "object.refresh_toon_outline"
     bl_label = "Refresh Outline"
+    bl_translation_context = LABEL_CONTEXT
     bl_description = "Rebuild the outline sources from the model's current render visibility"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1408,6 +1414,7 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
     """
     bl_idname = "object.remove_toon_outline"
     bl_label = "Remove Outline"
+    bl_translation_context = LABEL_CONTEXT
     bl_description = "Remove the selected model's outline and its unused data"
     bl_options = {'REGISTER', 'UNDO'}
 

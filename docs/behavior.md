@@ -65,6 +65,7 @@ User-facing explanations belong in `README.md`, `README_en.md`, and the GitHub P
 - Write every operator report, tooltip (`bl_description`), and property description in English, and add its Japanese translation to `translations.py`.
 - Translate a report with `report_message()` before filling in its values; never pass an f-string to `self.report`.
 - Keep button and panel labels (`bl_label` and layout `text=`) in English so that they match the READMEs and GitHub Pages.
+- Blender's own dictionary translates common words such as `Convert`, `Revert`, and `Opacity`. To keep labels in English in every language, give each operator `bl_translation_context = LABEL_CONTEXT` and each property `translation_context=LABEL_CONTEXT` (from `translations.py`), and pass `translate=False` with every layout `text=`. Register no translations under `LABEL_CONTEXT`; tooltips and descriptions are translated through the default context and are unaffected.
 
 ### Contact Button
 

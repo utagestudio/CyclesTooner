@@ -112,6 +112,13 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.28.2</span><strong>パネルのラベルを英語に統一</strong><time datetime="2026-10-06">2026年10月6日</time></summary>
+          <ul>
+            <li>パネルのボタンと項目名が、どの言語設定でもドキュメントと同じ英語で表示されるようになりました。これまで日本語表示では、Convert、Revert、Opacityなど一部だけが日本語になり、残りは英語のままでした。</li>
+            <li>ツールチップと操作メッセージは、引き続きBlenderの言語設定に従います。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.28.1</span><strong>スクリプト再読み込みの安定化</strong><time datetime="2026-10-05">2026年10月5日</time></summary>
           <ul>
             <li>アドオンのスクリプトを、Blenderがエクステンション向けに推奨する方法で読み込み・再読み込みするようにしました。「スクリプトを再読み込み」でアドオン全体が読み直されます。</li>
@@ -152,14 +159,6 @@
             <li>不透明度0.999などのほぼ不透明なマテリアルを変換した際、Material PreviewやEEVEEで面が裏返ったように見える問題を修正しました。</li>
             <li>変換時とOpacity変更時にDitheredを使用し、Blendedによる面の描画順序の乱れを防ぎます。</li>
             <li>設定済みの不透明度とCyclesシェーダーの透明度を保持します。既存の変換済みマテリアルには、次回のOpacity変更時に新設定が適用されます。</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.26.1</span><strong>レンダー状態に応じたアウトライン対象判定</strong><time datetime="2026-09-20">2026年9月20日</time></summary>
-          <ul>
-            <li>オブジェクトや所属するコレクションでレンダー無効にしたメッシュには、アウトラインを付けないようにしました。ビューポートだけで非表示にしたメッシュには、引き続きアウトラインが付きます。</li>
-            <li>複数のコレクションに入っているメッシュは、現在のシーンでいずれかのコレクションがレンダーされていれば、アウトラインが付くようにしました。</li>
-            <li>Add OutlineとRefresh Outlineで無関係なコレクションを移動しないようにし、非表示のリグ用オブジェクトもモデルの階層内に保つようにしました。</li>
           </ul>
         </details>
       </div>

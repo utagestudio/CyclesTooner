@@ -1,7 +1,7 @@
 
 # Version target and development identifier. The manifest stores the complete
 # SemVer string; Blender's bl_info accepts only the integer core tuple.
-ADDON_VERSION = (1, 28, 1)
+ADDON_VERSION = (1, 28, 2)
 ADDON_VERSION_PRERELEASE = ""
 ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 if ADDON_VERSION_PRERELEASE:
@@ -66,6 +66,7 @@ def register():
 
     bpy.types.Scene.cyclestooner_batch_opacity = bpy.props.FloatProperty(
         name="Opacity",
+        translation_context=translations.LABEL_CONTEXT,
         description="Opacity applied to selected toon materials",
         min=0.0,
         max=1.0,
@@ -74,6 +75,7 @@ def register():
     )
     bpy.types.Scene.cyclestooner_batch_smooth = bpy.props.FloatProperty(
         name="Smooth",
+        translation_context=translations.LABEL_CONTEXT,
         description="Smooth value applied to selected toon materials",
         min=0.0,
         max=1.0,
@@ -82,6 +84,7 @@ def register():
     )
     bpy.types.Scene.cyclestooner_outline_color = bpy.props.FloatVectorProperty(
         name="Outline Color",
+        translation_context=translations.LABEL_CONTEXT,
         description="Color applied to the selected model's outline",
         subtype='COLOR',
         size=4,
@@ -91,6 +94,7 @@ def register():
     )
     bpy.types.Scene.cyclestooner_outline_thickness = bpy.props.FloatProperty(
         name="Outline Thickness",
+        translation_context=translations.LABEL_CONTEXT,
         description="Base outline thickness in Blender units",
         subtype='DISTANCE',
         min=0.0,
@@ -100,6 +104,7 @@ def register():
     )
     bpy.types.Material.cyclestooner_opacity = bpy.props.FloatProperty(
         name="Opacity",
+        translation_context=translations.LABEL_CONTEXT,
         description="Opacity for this CyclesTooner material",
         min=0.0,
         max=1.0,
@@ -109,6 +114,7 @@ def register():
     )
     bpy.types.Material.cyclestooner_smooth = bpy.props.FloatProperty(
         name="Smooth",
+        translation_context=translations.LABEL_CONTEXT,
         description="Smooth value for this CyclesTooner material",
         min=0.0,
         max=1.0,
@@ -118,18 +124,21 @@ def register():
     )
     bpy.types.Material.cyclestooner_no_shadow = bpy.props.BoolProperty(
         name="No Shadow",
+        translation_context=translations.LABEL_CONTEXT,
         description="Stop this CyclesTooner material from casting shadows in Cycles",
         default=False,
         update=operators_converter.update_material_no_shadow_property,
     )
     bpy.types.Material.cyclestooner_emission = bpy.props.BoolProperty(
         name="Emission",
+        translation_context=translations.LABEL_CONTEXT,
         description="Mix an Emission shader into this CyclesTooner material so that it keeps its color in shade",
         default=False,
         update=operators_converter.update_material_emission_property,
     )
     bpy.types.Material.cyclestooner_emission_factor = bpy.props.FloatProperty(
         name="Emission Factor",
+        translation_context=translations.LABEL_CONTEXT,
         description="How much of the Emission shader is mixed in. 0 keeps the Toon shading and 1 shows the unshaded color",
         min=0.0,
         max=1.0,
