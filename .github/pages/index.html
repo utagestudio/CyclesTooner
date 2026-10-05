@@ -115,6 +115,17 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.28.0</span><strong>Per-material No Shadow and Emission toggles</strong><time datetime="2026-10-05">October 5, 2026</time></summary>
+          <ul>
+            <li>Adds a No Shadow toggle to the Material fields that stops a converted material, such as an eye, from casting shadows in Cycles.</li>
+            <li>Adds an Emission toggle with an Emission Factor slider that mixes in the material's own color without shading, so that parts such as eye whites keep their color in shade.</li>
+            <li>Both toggles stay in place through Apply Opacity and a repeated Convert, and Revert removes them.</li>
+            <li>Every converted material now has the CyclesTooner_AlphaOpacity node, so an alpha source can be connected after conversion. Materials converted earlier gain it on their next Convert or Apply Opacity.</li>
+            <li>Fixes parts painted to a CT_Outline weight of 0 rendering with a faceted pattern or disappearing on GPU. Those faces now get no outline; run Refresh Outline to update existing outlines.</li>
+            <li>Adds a Contact button at the bottom of the panel that opens the contact form in your language with the add-on version filled in.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.27.0</span><strong>English and Japanese messages</strong><time datetime="2026-09-29">September 29, 2026</time></summary>
           <ul>
             <li>Operator messages, warnings, button tooltips, and property descriptions now follow Blender's language setting and appear in English or Japanese.</li>
@@ -153,15 +164,6 @@
             <li>Converts Unitypackage Importer UnityToon v1 groups and labelled Unlit Emission materials directly to Toon BSDF.</li>
             <li>Preserves linked base colors, UnityToon normals, and texture or constant alpha through CyclesTooner's shared opacity flow.</li>
             <li>Leaves ordinary Emission materials unchanged.</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.25.2</span><strong>Reliable opacity and safer outlines</strong><time datetime="2026-09-15">September 15, 2026</time></summary>
-          <ul>
-            <li>Preserves configured, unlinked Principled Alpha values when converting materials to Toon BSDF.</li>
-            <li>Protects user objects and Geometry Nodes modifiers from being mistaken for generated outlines.</li>
-            <li>Includes render-visible meshes in outline sources regardless of viewport collection visibility, and keeps displacement normal-directed.</li>
-            <li>Removes obsolete VRToon-specific shader nodes while retaining unknown disconnected user nodes.</li>
           </ul>
         </details>
       </div>

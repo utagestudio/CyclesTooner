@@ -112,6 +112,17 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.28.0</span><strong>マテリアル単位のNo Shadow / Emissionトグル</strong><time datetime="2026-10-05">2026年10月5日</time></summary>
+          <ul>
+            <li>Material欄にNo Shadowトグルを追加しました。目などの変換済みマテリアルが、Cyclesで影を落とさないようにできます。</li>
+            <li>EmissionトグルとEmission Factorスライダーを追加しました。マテリアル自身の色を陰影なしで混ぜることで、白目などが陰の中でも沈まないようにできます。</li>
+            <li>どちらのトグルも、Apply OpacityやConvertの再実行後も維持され、Revertで取り除かれます。</li>
+            <li>変換したすべてのマテリアルにCyclesTooner_AlphaOpacityノードが作られるようになり、変換後にAlphaをつなげられます。以前に変換したマテリアルには、次回のConvertまたはApply Opacityで追加されます。</li>
+            <li>CT_Outlineのウェイトを0にした部分が、GPUでのレンダー時に模様が出たり消えたりする問題を修正しました。該当する面にはアウトラインが作られなくなります。既存のアウトラインはRefresh Outlineで更新できます。</li>
+            <li>パネルの一番下にContactボタンを追加しました。言語設定に合ったお問い合わせフォームが、使用中のバージョンが入力された状態で開きます。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.27.0</span><strong>メッセージの日英対応</strong><time datetime="2026-09-29">2026年9月29日</time></summary>
           <ul>
             <li>操作時のメッセージ、警告、ボタンのツールチップ、プロパティの説明が、Blenderの言語設定に合わせて日本語または英語で表示されるようになりました。</li>
@@ -150,15 +161,6 @@
             <li>Unitypackage ImporterのUnityToon v1グループと、Unlitラベル付きEmissionマテリアルをToon BSDFへ直接変換できるようにしました。</li>
             <li>接続済みのベースカラー、UnityToonのNormal、テクスチャまたは定数のAlphaを、CyclesTooner共通のOpacityフローへ引き継ぎます。</li>
             <li>通常のEmissionマテリアルは変換しません。</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.25.2</span><strong>Opacityとアウトラインの安定性を向上</strong><time datetime="2026-09-15">2026年9月15日</time></summary>
-          <ul>
-            <li>マテリアルをToon BSDFへ変換する際、設定済みで未接続のPrincipled Alphaを保持するようにしました。</li>
-            <li>ユーザー作成のオブジェクトやGeometry Nodesモディファイアを、生成済みアウトラインとして誤認しないようにしました。</li>
-            <li>viewport上のコレクション表示状態にかかわらず、レンダー表示されるメッシュをアウトラインの対象に含め、変位を法線方向のみにしました。</li>
-            <li>不明な切断済みユーザーノードを保持しながら、不要になったVRToon固有のシェーダーノードを削除するようにしました。</li>
           </ul>
         </details>
       </div>
