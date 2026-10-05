@@ -115,6 +115,13 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.28.1</span><strong>Reliable script reloading</strong><time datetime="2026-10-05">October 5, 2026</time></summary>
+          <ul>
+            <li>The add-on now loads and reloads its scripts the way Blender recommends for extensions, so Reload Scripts picks up every part of the add-on.</li>
+            <li>Running the add-on's script directly from the Text Editor is no longer supported. Install it as an extension instead.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.28.0</span><strong>Per-material No Shadow and Emission toggles</strong><time datetime="2026-10-05">October 5, 2026</time></summary>
           <ul>
             <li>Adds a No Shadow toggle to the Material fields that stops a converted material, such as an eye, from casting shadows in Cycles.</li>
@@ -156,14 +163,6 @@
             <li>Outlines now skip meshes disabled for rendering on the object or any of its collections, while meshes hidden only in the viewport still get outlines.</li>
             <li>A mesh linked to several collections keeps its outline as long as any collection in the current scene renders it.</li>
             <li>Add Outline and Refresh Outline no longer move unrelated collections, and keep hidden rig helpers inside the model hierarchy.</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.26.0</span><strong>Unitypackage Importer material conversion</strong><time datetime="2026-09-19">September 19, 2026</time></summary>
-          <ul>
-            <li>Converts Unitypackage Importer UnityToon v1 groups and labelled Unlit Emission materials directly to Toon BSDF.</li>
-            <li>Preserves linked base colors, UnityToon normals, and texture or constant alpha through CyclesTooner's shared opacity flow.</li>
-            <li>Leaves ordinary Emission materials unchanged.</li>
           </ul>
         </details>
       </div>
