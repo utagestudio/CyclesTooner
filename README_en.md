@@ -139,6 +139,7 @@ Messages and tooltips follow Blender's language setting and appear in English or
 ## Contact
 
 Bug reports, requests, and questions can be sent through the [contact form](https://tally.so/r/KYqY78?product=CyclesTooner).
+In Blender, the **Contact** button at the bottom of the CyclesTooner panel opens the same form with your add-on version filled in.
 If you have a GitHub account, [Issues](https://github.com/utagestudio/CyclesTooner/issues) works as well.
 
 ## For Developers
