@@ -145,6 +145,30 @@ GitHub のアカウントをお持ちなら、[Issues](https://github.com/utages
 - アドオンの動作仕様：[docs/behavior.md](docs/behavior.md)
 - バージョン、ブランチ、コミット、リリースの運用：[VERSIONING.md](VERSIONING.md)
 
+### 開発中のアドオンを Blender に読み込む
+
+リポジトリの作業ツリーを、Blender の `user_default` 拡張機能ディレクトリにシンボリックリンクします。起動するたびに、作業ツリーの現在の内容が読み込まれます。
+
+1. 拡張機能リポジトリや ZIP からインストールした CyclesTooner がある場合は、先にアンインストールします。両方を有効にすると、オペレーターやプロパティの登録が衝突します。
+2. リンクを作成します。リンク名は `blender_manifest.toml` の `id` と同じ `cycles_tooner` にしてください。`<version>` は `5.2` や `4.5` など、Blender のバージョンです。
+
+   ```bash
+   # Linux
+   ln -s /path/to/CyclesTooner ~/.config/blender/<version>/extensions/user_default/cycles_tooner
+   # macOS
+   ln -s /path/to/CyclesTooner ~/Library/Application\ Support/Blender/<version>/extensions/user_default/cycles_tooner
+   ```
+
+   ```bat
+   :: Windows（管理者権限のコマンドプロンプト）
+   mklink /D "%APPDATA%\Blender Foundation\Blender\<version>\extensions\user_default\cycles_tooner" "C:\path\to\CyclesTooner"
+   ```
+
+3. Blender を起動し、`Edit > Preferences > Add-ons` で **CyclesTooner** を有効にします。
+4. コードを変更したあとは、Blender を再起動するか、`F3` から `Reload Scripts` を実行します。
+
+元に戻すときは、アドオンを無効にしてからリンクを削除します。
+
 ## ライセンス
 
 [GPL-3.0-or-later](LICENSE)

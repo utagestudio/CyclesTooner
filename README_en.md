@@ -145,6 +145,30 @@ If you have a GitHub account, [Issues](https://github.com/utagestudio/CyclesToon
 - Add-on behavior specification: [docs/behavior.md](docs/behavior.md)
 - Versioning, branch, commit, and release workflow: [VERSIONING.md](VERSIONING.md)
 
+### Loading the Development Add-on in Blender
+
+Symlink the repository working tree into Blender's `user_default` extensions directory. Blender then loads the current contents of the working tree on every start.
+
+1. If CyclesTooner is installed from the extension repository or a ZIP file, uninstall it first. Enabling both makes their operator and property registrations collide.
+2. Create the link. Name it `cycles_tooner`, the same as the `id` in `blender_manifest.toml`. `<version>` is the Blender version, such as `5.2` or `4.5`.
+
+   ```bash
+   # Linux
+   ln -s /path/to/CyclesTooner ~/.config/blender/<version>/extensions/user_default/cycles_tooner
+   # macOS
+   ln -s /path/to/CyclesTooner ~/Library/Application\ Support/Blender/<version>/extensions/user_default/cycles_tooner
+   ```
+
+   ```bat
+   :: Windows (Command Prompt run as administrator)
+   mklink /D "%APPDATA%\Blender Foundation\Blender\<version>\extensions\user_default\cycles_tooner" "C:\path\to\CyclesTooner"
+   ```
+
+3. Start Blender and enable **CyclesTooner** in `Edit > Preferences > Add-ons`.
+4. After changing the code, restart Blender or run `Reload Scripts` from `F3`.
+
+To undo this, disable the add-on and then delete the link.
+
 ## License
 
 [GPL-3.0-or-later](LICENSE)
