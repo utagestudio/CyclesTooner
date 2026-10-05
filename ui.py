@@ -1,4 +1,3 @@
-import sys
 import urllib.parse
 
 import bpy
@@ -12,8 +11,8 @@ CONTACT_FORM_PRODUCT = "CyclesTooner"
 
 def get_addon_version_string():
     # ui is imported by the package, so read the version when it is needed.
-    module = sys.modules.get(__package__) if __package__ else sys.modules.get("__main__")
-    return getattr(module, "ADDON_VERSION_STRING", "")
+    from . import ADDON_VERSION_STRING
+    return ADDON_VERSION_STRING
 
 
 def build_contact_form_url():
