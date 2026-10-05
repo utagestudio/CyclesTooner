@@ -20,6 +20,8 @@ OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
 OUTLINE_NODE_GROUP_PROPERTY = "cyclestooner_outline_node_group"
 OUTLINE_EMISSION_NODE_NAME = "CyclesTooner_Outline_Emission"
+OUTLINE_ZERO_OFFSET_DELETE_NODE_NAME = "CyclesTooner_Outline_ZeroOffsetDelete"
+OUTLINE_ZERO_OFFSET_EPSILON = 1e-6
 DEFAULT_OUTLINE_COLOR = (0.098, 0.035, 0.023, 1.0)
 DEFAULT_OUTLINE_THICKNESS = 0.002
 OUTLINE_WEIGHT_ATTRIBUTE = "CT_Outline"
@@ -683,6 +685,59 @@ def set_outline_thickness(mod, thickness):
     return True
 
 
+def ensure_outline_zero_offset_delete(group):
+    """Delete outline faces that are not offset, because they coincide with the model."""
+    if not group:
+        return False
+    nodes = group.nodes
+    links = group.links
+    if nodes.get(OUTLINE_ZERO_OFFSET_DELETE_NODE_NAME):
+        return True
+
+    set_pos = next((node for node in nodes if node.type == 'SET_POSITION'), None)
+    if not set_pos:
+        return False
+    geometry_input = set_pos.inputs.get('Geometry')
+    offset_input = set_pos.inputs.get('Offset')
+    if not geometry_input or not geometry_input.is_linked or not offset_input or not offset_input.is_linked:
+        return False
+
+    # The offset is Normal * (Weight * Thickness); find the scalar factor.
+    vector_node = offset_input.links[0].from_node
+    if vector_node.type != 'VECT_MATH' or len(vector_node.inputs) < 2 or not vector_node.inputs[1].is_linked:
+        return False
+    distance_socket = vector_node.inputs[1].links[0].from_socket
+    geometry_socket = geometry_input.links[0].from_socket
+
+    absolute = nodes.new('ShaderNodeMath')
+    absolute.operation = 'ABSOLUTE'
+    absolute.location = (set_pos.location.x - 400, set_pos.location.y + 320)
+
+    compare = nodes.new('FunctionNodeCompare')
+    compare.data_type = 'FLOAT'
+    compare.operation = 'LESS_EQUAL'
+    compare.location = (set_pos.location.x - 220, set_pos.location.y + 320)
+    compare.inputs[1].default_value = OUTLINE_ZERO_OFFSET_EPSILON
+
+    # On the face domain the distance is the average of the face's vertices,
+    # so only faces whose vertices all stay in place are deleted.
+    delete = nodes.new('GeometryNodeDeleteGeometry')
+    delete.name = OUTLINE_ZERO_OFFSET_DELETE_NODE_NAME
+    delete.label = "CyclesTooner Delete Zero Offset"
+    delete.domain = 'FACE'
+    delete.mode = 'ALL'
+    delete.location = (set_pos.location.x - 40, set_pos.location.y + 240)
+
+    links.new(distance_socket, absolute.inputs[0])
+    links.new(absolute.outputs[0], compare.inputs[0])
+    links.new(geometry_socket, delete.inputs['Geometry'])
+    links.new(compare.outputs[0], delete.inputs['Selection'])
+    for link in list(geometry_input.links):
+        links.remove(link)
+    links.new(delete.outputs[0], geometry_input)
+    return True
+
+
 def is_outline_excluded_object(obj, render_enabled_collections=None):
     if obj.type != 'MESH':
         return True
@@ -1166,6 +1221,8 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         # Set Material -> Group Output
         socket_out_geo = get_socket(output_node, 'Geometry', is_output=False)
         links.new(set_mat.outputs['Geometry'], socket_out_geo)
+
+        ensure_outline_zero_offset_delete(group)
         
         return group
 
@@ -1337,6 +1394,8 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
         if not set_modifier_input(mod, 'Collection', source_collection):
             self.report({'WARNING'}, report_message("Could not update the outline Collection input."))
             return {'CANCELLED'}
+        # Outlines created by earlier versions keep faces that coincide with the model.
+        ensure_outline_zero_offset_delete(mod.node_group)
 
         self.report({'INFO'}, report_message(
             "Refreshed the outline sources for collection '{name}' ({count} mesh(es)).",

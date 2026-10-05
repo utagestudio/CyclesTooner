@@ -13,6 +13,7 @@ Use it when you want toon characters in scenes that rely on Cycles reflections, 
 - **Material conversion**: Converts MToon (VRM Add-on for Blender), MMDShaderDev (MMD Tools), VRToon (VRToon Shader Manager), UnityToon and Unlit (Unitypackage Importer), and Principled BSDF materials to Toon BSDF.
 - **Outline generation**: Creates an inverted-hull outline around the whole model. Vertex weights control the thickness of each part.
 - **Batch adjustment**: Changes Opacity and Smooth (softness of the shading boundary) across converted materials at once.
+- **Per-material finishing**: Toggles shadow casting off or adds an unlit look to a single material, such as eyes and eye whites.
 
 ## Requirements
 
@@ -86,12 +87,16 @@ Convert and Add Outline modify scene data directly. Save your .blend file first 
 
 - **Convert**: Converts materials on the selected objects and their descendants.
   - Transparency is controlled by one shared setup that mixes Toon BSDF with Transparent BSDF through a Mix Shader. The original material's alpha (texture or value) is carried into this setup.
+  - Every converted material gets a `CyclesTooner_AlphaOpacity` node, even when the original has no alpha. To add an alpha source later, connect it to the first input of this node.
   - Sets the material render method to `Dithered` so that EEVEE and Material Preview display correctly. This does not affect the Cycles result.
   - Converted nodes are arranged by connection order. Disconnected nodes whose purpose cannot be determined are kept in a `CyclesTooner Preserved Nodes` frame instead of being deleted.
 - **Revert**: Returns converted materials to Principled BSDF. Materials converted from anything other than Principled BSDF become a simplified Principled BSDF material, not the original shader.
 - **Opacity / Apply Opacity**: Sets opacity on converted materials of the selected objects and their descendants. `1.0` is opaque and `0.0` is fully transparent.
 - **Smooth / Apply Smooth**: Sets Toon BSDF Smooth for the same range. Higher values soften the shading boundary.
-- **Material fields**: When the active material has been converted, change Opacity and Smooth for that material only.
+- **Material fields**: When the active material has been converted, change the following for that material only.
+  - **Opacity / Smooth**: The same settings as above.
+  - **No Shadow**: Stops the material from casting shadows in Cycles. Use it for eye materials that would otherwise darken the meshes around them. Turning it on also turns on Transparent Shadows in the material settings.
+  - **Emission / Emission Factor**: Mixes in an Emission shader that uses the material's own color, so that parts such as eye whites keep their color in shade. Emission Factor appears while Emission is on: `0` keeps the Toon shading and `1` shows the color with no shading. In Cycles the emission also lights nearby surfaces slightly. If the Toon BSDF Color has no texture connected and you change that color later, turn Emission off and on again to pick it up.
 
 ### Outlines
 
@@ -112,6 +117,7 @@ Convert and Add Outline modify scene data directly. Save your .blend file first 
   - Change the overall thickness with **Outline Thickness** and **Apply Outline Thickness** (default `0.002`), or with `Thickness` on the `ToonOutlineGN` modifier.
   - Each source mesh receives a `CT_Outline` vertex group with every vertex weighted `0.5`. Paint the weights to vary thickness by area.
   - An existing `CT_Outline` group keeps its weights.
+  - Faces whose vertices all have weight `0` get no outline. Outlines created by an earlier version adopt this when you run Refresh Outline.
   - Models converted from VRToon use the thickness and weights saved during Convert.
 - **Outline Color / Apply Outline Color**: Changes the outline color of the selected model.
 - **Refresh Outline**: Rebuilds the outline sources after you show or hide model parts. Select an object in the model or the outline object first. Color and thickness settings are kept.
@@ -133,12 +139,37 @@ Messages and tooltips follow Blender's language setting and appear in English or
 ## Contact
 
 Bug reports, requests, and questions can be sent through the [contact form](https://tally.so/r/KYqY78?product=CyclesTooner).
+In Blender, the **Contact** button at the bottom of the CyclesTooner panel opens the same form with your add-on version filled in.
 If you have a GitHub account, [Issues](https://github.com/utagestudio/CyclesTooner/issues) works as well.
 
 ## For Developers
 
 - Add-on behavior specification: [docs/behavior.md](docs/behavior.md)
 - Versioning, branch, commit, and release workflow: [VERSIONING.md](VERSIONING.md)
+
+### Loading the Development Add-on in Blender
+
+Symlink the repository working tree into Blender's `user_default` extensions directory. Blender then loads the current contents of the working tree on every start.
+
+1. If CyclesTooner is installed from the extension repository or a ZIP file, uninstall it first. Enabling both makes their operator and property registrations collide.
+2. Create the link. Name it `cycles_tooner`, the same as the `id` in `blender_manifest.toml`. `<version>` is the Blender version, such as `5.2` or `4.5`.
+
+   ```bash
+   # Linux
+   ln -s /path/to/CyclesTooner ~/.config/blender/<version>/extensions/user_default/cycles_tooner
+   # macOS
+   ln -s /path/to/CyclesTooner ~/Library/Application\ Support/Blender/<version>/extensions/user_default/cycles_tooner
+   ```
+
+   ```bat
+   :: Windows (Command Prompt run as administrator)
+   mklink /D "%APPDATA%\Blender Foundation\Blender\<version>\extensions\user_default\cycles_tooner" "C:\path\to\CyclesTooner"
+   ```
+
+3. Start Blender and enable **CyclesTooner** in `Edit > Preferences > Add-ons`.
+4. After changing the code, restart Blender or run `Reload Scripts` from `F3`.
+
+To undo this, disable the add-on and then delete the link.
 
 ## License
 

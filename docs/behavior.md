@@ -15,9 +15,20 @@ User-facing explanations belong in `README.md`, `README_en.md`, and the GitHub P
 ### Opacity and Transparency
 
 - Opacity control is unified through the CyclesTooner opacity flow; do not create a separate MMD/MToon/VRToon/UnityToon alpha flow.
-- The flow is `Toon BSDF` and `Transparent BSDF` combined by the `CyclesTooner_OpacityMix` Mix Shader. A linked source alpha is multiplied by the `CyclesTooner_Opacity` value before it drives the mix.
+- The flow is `Toon BSDF` and `Transparent BSDF` combined by the `CyclesTooner_OpacityMix` Mix Shader. The `CyclesTooner_AlphaOpacity` Math node multiplies the source alpha by the `CyclesTooner_Opacity` value, and `CyclesTooner_Transparency` inverts the result to drive the mix.
+- Create `CyclesTooner_AlphaOpacity` in every converted material, including materials without a linked source alpha. Its first input stays unlinked at `1.0` in that case, so the result equals the Opacity value. Never overwrite the first input's value or link on an existing node; users connect their own alpha source there.
 - Preserve a configured, unlinked source alpha value as the initial Opacity. An existing non-default material Opacity takes precedence.
 - Set converted materials to the `DITHERED` surface render method during conversion and every opacity update. `BLENDED` does not sort faces within a mesh in EEVEE and makes nearly opaque materials look inside out in Material Preview. This setting must not change the shader opacity used by Cycles.
+
+### Material Toggles
+
+- A converted material's optional nodes follow its material properties. Every rebuild of the opacity flow (Convert on a converted material, `Apply Opacity`, and a toggle change) must recreate or remove those nodes from the properties; never drop an enabled toggle or leave a disabled toggle's nodes behind.
+- Helpers that walk the flow from the Material Output, such as finding the Toon BSDF or the source alpha, must look through the optional nodes.
+- A toggle must not change a material that has no `CyclesTooner_Opacity` node.
+- `No Shadow` (`cyclestooner_no_shadow`) inserts the `CyclesTooner_ShadowTransparency` Math node (`MAXIMUM`) between `CyclesTooner_Transparency` and the `CyclesTooner_OpacityMix` factor, with the `Is Shadow Ray` output of the `CyclesTooner_LightPath` node as its second input. Enabling it also enables the material's Transparent Shadows setting, because Cycles otherwise ignores shader transparency for shadow rays.
+- `Emission` (`cyclestooner_emission`) inserts the `CyclesTooner_EmissionMix` Mix Shader between the Toon BSDF and the first shader input of `CyclesTooner_OpacityMix`, with the Toon BSDF as its first shader and the `CyclesTooner_Emission` node as its second. Its factor is the material's `cyclestooner_emission_factor` (default `0.5`): `0` matches the toggle being off and `1` shows the unshaded color. The UI shows the factor only while the toggle is on.
+- On every rebuild, connect the Emission `Color` to the same source socket as the Toon BSDF `Color`, or copy the Toon BSDF color value when it is unlinked. Leave the Emission `Strength` as it is; the add-on controls the look through the mix factor only.
+- Revert removes the optional nodes and turns the toggles off.
 
 ### Source Shader Classification
 
@@ -55,6 +66,12 @@ User-facing explanations belong in `README.md`, `README_en.md`, and the GitHub P
 - Translate a report with `report_message()` before filling in its values; never pass an f-string to `self.report`.
 - Keep button and panel labels (`bl_label` and layout `text=`) in English so that they match the READMEs and GitHub Pages.
 
+### Contact Button
+
+- The `Contact` button at the bottom of the panel opens the shared contact form in a web browser. Use the Japanese form (`https://tally.so/r/kdVdDR`) when Blender's locale starts with `ja`, and the English form (`https://tally.so/r/KYqY78`) for every other language.
+- Add the URL-encoded parameters `product=CyclesTooner` and `version=<ADDON_VERSION_STRING>` so that the form is prefilled. Read the version from `__init__.py` at run time; never hard-code it.
+- The form is shared with other products. Do not change the form itself.
+
 ## Outline
 
 ### Add Outline
@@ -78,6 +95,7 @@ Root_Collection
 - `Add Outline` should configure the Geometry Nodes `Weight` input to use the `CT_Outline` attribute.
 - For every outline source mesh, `Add Outline` should create a `CT_Outline` vertex group with all vertices initialized to weight `0.5` when the group does not exist.
 - If an outline source mesh already has a `CT_Outline` vertex group, preserve the group and all of its existing weights unchanged.
+- The outline node group must delete every face whose offset distance (`Weight * Thickness`, averaged over the face) is `1e-6` or less, before offsetting. Such a face would coincide with the model surface, and Cycles renders coincident faces with artifacts or drops the surface on GPU devices.
 
 ### VRToon Outline Preparation
 
@@ -90,6 +108,7 @@ Root_Collection
 
 - `Refresh Outline` must require an actual selected model part or generated outline. Do not refresh from `context.collection` when nothing relevant is selected.
 - `Refresh Outline` should rebuild the source collection from the current root hierarchy while preserving the existing outline object, material, node group, and modifier values.
+- `Refresh Outline` adds the zero-offset face deletion to a node group created by an earlier version. It must not change the group in any other way.
 - If no render-visible mesh source is found during refresh, cancel and keep the existing source collection intact.
 
 ### Remove Outline
