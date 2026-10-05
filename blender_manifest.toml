@@ -2,7 +2,7 @@ schema_version = "1.0.0"
 
 id = "cycles_tooner"
 # Keep in sync with ADDON_VERSION_STRING in __init__.py
-version = "1.28.2-dev.1"
+version = "1.28.2"
 name = "CyclesTooner"
 tagline = "Convert EEVEE toon avatars to Toon BSDF for Cycles"
 maintainer = "utagestudio"

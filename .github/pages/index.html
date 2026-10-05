@@ -115,6 +115,13 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.28.2</span><strong>Consistent English panel labels</strong><time datetime="2026-10-05">October 5, 2026</time></summary>
+          <ul>
+            <li>Panel buttons and fields now stay in English in every language, matching the documentation. With Blender set to Japanese, a few labels such as Convert, Revert, and Opacity were shown in Japanese while the rest stayed in English.</li>
+            <li>Tooltips and operator messages still follow Blender's language setting.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.28.1</span><strong>Reliable script reloading</strong><time datetime="2026-10-05">October 5, 2026</time></summary>
           <ul>
             <li>The add-on now loads and reloads its scripts the way Blender recommends for extensions, so Reload Scripts picks up every part of the add-on.</li>
@@ -155,14 +162,6 @@
             <li>Fixes surfaces appearing inside out in Material Preview and EEVEE when nearly opaque materials, such as opacity 0.999, are converted.</li>
             <li>Uses Dithered rendering during conversion and opacity updates to avoid Blended face-order artifacts.</li>
             <li>Preserves configured opacity and Cycles shader transparency; existing converted materials adopt the setting on their next opacity change.</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.26.1</span><strong>Render-aware outline sources</strong><time datetime="2026-09-20">September 20, 2026</time></summary>
-          <ul>
-            <li>Outlines now skip meshes disabled for rendering on the object or any of its collections, while meshes hidden only in the viewport still get outlines.</li>
-            <li>A mesh linked to several collections keeps its outline as long as any collection in the current scene renders it.</li>
-            <li>Add Outline and Refresh Outline no longer move unrelated collections, and keep hidden rig helpers inside the model hierarchy.</li>
           </ul>
         </details>
       </div>
