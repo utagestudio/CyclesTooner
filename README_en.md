@@ -117,6 +117,7 @@ Convert and Add Outline modify scene data directly. Save your .blend file first 
   - Change the overall thickness with **Outline Thickness** and **Apply Outline Thickness** (default `0.002`), or with `Thickness` on the `ToonOutlineGN` modifier.
   - Each source mesh receives a `CT_Outline` vertex group with every vertex weighted `0.5`. Paint the weights to vary thickness by area.
   - An existing `CT_Outline` group keeps its weights.
+  - Faces whose vertices all have weight `0` get no outline. Outlines created by an earlier version adopt this when you run Refresh Outline.
   - Models converted from VRToon use the thickness and weights saved during Convert.
 - **Outline Color / Apply Outline Color**: Changes the outline color of the selected model.
 - **Refresh Outline**: Rebuilds the outline sources after you show or hide model parts. Select an object in the model or the outline object first. Color and thickness settings are kept.

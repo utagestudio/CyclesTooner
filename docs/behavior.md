@@ -89,6 +89,7 @@ Root_Collection
 - `Add Outline` should configure the Geometry Nodes `Weight` input to use the `CT_Outline` attribute.
 - For every outline source mesh, `Add Outline` should create a `CT_Outline` vertex group with all vertices initialized to weight `0.5` when the group does not exist.
 - If an outline source mesh already has a `CT_Outline` vertex group, preserve the group and all of its existing weights unchanged.
+- The outline node group must delete every face whose offset distance (`Weight * Thickness`, averaged over the face) is `1e-6` or less, before offsetting. Such a face would coincide with the model surface, and Cycles renders coincident faces with artifacts or drops the surface on GPU devices.
 
 ### VRToon Outline Preparation
 
@@ -101,6 +102,7 @@ Root_Collection
 
 - `Refresh Outline` must require an actual selected model part or generated outline. Do not refresh from `context.collection` when nothing relevant is selected.
 - `Refresh Outline` should rebuild the source collection from the current root hierarchy while preserving the existing outline object, material, node group, and modifier values.
+- `Refresh Outline` adds the zero-offset face deletion to a node group created by an earlier version. It must not change the group in any other way.
 - If no render-visible mesh source is found during refresh, cancel and keep the existing source collection intact.
 
 ### Remove Outline
