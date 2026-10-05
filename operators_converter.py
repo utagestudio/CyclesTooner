@@ -1,9 +1,6 @@
 import bpy
 
-if __package__:
-    from .translations import report_message
-else:
-    from translations import report_message
+from .translations import report_message
 
 CYCLES_TOONER_OPACITY_PROP = "cyclestooner_opacity"
 CYCLES_TOONER_SMOOTH_PROP = "cyclestooner_smooth"
@@ -1335,10 +1332,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
             if self.process_material(mat):
                 processed_count += 1
 
-        if __package__:
-            from . import operators_outline
-        else:
-            import operators_outline
+        from . import operators_outline
         prepared_count = operators_outline.prepare_vrtoon_outlines(objects_to_process)
         
         # 処理結果を情報エリアに報告

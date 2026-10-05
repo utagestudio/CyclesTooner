@@ -112,6 +112,13 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.28.1</span><strong>スクリプト再読み込みの安定化</strong><time datetime="2026-10-05">2026年10月5日</time></summary>
+          <ul>
+            <li>アドオンのスクリプトを、Blenderがエクステンション向けに推奨する方法で読み込み・再読み込みするようにしました。「スクリプトを再読み込み」でアドオン全体が読み直されます。</li>
+            <li>テキストエディターからアドオンのスクリプトを直接実行する使い方には対応しなくなりました。エクステンションとしてインストールしてください。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.28.0</span><strong>マテリアル単位のNo Shadow / Emissionトグル</strong><time datetime="2026-10-05">2026年10月5日</time></summary>
           <ul>
             <li>Material欄にNo Shadowトグルを追加しました。目などの変換済みマテリアルが、Cyclesで影を落とさないようにできます。</li>
@@ -153,14 +160,6 @@
             <li>オブジェクトや所属するコレクションでレンダー無効にしたメッシュには、アウトラインを付けないようにしました。ビューポートだけで非表示にしたメッシュには、引き続きアウトラインが付きます。</li>
             <li>複数のコレクションに入っているメッシュは、現在のシーンでいずれかのコレクションがレンダーされていれば、アウトラインが付くようにしました。</li>
             <li>Add OutlineとRefresh Outlineで無関係なコレクションを移動しないようにし、非表示のリグ用オブジェクトもモデルの階層内に保つようにしました。</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.26.0</span><strong>Unitypackage Importerのマテリアル変換に対応</strong><time datetime="2026-09-19">2026年9月19日</time></summary>
-          <ul>
-            <li>Unitypackage ImporterのUnityToon v1グループと、Unlitラベル付きEmissionマテリアルをToon BSDFへ直接変換できるようにしました。</li>
-            <li>接続済みのベースカラー、UnityToonのNormal、テクスチャまたは定数のAlphaを、CyclesTooner共通のOpacityフローへ引き継ぎます。</li>
-            <li>通常のEmissionマテリアルは変換しません。</li>
           </ul>
         </details>
       </div>
