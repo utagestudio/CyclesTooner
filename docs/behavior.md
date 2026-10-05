@@ -15,7 +15,8 @@ User-facing explanations belong in `README.md`, `README_en.md`, and the GitHub P
 ### Opacity and Transparency
 
 - Opacity control is unified through the CyclesTooner opacity flow; do not create a separate MMD/MToon/VRToon/UnityToon alpha flow.
-- The flow is `Toon BSDF` and `Transparent BSDF` combined by the `CyclesTooner_OpacityMix` Mix Shader. A linked source alpha is multiplied by the `CyclesTooner_Opacity` value before it drives the mix.
+- The flow is `Toon BSDF` and `Transparent BSDF` combined by the `CyclesTooner_OpacityMix` Mix Shader. The `CyclesTooner_AlphaOpacity` Math node multiplies the source alpha by the `CyclesTooner_Opacity` value, and `CyclesTooner_Transparency` inverts the result to drive the mix.
+- Create `CyclesTooner_AlphaOpacity` in every converted material, including materials without a linked source alpha. Its first input stays unlinked at `1.0` in that case, so the result equals the Opacity value. Never overwrite the first input's value or link on an existing node; users connect their own alpha source there.
 - Preserve a configured, unlinked source alpha value as the initial Opacity. An existing non-default material Opacity takes precedence.
 - Set converted materials to the `DITHERED` surface render method during conversion and every opacity update. `BLENDED` does not sort faces within a mesh in EEVEE and makes nearly opaque materials look inside out in Material Preview. This setting must not change the shader opacity used by Cycles.
 

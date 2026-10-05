@@ -1078,19 +1078,20 @@ def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opa
         mix_node.label = "CyclesTooner Opacity Mix"
     mix_node.location = (toon_node.location.x + 430, toon_node.location.y)
 
-    effective_opacity_socket = opacity_node.outputs['Value']
-
+    # Keep the alpha multiplier in every material so that an alpha source can
+    # be connected later without rebuilding the flow by hand.
+    alpha_multiply_node = nodes.get(CYCLES_TOONER_ALPHA_MULTIPLY_NODE)
+    if not alpha_multiply_node or alpha_multiply_node.type != 'MATH':
+        alpha_multiply_node = nodes.new(type='ShaderNodeMath')
+        alpha_multiply_node.name = CYCLES_TOONER_ALPHA_MULTIPLY_NODE
+        alpha_multiply_node.label = "CyclesTooner Alpha x Opacity"
+        alpha_multiply_node.inputs[0].default_value = 1.0
+    alpha_multiply_node.location = (toon_node.location.x - 200, toon_node.location.y + 170)
+    alpha_multiply_node.operation = 'MULTIPLY'
     if alpha_source:
-        alpha_multiply_node = nodes.get(CYCLES_TOONER_ALPHA_MULTIPLY_NODE)
-        if not alpha_multiply_node or alpha_multiply_node.type != 'MATH':
-            alpha_multiply_node = nodes.new(type='ShaderNodeMath')
-            alpha_multiply_node.name = CYCLES_TOONER_ALPHA_MULTIPLY_NODE
-            alpha_multiply_node.label = "CyclesTooner Alpha x Opacity"
-        alpha_multiply_node.location = (toon_node.location.x - 200, toon_node.location.y + 170)
-        alpha_multiply_node.operation = 'MULTIPLY'
         _replace_input_link(links, alpha_multiply_node.inputs[0], alpha_source)
-        _replace_input_link(links, alpha_multiply_node.inputs[1], opacity_node.outputs['Value'])
-        effective_opacity_socket = alpha_multiply_node.outputs['Value']
+    _replace_input_link(links, alpha_multiply_node.inputs[1], opacity_node.outputs['Value'])
+    effective_opacity_socket = alpha_multiply_node.outputs['Value']
 
     transparency_node = nodes.get(CYCLES_TOONER_TRANSPARENCY_NODE)
     if not transparency_node or transparency_node.type != 'MATH':
