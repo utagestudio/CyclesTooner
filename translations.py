@@ -80,6 +80,11 @@ JAPANESE = {
         "Emissionを混ぜる割合。0でToonの陰影のまま、1で陰影のない色になります",
 }
 
+# Translation context for button labels and property names. Nothing is
+# registered under it, so labels stay in English and never pick up Blender's
+# own translations of common words such as "Convert" or "Revert".
+LABEL_CONTEXT = "CyclesTooner"
+
 TRANSLATIONS = {
     "ja_JP": {("*", source): japanese for source, japanese in JAPANESE.items()},
 }

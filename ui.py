@@ -2,6 +2,8 @@ import urllib.parse
 
 import bpy
 
+from .translations import LABEL_CONTEXT
+
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
 CONTACT_FORM_URL_JA = "https://tally.so/r/kdVdDR"
@@ -34,6 +36,7 @@ class WM_OT_CyclesToonerContact(bpy.types.Operator):
     """お問い合わせフォームをブラウザで開きます。"""
     bl_idname = "wm.cyclestooner_contact"
     bl_label = "Contact"
+    bl_translation_context = LABEL_CONTEXT
     bl_description = "Open the contact form in a web browser to send a bug report, request, or question"
     bl_options = {'REGISTER'}
 
@@ -68,22 +71,22 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
         # オペレーター実行ボタンを配置 (変換)
         row = column.row()
         row.scale_y = 1.5
-        row.operator("object.to_toon_converter", text="Convert")
+        row.operator("object.to_toon_converter", text="Convert", translate=False)
         
         # オペレーター実行ボタンを配置 (リバート)
         row = column.row()
-        row.operator("object.to_toon_reverter", text="Revert")
+        row.operator("object.to_toon_reverter", text="Revert", translate=False)
 
         column.separator()
 
         # 透明度の一括適用
-        column.prop(context.scene, "cyclestooner_batch_opacity", text="Opacity")
+        column.prop(context.scene, "cyclestooner_batch_opacity", text="Opacity", translate=False)
         row = column.row()
-        op = row.operator("object.set_toon_opacity", text="Apply Opacity")
+        op = row.operator("object.set_toon_opacity", text="Apply Opacity", translate=False)
         op.opacity = context.scene.cyclestooner_batch_opacity
-        column.prop(context.scene, "cyclestooner_batch_smooth", text="Smooth")
+        column.prop(context.scene, "cyclestooner_batch_smooth", text="Smooth", translate=False)
         row = column.row()
-        op = row.operator("object.set_toon_smooth", text="Apply Smooth")
+        op = row.operator("object.set_toon_smooth", text="Apply Smooth", translate=False)
         op.smooth = context.scene.cyclestooner_batch_smooth
 
         active_mat = context.object.active_material if context.object else None
@@ -96,40 +99,40 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
         ):
             box = column.box()
             box.label(text=f"Material: {active_mat.name}")
-            box.prop(active_mat, "cyclestooner_opacity", text="Opacity")
-            box.prop(active_mat, "cyclestooner_smooth", text="Smooth")
-            box.prop(active_mat, "cyclestooner_no_shadow", text="No Shadow")
-            box.prop(active_mat, "cyclestooner_emission", text="Emission")
+            box.prop(active_mat, "cyclestooner_opacity", text="Opacity", translate=False)
+            box.prop(active_mat, "cyclestooner_smooth", text="Smooth", translate=False)
+            box.prop(active_mat, "cyclestooner_no_shadow", text="No Shadow", translate=False)
+            box.prop(active_mat, "cyclestooner_emission", text="Emission", translate=False)
             if active_mat.cyclestooner_emission:
-                box.prop(active_mat, "cyclestooner_emission_factor", text="Emission Factor")
+                box.prop(active_mat, "cyclestooner_emission_factor", text="Emission Factor", translate=False)
         
         column.separator()
         
         # オペレーター実行ボタンを配置 (アウトライン追加)
         row = column.row()
         row.scale_y = 1.2
-        row.operator("object.add_toon_outline", text="Add Outline")
+        row.operator("object.add_toon_outline", text="Add Outline", translate=False)
 
         # オペレーター実行ボタンを配置 (アウトライン更新)
         row = column.row()
-        row.operator("object.refresh_toon_outline", text="Refresh Outline")
+        row.operator("object.refresh_toon_outline", text="Refresh Outline", translate=False)
         
         # オペレーター実行ボタンを配置 (アウトライン削除)
         row = column.row()
-        row.operator("object.remove_toon_outline", text="Remove Outline")
+        row.operator("object.remove_toon_outline", text="Remove Outline", translate=False)
 
-        column.prop(context.scene, "cyclestooner_outline_color", text="Outline Color")
+        column.prop(context.scene, "cyclestooner_outline_color", text="Outline Color", translate=False)
         row = column.row()
-        op = row.operator("object.set_toon_outline_color", text="Apply Outline Color")
+        op = row.operator("object.set_toon_outline_color", text="Apply Outline Color", translate=False)
         op.color = context.scene.cyclestooner_outline_color
 
-        column.prop(context.scene, "cyclestooner_outline_thickness", text="Outline Thickness")
+        column.prop(context.scene, "cyclestooner_outline_thickness", text="Outline Thickness", translate=False)
         row = column.row()
-        op = row.operator("object.set_toon_outline_thickness", text="Apply Outline Thickness")
+        op = row.operator("object.set_toon_outline_thickness", text="Apply Outline Thickness", translate=False)
         op.thickness = context.scene.cyclestooner_outline_thickness
 
         column.separator()
 
         # お問い合わせフォームを開く
         row = column.row()
-        row.operator("wm.cyclestooner_contact", text="Contact", icon='URL')
+        row.operator("wm.cyclestooner_contact", text="Contact", translate=False, icon='URL')

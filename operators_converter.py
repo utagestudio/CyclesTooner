@@ -1,6 +1,6 @@
 import bpy
 
-from .translations import report_message
+from .translations import LABEL_CONTEXT, report_message
 
 CYCLES_TOONER_OPACITY_PROP = "cyclestooner_opacity"
 CYCLES_TOONER_SMOOTH_PROP = "cyclestooner_smooth"
@@ -1303,6 +1303,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
     """
     bl_idname = "object.to_toon_converter"
     bl_label = "Convert"
+    bl_translation_context = LABEL_CONTEXT
     bl_description = "Convert the materials of the selected objects and their descendants to Toon BSDF for Cycles"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1635,6 +1636,7 @@ class OBJECT_OT_ToonReverter(bpy.types.Operator):
     """
     bl_idname = "object.to_toon_reverter"
     bl_label = "Revert"
+    bl_translation_context = LABEL_CONTEXT
     bl_description = "Restore converted materials to Principled BSDF. Materials converted from other shaders become a simplified Principled BSDF"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -1778,11 +1780,13 @@ class OBJECT_OT_SetToonOpacity(bpy.types.Operator):
     """
     bl_idname = "object.set_toon_opacity"
     bl_label = "Apply Opacity"
+    bl_translation_context = LABEL_CONTEXT
     bl_description = "Apply the opacity to the converted materials of the selected objects and their descendants"
     bl_options = {'REGISTER', 'UNDO'}
 
     opacity: bpy.props.FloatProperty(
         name="Opacity",
+        translation_context=LABEL_CONTEXT,
         description="Opacity applied to selected toon materials",
         min=0.0,
         max=1.0,
@@ -1815,11 +1819,13 @@ class OBJECT_OT_SetToonSmooth(bpy.types.Operator):
     """
     bl_idname = "object.set_toon_smooth"
     bl_label = "Apply Smooth"
+    bl_translation_context = LABEL_CONTEXT
     bl_description = "Apply the Smooth value to the converted materials of the selected objects and their descendants"
     bl_options = {'REGISTER', 'UNDO'}
 
     smooth: bpy.props.FloatProperty(
         name="Smooth",
+        translation_context=LABEL_CONTEXT,
         description="Smooth value applied to selected toon materials",
         min=0.0,
         max=1.0,
