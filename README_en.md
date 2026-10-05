@@ -13,6 +13,7 @@ Use it when you want toon characters in scenes that rely on Cycles reflections, 
 - **Material conversion**: Converts MToon (VRM Add-on for Blender), MMDShaderDev (MMD Tools), VRToon (VRToon Shader Manager), UnityToon and Unlit (Unitypackage Importer), and Principled BSDF materials to Toon BSDF.
 - **Outline generation**: Creates an inverted-hull outline around the whole model. Vertex weights control the thickness of each part.
 - **Batch adjustment**: Changes Opacity and Smooth (softness of the shading boundary) across converted materials at once.
+- **Per-material finishing**: Toggles shadow casting off or adds an unlit look to a single material, such as eyes and eye whites.
 
 ## Requirements
 
@@ -86,12 +87,16 @@ Convert and Add Outline modify scene data directly. Save your .blend file first 
 
 - **Convert**: Converts materials on the selected objects and their descendants.
   - Transparency is controlled by one shared setup that mixes Toon BSDF with Transparent BSDF through a Mix Shader. The original material's alpha (texture or value) is carried into this setup.
+  - Every converted material gets a `CyclesTooner_AlphaOpacity` node, even when the original has no alpha. To add an alpha source later, connect it to the first input of this node.
   - Sets the material render method to `Dithered` so that EEVEE and Material Preview display correctly. This does not affect the Cycles result.
   - Converted nodes are arranged by connection order. Disconnected nodes whose purpose cannot be determined are kept in a `CyclesTooner Preserved Nodes` frame instead of being deleted.
 - **Revert**: Returns converted materials to Principled BSDF. Materials converted from anything other than Principled BSDF become a simplified Principled BSDF material, not the original shader.
 - **Opacity / Apply Opacity**: Sets opacity on converted materials of the selected objects and their descendants. `1.0` is opaque and `0.0` is fully transparent.
 - **Smooth / Apply Smooth**: Sets Toon BSDF Smooth for the same range. Higher values soften the shading boundary.
-- **Material fields**: When the active material has been converted, change Opacity and Smooth for that material only.
+- **Material fields**: When the active material has been converted, change the following for that material only.
+  - **Opacity / Smooth**: The same settings as above.
+  - **No Shadow**: Stops the material from casting shadows in Cycles. Use it for eye materials that would otherwise darken the meshes around them. Turning it on also turns on Transparent Shadows in the material settings.
+  - **Emission / Emission Factor**: Mixes in an Emission shader that uses the material's own color, so that parts such as eye whites keep their color in shade. Emission Factor appears while Emission is on: `0` keeps the Toon shading and `1` shows the color with no shading. In Cycles the emission also lights nearby surfaces slightly. If the Toon BSDF Color has no texture connected and you change that color later, turn Emission off and on again to pick it up.
 
 ### Outlines
 

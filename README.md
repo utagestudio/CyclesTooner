@@ -13,6 +13,7 @@ Cycles の反射、屈折、ボリューム、魚眼レンズなどを使った�
 - **マテリアル変換**：MToon（VRM Add-on for Blender）、MMDShaderDev（MMD Tools）、VRToon（VRToon Shader Manager）、UnityToon と Unlit（Unitypackage Importer）、Principled BSDF を Toon BSDF に変換します。
 - **アウトライン生成**：モデル全体を囲む背面法アウトラインを作成します。頂点ウェイトで部分ごとの太さを調整できます。
 - **一括調整**：変換済みマテリアルの Opacity（不透明度）と Smooth（陰影境界のぼかし）をまとめて変更できます。
+- **マテリアル単位の仕上げ**：目や白目など特定のマテリアルだけ、影を落とさないようにしたり、陰影のない見た目を加えたりできます。
 
 ## 動作環境
 
@@ -86,12 +87,16 @@ Convert と Add Outline は、シーンのデータを直接書き換えます�
 
 - **Convert**：選択したオブジェクトとその子孫のマテリアルを変換します。
   - 透明度は、Toon BSDF と Transparent BSDF を Mix Shader で合成する共通の仕組みで制御します。元のマテリアルの Alpha（テクスチャ・値）は、この仕組みに引き継がれます。
+  - 元のマテリアルに Alpha がない場合も含め、変換したすべてのマテリアルに `CyclesTooner_AlphaOpacity` ノードが作られます。あとから Alpha を追加するときは、このノードの 1 つ目の入力につないでください。
   - EEVEE とマテリアルプレビューでの表示が乱れないよう、マテリアルのレンダーメソッドを `Dithered` に設定します。Cycles の見た目には影響しません。
   - 変換後のノードは接続順に自動整列されます。用途を判断できない未接続のノードは削除せず、`CyclesTooner Preserved Nodes` フレームにまとめます。
 - **Revert**：変換したマテリアルを Principled BSDF に戻します。変換元が Principled BSDF 以外の場合は、元のシェーダーではなく簡易的な Principled BSDF になります。
 - **Opacity / Apply Opacity**：選択したオブジェクトとその子孫の変換済みマテリアルに、不透明度をまとめて設定します。`1.0` で不透明、`0.0` で完全に透明です。
 - **Smooth / Apply Smooth**：同じ範囲の Toon BSDF の Smooth をまとめて設定します。値を上げると陰影の境界がやわらかくなります。
-- **Material 欄**：アクティブなマテリアルが変換済みの場合、そのマテリアルだけの Opacity と Smooth を変更できます。
+- **Material 欄**：アクティブなマテリアルが変換済みの場合、そのマテリアルだけを対象に次の項目を変更できます。
+  - **Opacity / Smooth**：上記と同じ設定です。
+  - **No Shadow**：そのマテリアルが Cycles で影を落とさないようにします。周囲のメッシュを暗くしてしまう目のマテリアルなどに使います。オンにすると、マテリアル設定の Transparent Shadows も有効になります。
+  - **Emission / Emission Factor**：マテリアル自身の色を使った Emission を混ぜて、白目などが陰の中でも沈まないようにします。Emission Factor は Emission がオンの間だけ表示され、`0` で Toon の陰影のまま、`1` で陰影のない色になります。Cycles では、この Emission が周囲の面もわずかに照らします。Toon BSDF の Color にテクスチャがつながっていない状態であとから色を変えた場合は、Emission をいったんオフにしてからオンにし直すと反映されます。
 
 ### アウトライン
 
