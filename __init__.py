@@ -1,8 +1,8 @@
 
 # Version target and development identifier. The manifest stores the complete
 # SemVer string; Blender's bl_info accepts only the integer core tuple.
-ADDON_VERSION = (1, 28, 0)
-ADDON_VERSION_PRERELEASE = ""
+ADDON_VERSION = (1, 28, 1)
+ADDON_VERSION_PRERELEASE = "dev.1"
 ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 if ADDON_VERSION_PRERELEASE:
     ADDON_VERSION_STRING = f"{ADDON_VERSION_STRING}-{ADDON_VERSION_PRERELEASE}"
@@ -20,36 +20,25 @@ bl_info = {
     "category": "Material",
 }
 
+# Blender re-executes this file on Reload Scripts with the previous namespace
+# still in place, so "bpy" is already defined on a reload.
+_needs_reload = "bpy" in locals()
+
 import bpy
-import sys
-import importlib
+from . import (
+    translations,
+    operators_converter,
+    operators_outline,
+    ui,
+)
 
-# サブモジュールの名前リスト (New structure)
-modules_names = ['translations', 'operators_converter', 'operators_outline', 'ui']
-
-# サブモジュールのリロードとインポート
-# パッケージ名が解決できる場合（正規のアドオンとして読み込まれた場合）
-if __package__:
-    for name in modules_names:
-        full_name = f"{__package__}.{name}"
-        if full_name in sys.modules:
-            importlib.reload(sys.modules[full_name])
-            
-    from . import translations
-    from . import operators_converter
-    from . import operators_outline
-    from . import ui
-
-# パッケージとして解決できない場合（テキストエディタで直接実行した場合など）
-else:
-    import translations
-    import operators_converter
-    import operators_outline
-    import ui
-    importlib.reload(translations)
-    importlib.reload(operators_converter)
-    importlib.reload(operators_outline)
-    importlib.reload(ui)
+# translations is reloaded first because the operator modules import from it.
+if _needs_reload:
+    import importlib
+    translations = importlib.reload(translations)
+    operators_converter = importlib.reload(operators_converter)
+    operators_outline = importlib.reload(operators_outline)
+    ui = importlib.reload(ui)
 
 # 登録対象のクラスリスト
 classes = (
