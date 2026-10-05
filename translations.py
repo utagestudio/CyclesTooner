@@ -69,6 +69,8 @@ JAPANESE = {
     "Base outline thickness in Blender units": "アウトラインの基本の太さ（Blenderの単位）",
     "Opacity for this CyclesTooner material": "このCyclesToonerマテリアルの不透明度",
     "Smooth value for this CyclesTooner material": "このCyclesToonerマテリアルのSmoothの値",
+    "Stop this CyclesTooner material from casting shadows in Cycles":
+        "このCyclesToonerマテリアルがCyclesで影を落とさないようにします",
 }
 
 TRANSLATIONS = {

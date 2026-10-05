@@ -64,6 +64,7 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
             box.label(text=f"Material: {active_mat.name}")
             box.prop(active_mat, "cyclestooner_opacity", text="Opacity")
             box.prop(active_mat, "cyclestooner_smooth", text="Smooth")
+            box.prop(active_mat, "cyclestooner_no_shadow", text="No Shadow")
         
         column.separator()
         

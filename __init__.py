@@ -2,7 +2,7 @@
 # Version target and development identifier. The manifest stores the complete
 # SemVer string; Blender's bl_info accepts only the integer core tuple.
 ADDON_VERSION = (1, 28, 0)
-ADDON_VERSION_PRERELEASE = "dev.1"
+ADDON_VERSION_PRERELEASE = "dev.2"
 ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 if ADDON_VERSION_PRERELEASE:
     ADDON_VERSION_STRING = f"{ADDON_VERSION_STRING}-{ADDON_VERSION_PRERELEASE}"
@@ -126,6 +126,12 @@ def register():
         subtype='FACTOR',
         update=operators_converter.update_material_smooth_property,
     )
+    bpy.types.Material.cyclestooner_no_shadow = bpy.props.BoolProperty(
+        name="No Shadow",
+        description="Stop this CyclesTooner material from casting shadows in Cycles",
+        default=False,
+        update=operators_converter.update_material_no_shadow_property,
+    )
 
 def unregister():
     """
@@ -135,6 +141,8 @@ def unregister():
         del bpy.types.Material.cyclestooner_opacity
     if hasattr(bpy.types.Material, "cyclestooner_smooth"):
         del bpy.types.Material.cyclestooner_smooth
+    if hasattr(bpy.types.Material, "cyclestooner_no_shadow"):
+        del bpy.types.Material.cyclestooner_no_shadow
     if hasattr(bpy.types.Scene, "cyclestooner_batch_opacity"):
         del bpy.types.Scene.cyclestooner_batch_opacity
     if hasattr(bpy.types.Scene, "cyclestooner_batch_smooth"):

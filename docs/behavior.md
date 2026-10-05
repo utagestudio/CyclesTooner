@@ -20,6 +20,14 @@ User-facing explanations belong in `README.md`, `README_en.md`, and the GitHub P
 - Preserve a configured, unlinked source alpha value as the initial Opacity. An existing non-default material Opacity takes precedence.
 - Set converted materials to the `DITHERED` surface render method during conversion and every opacity update. `BLENDED` does not sort faces within a mesh in EEVEE and makes nearly opaque materials look inside out in Material Preview. This setting must not change the shader opacity used by Cycles.
 
+### Material Toggles
+
+- A converted material's optional nodes follow its material properties. Every rebuild of the opacity flow (Convert on a converted material, `Apply Opacity`, and a toggle change) must recreate or remove those nodes from the properties; never drop an enabled toggle or leave a disabled toggle's nodes behind.
+- Helpers that walk the flow from the Material Output, such as finding the Toon BSDF or the source alpha, must look through the optional nodes.
+- A toggle must not change a material that has no `CyclesTooner_Opacity` node.
+- `No Shadow` (`cyclestooner_no_shadow`) inserts the `CyclesTooner_ShadowTransparency` Math node (`MAXIMUM`) between `CyclesTooner_Transparency` and the `CyclesTooner_OpacityMix` factor, with the `Is Shadow Ray` output of the `CyclesTooner_LightPath` node as its second input. Enabling it also enables the material's Transparent Shadows setting, because Cycles otherwise ignores shader transparency for shadow rays.
+- Revert removes the optional nodes and turns the toggles off.
+
 ### Source Shader Classification
 
 - Direct MMDShaderDev, MToon, and VRToon conversion should preserve available base color, texture color/alpha, normal links, and material alpha as far as the current converter supports.

@@ -12,6 +12,8 @@ CYCLES_TOONER_ALPHA_MULTIPLY_NODE = "CyclesTooner_AlphaOpacity"
 CYCLES_TOONER_TRANSPARENCY_NODE = "CyclesTooner_Transparency"
 CYCLES_TOONER_MIX_NODE = "CyclesTooner_OpacityMix"
 CYCLES_TOONER_TRANSPARENT_NODE = "CyclesTooner_Transparent"
+CYCLES_TOONER_SHADOW_TRANSPARENCY_NODE = "CyclesTooner_ShadowTransparency"
+CYCLES_TOONER_LIGHT_PATH_NODE = "CyclesTooner_LightPath"
 CYCLES_TOONER_SOURCE_SHADER_PROP = "cyclestooner_source_shader"
 CYCLES_TOONER_MMD_BASE_TEX = "CyclesTooner_MMDBaseTex"
 CYCLES_TOONER_MMD_DIFFUSE_MULTIPLY = "CyclesTooner_MMDDiffuseMultiply"
@@ -81,6 +83,12 @@ def update_material_smooth_property(self, context):
         return
     smooth = clamp_smooth(getattr(self, "cyclestooner_smooth", DEFAULT_TOON_SMOOTH))
     set_material_smooth(self, smooth)
+
+
+def update_material_no_shadow_property(self, context):
+    if is_outline_material(self):
+        return
+    refresh_material_opacity_flow(self)
 
 
 def set_material_opacity(mat, opacity):
@@ -834,6 +842,16 @@ def extract_alpha_source_from_mix_fac(fac_node, nodes_to_remove=None):
             return fac_node.inputs['Color'].links[0].from_socket
         return None
 
+    if fac_node.name == CYCLES_TOONER_SHADOW_TRANSPARENCY_NODE and fac_node.type == 'MATH':
+        nodes_to_remove.append(fac_node)
+        if fac_node.inputs[1].is_linked:
+            light_path_node = fac_node.inputs[1].links[0].from_node
+            if light_path_node.name == CYCLES_TOONER_LIGHT_PATH_NODE:
+                nodes_to_remove.append(light_path_node)
+        if not fac_node.inputs[0].is_linked:
+            return None
+        fac_node = fac_node.inputs[0].links[0].from_node
+
     if fac_node.name == CYCLES_TOONER_TRANSPARENCY_NODE and fac_node.type == 'MATH':
         nodes_to_remove.append(fac_node)
         if not fac_node.inputs[1].is_linked:
@@ -1050,6 +1068,42 @@ def organize_converted_material_nodes(mat):
     layout_preserved_nodes(nodes, reachable_nodes)
 
 
+def setup_no_shadow_nodes(mat, transparency_node):
+    """Add or remove the no-shadow nodes and return the socket that drives the mix."""
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    shadow_node = nodes.get(CYCLES_TOONER_SHADOW_TRANSPARENCY_NODE)
+    if shadow_node and shadow_node.type != 'MATH':
+        shadow_node = None
+    light_path_node = nodes.get(CYCLES_TOONER_LIGHT_PATH_NODE)
+    if light_path_node and light_path_node.type != 'LIGHT_PATH':
+        light_path_node = None
+
+    if not getattr(mat, "cyclestooner_no_shadow", False):
+        remove_nodes_if_present(nodes, [node for node in (shadow_node, light_path_node) if node])
+        return transparency_node.outputs['Value']
+
+    if not light_path_node:
+        light_path_node = nodes.new(type='ShaderNodeLightPath')
+        light_path_node.name = CYCLES_TOONER_LIGHT_PATH_NODE
+        light_path_node.label = "CyclesTooner Light Path"
+    light_path_node.location = (transparency_node.location.x, transparency_node.location.y + 360)
+
+    if not shadow_node:
+        shadow_node = nodes.new(type='ShaderNodeMath')
+        shadow_node.name = CYCLES_TOONER_SHADOW_TRANSPARENCY_NODE
+        shadow_node.label = "CyclesTooner Shadow Transparency"
+    shadow_node.location = (transparency_node.location.x + 200, transparency_node.location.y)
+    shadow_node.operation = 'MAXIMUM'
+
+    # Shadow rays see the surface as fully transparent, so it casts no shadow.
+    _replace_input_link(links, shadow_node.inputs[0], transparency_node.outputs['Value'])
+    _replace_input_link(links, shadow_node.inputs[1], light_path_node.outputs['Is Shadow Ray'])
+    # Cycles ignores shader transparency for shadow rays without this setting.
+    mat.use_transparent_shadow = True
+    return shadow_node.outputs['Value']
+
+
 def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opacity=1.0):
     tree = mat.node_tree
     nodes = tree.nodes
@@ -1104,7 +1158,7 @@ def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opa
     transparency_node.inputs[0].default_value = 1.0
     _replace_input_link(links, transparency_node.inputs[1], effective_opacity_socket)
 
-    _replace_input_link(links, mix_node.inputs['Fac'], transparency_node.outputs['Value'])
+    _replace_input_link(links, mix_node.inputs['Fac'], setup_no_shadow_nodes(mat, transparency_node))
     _replace_input_link(links, mix_node.inputs[1], toon_node.outputs['BSDF'])
     _replace_input_link(links, mix_node.inputs[2], transparent_node.outputs['BSDF'])
     _replace_input_link(links, output_node.inputs['Surface'], mix_node.outputs['Shader'])
@@ -1112,6 +1166,49 @@ def setup_toon_opacity_nodes(mat, toon_node, output_node, alpha_source=None, opa
     mat[CYCLES_TOONER_OPACITY_PROP] = opacity
     sync_material_opacity_property(mat, opacity)
     _set_material_blend_settings(mat, opacity)
+
+
+def rebuild_material_opacity_flow(mat, opacity=None):
+    """Rebuild the opacity flow of a Toon material from its current settings."""
+    if not mat.use_nodes or not mat.node_tree:
+        return False
+
+    nodes = mat.node_tree.nodes
+    output_node = find_output_node(nodes)
+    if not output_node:
+        return False
+
+    surface_input = output_node.inputs.get('Surface')
+    if not surface_input or not surface_input.is_linked:
+        return False
+
+    root_node = surface_input.links[0].from_node
+    toon_node = find_toon_node_from_root(root_node)
+    if not toon_node:
+        return False
+
+    if opacity is None:
+        opacity = mat.get(CYCLES_TOONER_OPACITY_PROP, getattr(mat, "cyclestooner_opacity", 1.0))
+
+    obsolete_nodes = collect_obsolete_mix_nodes(root_node)
+    setup_toon_opacity_nodes(
+        mat,
+        toon_node,
+        output_node,
+        alpha_source=get_alpha_source_from_root_mix(root_node),
+        opacity=opacity,
+    )
+    remove_nodes_if_present(nodes, obsolete_nodes)
+    return True
+
+
+def refresh_material_opacity_flow(mat):
+    """Apply the material's toggle settings to an already converted material."""
+    if not mat.use_nodes or not mat.node_tree:
+        return False
+    if not mat.node_tree.nodes.get(CYCLES_TOONER_OPACITY_NODE):
+        return False
+    return rebuild_material_opacity_flow(mat)
 
 
 def _replace_input_link(links, input_socket, output_socket):
@@ -1225,16 +1322,7 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
         if principled_node.type == 'MIX_SHADER':
             toon_node = find_toon_node_from_root(principled_node)
             if toon_node:
-                alpha_source = get_alpha_source_from_root_mix(principled_node)
-                obsolete_nodes = collect_obsolete_mix_nodes(principled_node)
-                setup_toon_opacity_nodes(
-                    mat,
-                    toon_node,
-                    output_node,
-                    alpha_source=alpha_source,
-                    opacity=mat.get(CYCLES_TOONER_OPACITY_PROP, getattr(mat, "cyclestooner_opacity", 1.0)),
-                )
-                remove_nodes_if_present(nodes, obsolete_nodes)
+                rebuild_material_opacity_flow(mat)
                 organize_converted_material_nodes(mat)
                 return True
 
@@ -1604,6 +1692,8 @@ class OBJECT_OT_ToonReverter(bpy.types.Operator):
             mat.blend_method = 'OPAQUE'
         sync_material_opacity_property(mat, 1.0)
         sync_material_smooth_property(mat, DEFAULT_TOON_SMOOTH)
+        if getattr(mat, "cyclestooner_no_shadow", False):
+            mat.cyclestooner_no_shadow = False
             
         return True
 
@@ -1641,33 +1731,7 @@ class OBJECT_OT_SetToonOpacity(bpy.types.Operator):
         return {'FINISHED'}
 
     def apply_opacity_to_material(self, mat, opacity):
-        if not mat.use_nodes or not mat.node_tree:
-            return False
-
-        nodes = mat.node_tree.nodes
-        output_node = find_output_node(nodes)
-        if not output_node:
-            return False
-
-        surface_input = output_node.inputs.get('Surface')
-        if not surface_input or not surface_input.is_linked:
-            return False
-
-        root_node = surface_input.links[0].from_node
-        toon_node = find_toon_node_from_root(root_node)
-        if not toon_node:
-            return False
-
-        obsolete_nodes = collect_obsolete_mix_nodes(root_node)
-        setup_toon_opacity_nodes(
-            mat,
-            toon_node,
-            output_node,
-            alpha_source=get_alpha_source_from_root_mix(root_node),
-            opacity=opacity,
-        )
-        remove_nodes_if_present(nodes, obsolete_nodes)
-        return True
+        return rebuild_material_opacity_flow(mat, opacity)
 
 
 class OBJECT_OT_SetToonSmooth(bpy.types.Operator):
