@@ -66,6 +66,12 @@ User-facing explanations belong in `README.md`, `README_en.md`, and the GitHub P
 - Translate a report with `report_message()` before filling in its values; never pass an f-string to `self.report`.
 - Keep button and panel labels (`bl_label` and layout `text=`) in English so that they match the READMEs and GitHub Pages.
 
+### Contact Button
+
+- The `Contact` button at the bottom of the panel opens the shared contact form in a web browser. Use the Japanese form (`https://tally.so/r/kdVdDR`) when Blender's locale starts with `ja`, and the English form (`https://tally.so/r/KYqY78`) for every other language.
+- Add the URL-encoded parameters `product=CyclesTooner` and `version=<ADDON_VERSION_STRING>` so that the form is prefilled. Read the version from `__init__.py` at run time; never hard-code it.
+- The form is shared with other products. Do not change the form itself.
+
 ## Outline
 
 ### Add Outline

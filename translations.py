@@ -62,6 +62,9 @@ JAPANESE = {
     "Remove the selected model's outline and its unused data":
         "選択したモデルのアウトラインと、使われなくなったデータを削除します",
 
+    "Open the contact form in a web browser to send a bug report, request, or question":
+        "お問い合わせフォームをブラウザで開きます。不具合の報告、要望、質問を送れます",
+
     # Property descriptions
     "Opacity applied to selected toon materials": "選択したToonマテリアルに適用する不透明度",
     "Smooth value applied to selected toon materials": "選択したToonマテリアルに適用するSmoothの値",

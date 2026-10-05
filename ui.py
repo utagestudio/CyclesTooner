@@ -1,11 +1,46 @@
+import sys
+import urllib.parse
+
 import bpy
 
 OUTLINE_MATERIAL_NAME = "Toon_Outline"
 OUTLINE_MATERIAL_PROPERTY = "cyclestooner_outline_material"
+CONTACT_FORM_URL_JA = "https://tally.so/r/kdVdDR"
+CONTACT_FORM_URL_EN = "https://tally.so/r/KYqY78"
+CONTACT_FORM_PRODUCT = "CyclesTooner"
+
+
+def get_addon_version_string():
+    # ui is imported by the package, so read the version when it is needed.
+    module = sys.modules.get(__package__) if __package__ else sys.modules.get("__main__")
+    return getattr(module, "ADDON_VERSION_STRING", "")
+
+
+def build_contact_form_url():
+    """Return the contact form URL for Blender's language with the product and version filled in."""
+    locale = bpy.app.translations.locale or ""
+    base_url = CONTACT_FORM_URL_JA if locale.startswith("ja") else CONTACT_FORM_URL_EN
+    params = {"product": CONTACT_FORM_PRODUCT}
+    version = get_addon_version_string()
+    if version:
+        params["version"] = version
+    return f"{base_url}?{urllib.parse.urlencode(params, quote_via=urllib.parse.quote)}"
 
 
 def is_outline_material(mat):
     return bool(mat and (mat.get(OUTLINE_MATERIAL_PROPERTY) or mat.name == OUTLINE_MATERIAL_NAME))
+
+
+class WM_OT_CyclesToonerContact(bpy.types.Operator):
+    """お問い合わせフォームをブラウザで開きます。"""
+    bl_idname = "wm.cyclestooner_contact"
+    bl_label = "Contact"
+    bl_description = "Open the contact form in a web browser to send a bug report, request, or question"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        bpy.ops.wm.url_open(url=build_contact_form_url())
+        return {'FINISHED'}
 
 
 class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
@@ -93,3 +128,9 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
         row = column.row()
         op = row.operator("object.set_toon_outline_thickness", text="Apply Outline Thickness")
         op.thickness = context.scene.cyclestooner_outline_thickness
+
+        column.separator()
+
+        # お問い合わせフォームを開く
+        row = column.row()
+        row.operator("wm.cyclestooner_contact", text="Contact", icon='URL')
