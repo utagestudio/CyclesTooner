@@ -139,7 +139,6 @@ Convert と Add Outline は、シーンのデータを直接書き換えます�
 ## お問い合わせ
 
 不具合の報告、要望、質問は[お問い合わせフォーム](https://tally.so/r/kdVdDR?product=CyclesTooner)から送れます。
-Blender では、CyclesTooner パネルの一番下にある **Contact** ボタンから同じフォームを開けます。使用中のバージョンが入力された状態で開きます。
 GitHub のアカウントをお持ちなら、[Issues](https://github.com/utagestudio/CyclesTooner/issues) に書いていただいてもかまいません。
 
 ## 開発者向け
