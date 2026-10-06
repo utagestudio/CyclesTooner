@@ -112,6 +112,13 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.28.3</span><strong>Contactボタンを削除</strong><time datetime="2026-10-06">2026年10月6日</time></summary>
+          <ul>
+            <li>Blender Extensionsの審査での指摘に従い、パネルの一番下にあったContactボタンを削除しました。アドオンからWebページを開くことはなくなります。</li>
+            <li>お問い合わせフォームとGitHub Issuesは、引き続きこのページとREADMEの「お問い合わせ」から利用できます。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.28.2</span><strong>パネルのラベルを英語に統一</strong><time datetime="2026-10-06">2026年10月6日</time></summary>
           <ul>
             <li>パネルのボタンと項目名が、どの言語設定でもドキュメントと同じ英語で表示されるようになりました。これまで日本語表示では、Convert、Revert、Opacityなど一部だけが日本語になり、残りは英語のままでした。</li>
@@ -151,14 +158,6 @@
             <li>拡張機能の紹介文を「EEVEE向けトゥーンアバターをCyclesで使うためのツール」という内容に改め、Renderタグを追加し、Webサイトのリンク先をこのドキュメントサイトにしました。</li>
             <li>アドオンのメタデータの作者表記をutagestudioにしました。</li>
             <li>READMEとこのサイトを、クイックスタート、対応シェーダーの表、変換前の注意事項、トラブルシューティングを中心に再構成し、Unitypackage ImporterのUnlit変換についても記載しました。</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.26.2</span><strong>半透明マテリアルのプレビュー表示を安定化</strong><time datetime="2026-09-25">2026年9月25日</time></summary>
-          <ul>
-            <li>不透明度0.999などのほぼ不透明なマテリアルを変換した際、Material PreviewやEEVEEで面が裏返ったように見える問題を修正しました。</li>
-            <li>変換時とOpacity変更時にDitheredを使用し、Blendedによる面の描画順序の乱れを防ぎます。</li>
-            <li>設定済みの不透明度とCyclesシェーダーの透明度を保持します。既存の変換済みマテリアルには、次回のOpacity変更時に新設定が適用されます。</li>
           </ul>
         </details>
       </div>

@@ -115,6 +115,13 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.28.3</span><strong>Contact button removed</strong><time datetime="2026-10-06">October 6, 2026</time></summary>
+          <ul>
+            <li>Removes the Contact button from the bottom of the panel, as requested in the Blender Extensions review. The add-on no longer opens any web page.</li>
+            <li>The contact form and GitHub Issues are still available from the Contact section of this page and the README.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.28.2</span><strong>Consistent English panel labels</strong><time datetime="2026-10-06">October 6, 2026</time></summary>
           <ul>
             <li>Panel buttons and fields now stay in English in every language, matching the documentation. With Blender set to Japanese, a few labels such as Convert, Revert, and Opacity were shown in Japanese while the rest stayed in English.</li>
@@ -154,14 +161,6 @@
             <li>The extension listing now describes CyclesTooner as a tool for rendering EEVEE toon avatars in Cycles, adds the Render tag, and links to this documentation site.</li>
             <li>The add-on metadata now credits utagestudio as its author.</li>
             <li>The README and this site were reorganized around a quick start, a supported-shader table, cautions before converting, and troubleshooting, and now document Unitypackage Importer Unlit conversion.</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.26.2</span><strong>Stable transparent material previews</strong><time datetime="2026-09-25">September 25, 2026</time></summary>
-          <ul>
-            <li>Fixes surfaces appearing inside out in Material Preview and EEVEE when nearly opaque materials, such as opacity 0.999, are converted.</li>
-            <li>Uses Dithered rendering during conversion and opacity updates to avoid Blended face-order artifacts.</li>
-            <li>Preserves configured opacity and Cycles shader transparency; existing converted materials adopt the setting on their next opacity change.</li>
           </ul>
         </details>
       </div>
