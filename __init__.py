@@ -1,8 +1,8 @@
 
 # Version target and development identifier. The manifest stores the complete
 # SemVer string; Blender's bl_info accepts only the integer core tuple.
-ADDON_VERSION = (1, 28, 2)
-ADDON_VERSION_PRERELEASE = ""
+ADDON_VERSION = (1, 28, 3)
+ADDON_VERSION_PRERELEASE = "dev.1"
 ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 if ADDON_VERSION_PRERELEASE:
     ADDON_VERSION_STRING = f"{ADDON_VERSION_STRING}-{ADDON_VERSION_PRERELEASE}"
@@ -51,7 +51,6 @@ classes = (
     operators_outline.OBJECT_OT_AddOutline,
     operators_outline.OBJECT_OT_RefreshOutline,
     operators_outline.OBJECT_OT_RemoveOutline,
-    ui.WM_OT_CyclesToonerContact,
     ui.VIEW3D_PT_CyclesTooner,
 )
 

@@ -67,12 +67,6 @@ User-facing explanations belong in `README.md`, `README_en.md`, and the GitHub P
 - Keep button and panel labels (`bl_label` and layout `text=`) in English so that they match the READMEs and GitHub Pages.
 - Blender's own dictionary translates common words such as `Convert`, `Revert`, and `Opacity`. To keep labels in English in every language, give each operator `bl_translation_context = LABEL_CONTEXT` and each property `translation_context=LABEL_CONTEXT` (from `translations.py`), and pass `translate=False` with every layout `text=`. Register no translations under `LABEL_CONTEXT`; tooltips and descriptions are translated through the default context and are unaffected.
 
-### Contact Button
-
-- The `Contact` button at the bottom of the panel opens the shared contact form in a web browser. Use the Japanese form (`https://tally.so/r/kdVdDR`) when Blender's locale starts with `ja`, and the English form (`https://tally.so/r/KYqY78`) for every other language.
-- Add the URL-encoded parameters `product=CyclesTooner` and `version=<ADDON_VERSION_STRING>` so that the form is prefilled. Read the version from `__init__.py` at run time; never hard-code it.
-- The form is shared with other products. Do not change the form itself.
-
 ## Outline
 
 ### Add Outline
