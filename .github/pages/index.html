@@ -201,11 +201,13 @@
             Build inverted-hull outline objects from the selected model root using Geometry Nodes,
             excluding meshes disabled for rendering and keeping internal source collections out of the active View Layer.
             Converted VRToon models reuse the weights and Thickness prepared during conversion.
+            Parts hidden by setting their opacity to 0, as MMD models often do, get no outline.
           </p>
           <ul>
             <li>Object-driven outline targets</li>
             <li>Automatic CT_Outline weights for per-vertex thickness</li>
             <li>Reuse prepared VRToon weights and Thickness</li>
+            <li>Per-model alpha threshold that skips transparent materials</li>
             <li>Refresh and remove outline tools</li>
           </ul>
         </article>
@@ -221,6 +223,7 @@
             <li>Batch Smooth slider</li>
             <li>Per-material adjustment</li>
             <li>No Shadow toggle for materials that should not cast shadows</li>
+            <li>No Outline toggle for materials that should not have an outline</li>
             <li>Emission toggle for an unlit look</li>
           </ul>
         </article>

@@ -96,6 +96,7 @@ Convert and Add Outline modify scene data directly. Save your .blend file first 
 - **Material fields**: When the active material has been converted, change the following for that material only.
   - **Opacity / Smooth**: The same settings as above.
   - **No Shadow**: Stops the material from casting shadows in Cycles. Use it for eye materials that would otherwise darken the meshes around them. Turning it on also turns on Transparent Shadows in the material settings.
+  - **No Outline**: Excludes the material's faces from the model's outline. Use it for semi-transparent parts that need no outline, such as blush, tears, and eyeglass lenses.
   - **Emission / Emission Factor**: Mixes in an Emission shader that uses the material's own color, so that parts such as eye whites keep their color in shade. Emission Factor appears while Emission is on: `0` keeps the Toon shading and `1` shows the color with no shading. In Cycles the emission also lights nearby surfaces slightly. If the Toon BSDF Color has no texture connected and you change that color later, turn Emission off and on again to pick it up.
 
 ### Outlines
@@ -120,6 +121,13 @@ Convert and Add Outline modify scene data directly. Save your .blend file first 
   - Faces whose vertices all have weight `0` get no outline. Outlines created by an earlier version adopt this when you run Refresh Outline.
   - Models converted from VRToon use the thickness and weights saved during Convert.
 - **Outline Color / Apply Outline Color**: Changes the outline color of the selected model.
+- **Excluding transparent materials**
+  - Faces of materials whose opacity is at or below **Outline Alpha Threshold** (default `0.001`) get no outline. This also excludes parts that an MMD model hides by setting their Alpha to `0`.
+  - The threshold is a per-model setting. Change the value and click **Apply Outline Alpha Threshold** to apply it to the selected model. Raising it to about `0.99` removes the outline from semi-transparent parts as well. Add Outline uses the current value.
+  - The check uses the material's Opacity and the value set on the first input of `CyclesTooner_AlphaOpacity`. Texture alpha is not taken into account.
+  - Materials with **No Outline** turned on in the Material fields are excluded regardless of the threshold.
+  - Changes to Opacity, No Outline, and the threshold take effect immediately. Opacity animated with keyframes or drivers is not followed.
+  - Excluded faces receive the `CT_OutlineHidden` face attribute, which Remove Outline deletes. Outlines created by an earlier version adopt this when you run Refresh Outline.
 - **Refresh Outline**: Rebuilds the outline sources after you show or hide model parts. Select an object in the model or the outline object first. Color and thickness settings are kept.
 - **Remove Outline**: Deletes the outline object, its source collection, and outline data that is no longer used. Select an object in the model or the outline object first.
 
@@ -133,6 +141,7 @@ Messages and tooltips follow Blender's language setting and appear in English or
 | "An outline already exists for this root object." | The outline already exists. Update its sources with **Refresh Outline**, or delete it with **Remove Outline** and create it again. |
 | "No render-visible mesh was found for the outline." | The model hierarchy has no mesh that renders. Check the render visibility of the objects and collections. |
 | The outline remains after hiding a part | Click **Refresh Outline**. |
+| A part with Alpha `0` still has an outline | For an outline created by an earlier version, click **Refresh Outline**. If the Opacity is animated with keyframes, the animated value is not checked, so use **No Outline**. |
 | A VRToon outline disappeared after Convert | This is expected. Click **Add Outline** to rebuild it with the saved thickness. |
 | Revert does not restore the original look | Conversions from shaders other than Principled BSDF cannot be restored. Use the .blend file you saved before converting. |
 

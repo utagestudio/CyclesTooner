@@ -197,11 +197,13 @@
             選択オブジェクトの最上位親を基準に、Geometry Nodesで背面法アウトラインを生成します。
             レンダー無効のメッシュは対象から除外し、内部用SourceコレクションもView Layerから除外します。
             VRToonから変換したモデルでは、Convert時に退避したウェイトとThicknessを再利用します。
+            MMDモデルなどで不透明度を0にして非表示にした部位には、アウトラインを付けません。
           </p>
           <ul>
             <li>オブジェクト基準のアウトライン対象</li>
             <li>CT_Outlineの自動作成と頂点ごとの太さ制御</li>
             <li>退避したVRToonウェイトとThicknessを再利用</li>
+            <li>透明なマテリアルを除外するモデル単位のアルファしきい値</li>
             <li>更新・削除ツールを搭載</li>
           </ul>
         </article>
@@ -217,6 +219,7 @@
             <li>一括Smoothスライダー</li>
             <li>マテリアル単位の調整</li>
             <li>影を落とさないNo Shadowトグル</li>
+            <li>アウトラインを付けないNo Outlineトグル</li>
             <li>陰影のない見た目を加えるEmissionトグル</li>
           </ul>
         </article>
