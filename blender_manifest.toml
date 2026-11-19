@@ -17,6 +17,7 @@ paths_exclude_pattern = [
   "__pycache__/",
   "/.git/",
   "/*.zip",
+  "/dist/",
   "/_temp/",
   "/.agents/",
   "/.codex/",
