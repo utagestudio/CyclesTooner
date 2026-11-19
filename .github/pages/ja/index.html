@@ -112,6 +112,16 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.29.0</span><strong>透明なマテリアルをアウトラインから除外</strong><time datetime="2026-11-20">2026年11月20日</time></summary>
+          <ul>
+            <li>MMDモデルなどでマテリアルの不透明度を0にして非表示にした部位に、アウトラインが残らなくなりました。</li>
+            <li>Outline Alpha ThresholdとApply Outline Alpha Thresholdを追加しました。モデルごとに、不透明度がこの値以下のマテリアルからアウトラインを外します。値を上げると、半透明の部位も除外できます。</li>
+            <li>Material欄にNo Outlineトグルを追加しました。頬染め、涙、メガネのレンズなど、アウトラインが不要な部位に使えます。</li>
+            <li>Opacity、No Outline、しきい値の変更は、すぐにアウトラインに反映されます。以前のバージョンで作成したアウトラインは、Refresh Outlineで更新できます。</li>
+            <li>拡張機能をローカルでビルドしたとき、以前に作ったパッケージが入り込まなくなりました。</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.28.3</span><strong>Contactボタンを削除</strong><time datetime="2026-10-06">2026年10月6日</time></summary>
           <ul>
             <li>Blender Extensionsの審査での指摘に従い、パネルの一番下にあったContactボタンを削除しました。アドオンからWebページを開くことはなくなります。</li>
@@ -151,15 +161,6 @@
             <li>プリファレンスでレポートやツールチップの翻訳をオフにすると、英語で表示されます。</li>
           </ul>
         </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.26.3</span><strong>パッケージの整理とドキュメントの改善</strong><time datetime="2026-09-29">2026年9月29日</time></summary>
-          <ul>
-            <li>拡張機能のパッケージから開発用のファイルを除き、インストールされるのはアドオン本体、README、ライセンスだけになりました。</li>
-            <li>拡張機能の紹介文を「EEVEE向けトゥーンアバターをCyclesで使うためのツール」という内容に改め、Renderタグを追加し、Webサイトのリンク先をこのドキュメントサイトにしました。</li>
-            <li>アドオンのメタデータの作者表記をutagestudioにしました。</li>
-            <li>READMEとこのサイトを、クイックスタート、対応シェーダーの表、変換前の注意事項、トラブルシューティングを中心に再構成し、Unitypackage ImporterのUnlit変換についても記載しました。</li>
-          </ul>
-        </details>
       </div>
     </section>
 
@@ -197,11 +198,13 @@
             選択オブジェクトの最上位親を基準に、Geometry Nodesで背面法アウトラインを生成します。
             レンダー無効のメッシュは対象から除外し、内部用SourceコレクションもView Layerから除外します。
             VRToonから変換したモデルでは、Convert時に退避したウェイトとThicknessを再利用します。
+            MMDモデルなどで不透明度を0にして非表示にした部位には、アウトラインを付けません。
           </p>
           <ul>
             <li>オブジェクト基準のアウトライン対象</li>
             <li>CT_Outlineの自動作成と頂点ごとの太さ制御</li>
             <li>退避したVRToonウェイトとThicknessを再利用</li>
+            <li>透明なマテリアルを除外するモデル単位のアルファしきい値</li>
             <li>更新・削除ツールを搭載</li>
           </ul>
         </article>
@@ -217,6 +220,7 @@
             <li>一括Smoothスライダー</li>
             <li>マテリアル単位の調整</li>
             <li>影を落とさないNo Shadowトグル</li>
+            <li>アウトラインを付けないNo Outlineトグル</li>
             <li>陰影のない見た目を加えるEmissionトグル</li>
           </ul>
         </article>

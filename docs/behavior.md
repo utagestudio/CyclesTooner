@@ -26,9 +26,10 @@ User-facing explanations belong in `README.md`, `README_en.md`, and the GitHub P
 - Helpers that walk the flow from the Material Output, such as finding the Toon BSDF or the source alpha, must look through the optional nodes.
 - A toggle must not change a material that has no `CyclesTooner_Opacity` node.
 - `No Shadow` (`cyclestooner_no_shadow`) inserts the `CyclesTooner_ShadowTransparency` Math node (`MAXIMUM`) between `CyclesTooner_Transparency` and the `CyclesTooner_OpacityMix` factor, with the `Is Shadow Ray` output of the `CyclesTooner_LightPath` node as its second input. Enabling it also enables the material's Transparent Shadows setting, because Cycles otherwise ignores shader transparency for shadow rays.
+- `No Outline` (`cyclestooner_no_outline`) does not change the material's nodes. It excludes the material's faces from every outline whose sources use the material (see Outline Exclusion).
 - `Emission` (`cyclestooner_emission`) inserts the `CyclesTooner_EmissionMix` Mix Shader between the Toon BSDF and the first shader input of `CyclesTooner_OpacityMix`, with the Toon BSDF as its first shader and the `CyclesTooner_Emission` node as its second. Its factor is the material's `cyclestooner_emission_factor` (default `0.5`): `0` matches the toggle being off and `1` shows the unshaded color. The UI shows the factor only while the toggle is on.
 - On every rebuild, connect the Emission `Color` to the same source socket as the Toon BSDF `Color`, or copy the Toon BSDF color value when it is unlinked. Leave the Emission `Strength` as it is; the add-on controls the look through the mix factor only.
-- Revert removes the optional nodes and turns the toggles off.
+- Revert removes the optional nodes and turns the toggles off, including `No Outline`.
 
 ### Source Shader Classification
 
@@ -90,6 +91,7 @@ Root_Collection
 - `Add Outline` should configure the Geometry Nodes `Weight` input to use the `CT_Outline` attribute.
 - For every outline source mesh, `Add Outline` should create a `CT_Outline` vertex group with all vertices initialized to weight `0.5` when the group does not exist.
 - If an outline source mesh already has a `CT_Outline` vertex group, preserve the group and all of its existing weights unchanged.
+- `Add Outline` stores the scene's `Outline Alpha Threshold` on the model root and writes the hidden-face attribute to the outline sources (see Outline Exclusion).
 - The outline node group must delete every face whose offset distance (`Weight * Thickness`, averaged over the face) is `1e-6` or less, before offsetting. Such a face would coincide with the model surface, and Cycles renders coincident faces with artifacts or drops the surface on GPU devices.
 
 ### VRToon Outline Preparation
@@ -103,9 +105,23 @@ Root_Collection
 
 - `Refresh Outline` must require an actual selected model part or generated outline. Do not refresh from `context.collection` when nothing relevant is selected.
 - `Refresh Outline` should rebuild the source collection from the current root hierarchy while preserving the existing outline object, material, node group, and modifier values.
-- `Refresh Outline` adds the zero-offset face deletion to a node group created by an earlier version. It must not change the group in any other way.
+- `Refresh Outline` adds the zero-offset face deletion and the hidden-face deletion to a node group created by an earlier version. It must not change the group in any other way.
+- `Refresh Outline` rewrites the hidden-face attribute of the rebuilt sources with the root's stored threshold, and removes the attribute from meshes that are no longer sources.
+
+### Outline Exclusion
+
+- A face is excluded from the outline when its material has `No Outline` on, or when the material's maximum opacity is at or below the model's alpha threshold.
+- The maximum opacity is the `CyclesTooner_Opacity` value multiplied by the first input of `CyclesTooner_AlphaOpacity` when that input is unlinked. A linked alpha source, such as a texture, never exceeds `1`, so it is left out of the product. MMD material Alpha, the value MMD models switch between `1` and `0`, ends up in the Opacity value.
+- Only converted materials, which have the `CyclesTooner_Opacity` Value node, are checked against the threshold. Unconverted materials and empty slots keep their outline unless `No Outline` is on.
+- The threshold is stored per model as `cyclestooner_outline_alpha_threshold` on the root object. It defaults to `0.001` and is clamped to `0..1`. `Apply Outline Alpha Threshold` stores the scene value on the selected model's root and rewrites its sources. Outlines without a root use the default.
+- Python writes the result to the `CT_OutlineHidden` Boolean face attribute of each source mesh, from the material slot of each face. A mesh without excluded faces has no such attribute. Never change `CT_Outline` weights for exclusion.
+- The node group's `CyclesTooner_Outline_HiddenDelete` Delete Geometry node (Face domain, All) sits right after Realize Instances, before the offset and Set Material, and its selection is the `CT_OutlineHidden` named attribute.
+- Rewrite the attribute of the affected sources when `Add Outline`, `Refresh Outline`, or `Apply Outline Alpha Threshold` runs, when a material's Opacity or `No Outline` changes, and after Convert, Revert, and `Apply Opacity`.
+- The attribute is static. Opacity animated with keyframes or drivers is not followed.
+- Skip a source mesh in Edit Mode, because Blender overwrites mesh attributes when the mesh leaves Edit Mode.
 - If no render-visible mesh source is found during refresh, cancel and keep the existing source collection intact.
 
 ### Remove Outline
 
 - `Remove Outline` should remove the generated outline object, its source collection, empty outline container collection, and unused outline data blocks where safe.
+- `Remove Outline` removes the `CT_OutlineHidden` attribute from the meshes of the removed source collection.

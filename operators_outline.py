@@ -28,6 +28,14 @@ VRTOON_OUTLINE_THICK_GROUP = "vrt_outline_thick"
 VRTOON_OUTLINE_MASK_GROUP = "vrt_outline_mask"
 VRTOON_OUTLINE_MATERIAL_PROPERTY = "vrt_outline_mat"
 PREPARED_OUTLINE_THICKNESS_PROPERTY = "cyclestooner_prepared_outline_thickness"
+OUTLINE_HIDDEN_ATTRIBUTE = "CT_OutlineHidden"
+OUTLINE_HIDDEN_DELETE_NODE_NAME = "CyclesTooner_Outline_HiddenDelete"
+OUTLINE_HIDDEN_ATTRIBUTE_NODE_NAME = "CyclesTooner_Outline_HiddenAttribute"
+OUTLINE_ALPHA_THRESHOLD_PROPERTY = "cyclestooner_outline_alpha_threshold"
+DEFAULT_OUTLINE_ALPHA_THRESHOLD = 0.001
+# Material node names owned by operators_converter, which imports this module.
+MATERIAL_OPACITY_NODE_NAME = "CyclesTooner_Opacity"
+MATERIAL_ALPHA_MULTIPLY_NODE_NAME = "CyclesTooner_AlphaOpacity"
 
 
 def get_outline_base_name(target_collection):
@@ -735,6 +743,183 @@ def ensure_outline_zero_offset_delete(group):
     return True
 
 
+def ensure_outline_hidden_face_delete(group):
+    """Delete the faces whose source material is excluded from the outline."""
+    if not group:
+        return False
+    nodes = group.nodes
+    links = group.links
+    if nodes.get(OUTLINE_HIDDEN_DELETE_NODE_NAME):
+        return True
+
+    realize = next((node for node in nodes if node.type == 'REALIZE_INSTANCES'), None)
+    if not realize:
+        return False
+    realize_output = realize.outputs.get('Geometry')
+    if not realize_output or not realize_output.is_linked:
+        return False
+    targets = [link.to_socket for link in realize_output.links]
+
+    attribute = nodes.new('GeometryNodeInputNamedAttribute')
+    attribute.name = OUTLINE_HIDDEN_ATTRIBUTE_NODE_NAME
+    attribute.label = "CyclesTooner Outline Hidden"
+    attribute.data_type = 'BOOLEAN'
+    attribute.inputs['Name'].default_value = OUTLINE_HIDDEN_ATTRIBUTE
+    attribute.location = (realize.location.x, realize.location.y - 360)
+
+    delete = nodes.new('GeometryNodeDeleteGeometry')
+    delete.name = OUTLINE_HIDDEN_DELETE_NODE_NAME
+    delete.label = "CyclesTooner Delete Hidden Faces"
+    delete.domain = 'FACE'
+    delete.mode = 'ALL'
+    delete.location = (realize.location.x + 160, realize.location.y - 200)
+
+    for link in list(realize_output.links):
+        links.remove(link)
+    links.new(realize_output, delete.inputs['Geometry'])
+    links.new(attribute.outputs['Attribute'], delete.inputs['Selection'])
+    for target in targets:
+        links.new(delete.outputs['Geometry'], target)
+    return True
+
+
+def clamp_alpha_threshold(value):
+    return max(0.0, min(1.0, float(value)))
+
+
+def get_outline_alpha_threshold(root_obj):
+    if root_obj is None:
+        return DEFAULT_OUTLINE_ALPHA_THRESHOLD
+    return clamp_alpha_threshold(
+        root_obj.get(OUTLINE_ALPHA_THRESHOLD_PROPERTY, DEFAULT_OUTLINE_ALPHA_THRESHOLD)
+    )
+
+
+def get_material_outline_alpha(mat):
+    """Return the highest opacity a converted material can reach, or None if unconverted.
+
+    A linked alpha source such as a texture never exceeds 1, so it only lowers
+    the result and is left out. The material Alpha that MMD models switch
+    between 1 and 0 ends up in the Opacity value.
+    """
+    if not mat or not mat.use_nodes or not mat.node_tree:
+        return None
+    nodes = mat.node_tree.nodes
+    opacity_node = nodes.get(MATERIAL_OPACITY_NODE_NAME)
+    if not opacity_node or opacity_node.type != 'VALUE':
+        return None
+    alpha = float(opacity_node.outputs['Value'].default_value)
+
+    alpha_multiply = nodes.get(MATERIAL_ALPHA_MULTIPLY_NODE_NAME)
+    if alpha_multiply and alpha_multiply.type == 'MATH':
+        alpha_input = alpha_multiply.inputs[0]
+        if not alpha_input.is_linked:
+            alpha *= float(alpha_input.default_value)
+    return max(0.0, min(1.0, alpha))
+
+
+def is_material_hidden_from_outline(mat, threshold):
+    if not mat:
+        return False
+    if getattr(mat, "cyclestooner_no_outline", False):
+        return True
+    alpha = get_material_outline_alpha(mat)
+    return alpha is not None and alpha <= threshold
+
+
+def remove_outline_hidden_attribute(obj):
+    if not obj or obj.type != 'MESH' or not obj.data:
+        return False
+    attribute = obj.data.attributes.get(OUTLINE_HIDDEN_ATTRIBUTE)
+    if not attribute:
+        return False
+    obj.data.attributes.remove(attribute)
+    return True
+
+
+def write_outline_hidden_attribute(obj, threshold):
+    """Mark the faces of excluded materials. Return the number of marked faces."""
+    if not obj or obj.type != 'MESH' or not obj.data or obj.mode == 'EDIT':
+        return 0
+    mesh = obj.data
+    hidden_slots = [
+        is_material_hidden_from_outline(slot.material, threshold)
+        for slot in obj.material_slots
+    ]
+    if not any(hidden_slots) or not mesh.polygons:
+        remove_outline_hidden_attribute(obj)
+        return 0
+
+    material_indices = [0] * len(mesh.polygons)
+    mesh.polygons.foreach_get('material_index', material_indices)
+    slot_count = len(hidden_slots)
+    hidden = [
+        hidden_slots[index] if 0 <= index < slot_count else False
+        for index in material_indices
+    ]
+    hidden_count = sum(hidden)
+    if hidden_count == 0:
+        remove_outline_hidden_attribute(obj)
+        return 0
+
+    attribute = mesh.attributes.get(OUTLINE_HIDDEN_ATTRIBUTE)
+    if attribute and (attribute.domain != 'FACE' or attribute.data_type != 'BOOLEAN'):
+        mesh.attributes.remove(attribute)
+        attribute = None
+    if not attribute:
+        attribute = mesh.attributes.new(OUTLINE_HIDDEN_ATTRIBUTE, 'BOOLEAN', 'FACE')
+    attribute.data.foreach_set('value', hidden)
+    mesh.update()
+    return hidden_count
+
+
+def update_outline_hidden_faces(source_collection, root_obj, materials=None):
+    """Rewrite the hidden-face attribute of an outline's source meshes."""
+    if not source_collection:
+        return 0
+    threshold = get_outline_alpha_threshold(root_obj)
+    material_names = {mat.name for mat in materials} if materials is not None else None
+    hidden_count = 0
+    for obj in source_collection.all_objects:
+        if obj.type != 'MESH':
+            continue
+        if material_names is not None and not any(
+            slot.material and slot.material.name in material_names
+            for slot in obj.material_slots
+        ):
+            continue
+        hidden_count += write_outline_hidden_attribute(obj, threshold)
+    return hidden_count
+
+
+def iter_outline_sources():
+    """Yield (outline object, source collection, root object) for every outline."""
+    for outline_obj in bpy.data.objects:
+        if outline_obj.type != 'MESH' or not find_outline_modifier(outline_obj):
+            continue
+        source_name = outline_obj.get(OUTLINE_SOURCE_PROPERTY)
+        if not source_name and outline_obj.name.endswith("_Outline"):
+            source_name = f"{outline_obj.name.removesuffix('_Outline')}{OUTLINE_SOURCE_SUFFIX}"
+        source_collection = bpy.data.collections.get(source_name) if source_name else None
+        if not source_collection:
+            continue
+        root_name = outline_obj.get(OUTLINE_ROOT_PROPERTY)
+        root_obj = bpy.data.objects.get(root_name) if root_name else None
+        yield outline_obj, source_collection, root_obj
+
+
+def refresh_outline_hidden_faces_for_materials(materials):
+    """Update every outline whose sources use one of the given materials."""
+    materials = [mat for mat in materials if mat]
+    if not materials:
+        return 0
+    hidden_count = 0
+    for outline_obj, source_collection, root_obj in iter_outline_sources():
+        hidden_count += update_outline_hidden_faces(source_collection, root_obj, materials)
+        outline_obj.update_tag()
+    return hidden_count
+
+
 def is_outline_excluded_object(obj, render_enabled_collections=None):
     if obj.type != 'MESH':
         return True
@@ -1036,6 +1221,11 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
             if remove_vrtoon_outline(source_obj):
                 removed_count += 1
 
+        root_obj[OUTLINE_ALPHA_THRESHOLD_PROPERTY] = clamp_alpha_threshold(
+            context.scene.cyclestooner_outline_alpha_threshold
+        )
+        update_outline_hidden_faces(source_collection, root_obj)
+
         exclude_collection_from_view_layer(context.view_layer, source_collection)
         context.view_layer.update()
 
@@ -1220,6 +1410,7 @@ class OBJECT_OT_AddOutline(bpy.types.Operator):
         socket_out_geo = get_socket(output_node, 'Geometry', is_output=False)
         links.new(set_mat.outputs['Geometry'], socket_out_geo)
 
+        ensure_outline_hidden_face_delete(group)
         ensure_outline_zero_offset_delete(group)
         
         return group
@@ -1306,6 +1497,61 @@ class OBJECT_OT_SetOutlineThickness(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class OBJECT_OT_SetOutlineAlphaThreshold(bpy.types.Operator):
+    """選択中のモデルのアウトラインから除外する不透明度のしきい値を変更します。"""
+    bl_idname = "object.set_toon_outline_alpha_threshold"
+    bl_label = "Apply Outline Alpha Threshold"
+    bl_translation_context = LABEL_CONTEXT
+    bl_description = "Apply the alpha threshold to the selected model's outline. Faces of materials whose opacity is at or below it get no outline"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    threshold: bpy.props.FloatProperty(
+        name="Outline Alpha Threshold",
+        translation_context=LABEL_CONTEXT,
+        description="Materials whose opacity is at or below this value get no outline. Texture alpha is not taken into account",
+        min=0.0,
+        max=1.0,
+        precision=3,
+        default=DEFAULT_OUTLINE_ALPHA_THRESHOLD,
+        subtype='FACTOR',
+    )
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        target_collection = resolve_outline_target_collection(context, list(context.selected_objects))
+        outline_obj = find_outline_object(target_collection) if target_collection else None
+        mod = find_outline_modifier(outline_obj) if outline_obj else None
+        if not mod:
+            self.report({'WARNING'}, report_message("No outline was found for the selected model."))
+            return {'CANCELLED'}
+
+        source_name = outline_obj.get(OUTLINE_SOURCE_PROPERTY)
+        source_collection = bpy.data.collections.get(source_name) if source_name else None
+        if not source_collection and is_internal_outline_source_collection(target_collection):
+            source_collection = target_collection
+        if not source_collection:
+            self.report({'WARNING'}, report_message("The outline source collection was not found."))
+            return {'CANCELLED'}
+
+        root_name = outline_obj.get(OUTLINE_ROOT_PROPERTY)
+        root_obj = bpy.data.objects.get(root_name) if root_name else None
+        if not root_obj:
+            self.report({'WARNING'}, report_message("The outline root object was not found. Run Remove Outline and Add Outline again."))
+            return {'CANCELLED'}
+
+        root_obj[OUTLINE_ALPHA_THRESHOLD_PROPERTY] = clamp_alpha_threshold(self.threshold)
+        ensure_outline_hidden_face_delete(mod.node_group)
+        update_outline_hidden_faces(source_collection, root_obj)
+        outline_obj.update_tag()
+        context.view_layer.update()
+
+        self.report({'INFO'}, report_message("Changed the outline alpha threshold."))
+        return {'FINISHED'}
+
+
 class OBJECT_OT_RefreshOutline(bpy.types.Operator):
     """
     既存アウトラインの参照元コレクションを現在の表示状態で再構築するオペレーター
@@ -1370,6 +1616,13 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
             self.report({'WARNING'}, report_message("No render-visible mesh was found for the outline. The existing sources were kept."))
             return {'CANCELLED'}
 
+        previous_source_collection = known_source_collection or (
+            target_collection if is_internal_outline_source_collection(target_collection) else None
+        )
+        previous_source_objects = (
+            list(previous_source_collection.all_objects) if previous_source_collection else []
+        )
+
         if root_obj:
             parent_collection = find_object_parent_collection(root_obj, context.collection, context.scene.collection)
             source_collection, source_count = create_root_outline_collections(
@@ -1397,8 +1650,15 @@ class OBJECT_OT_RefreshOutline(bpy.types.Operator):
         if not set_modifier_input(mod, 'Collection', source_collection):
             self.report({'WARNING'}, report_message("Could not update the outline Collection input."))
             return {'CANCELLED'}
-        # Outlines created by earlier versions keep faces that coincide with the model.
+        # Outlines created by earlier versions lack the face deletions.
+        ensure_outline_hidden_face_delete(mod.node_group)
         ensure_outline_zero_offset_delete(mod.node_group)
+        current_source_objects = set(source_collection.all_objects)
+        for obj in previous_source_objects:
+            if obj not in current_source_objects:
+                remove_outline_hidden_attribute(obj)
+        update_outline_hidden_faces(source_collection, root_obj)
+        outline_obj.update_tag()
 
         self.report({'INFO'}, report_message(
             "Refreshed the outline sources for collection '{name}' ({count} mesh(es)).",
@@ -1484,6 +1744,13 @@ class OBJECT_OT_RemoveOutline(bpy.types.Operator):
             for mat_slot in obj.material_slots:
                 if mat_slot.material:
                     materials_to_check.add(mat_slot.material)
+
+        # The source meshes no longer feed an outline.
+        for collection_name in source_collections_to_remove:
+            source_collection = bpy.data.collections.get(collection_name)
+            if source_collection:
+                for source_obj in source_collection.all_objects:
+                    remove_outline_hidden_attribute(source_obj)
 
         # オブジェクトの完全削除
         for obj in objects_to_delete:

@@ -1,7 +1,7 @@
 
 # Version target and development identifier. The manifest stores the complete
 # SemVer string; Blender's bl_info accepts only the integer core tuple.
-ADDON_VERSION = (1, 28, 3)
+ADDON_VERSION = (1, 29, 0)
 ADDON_VERSION_PRERELEASE = ""
 ADDON_VERSION_STRING = ".".join(map(str, ADDON_VERSION))
 if ADDON_VERSION_PRERELEASE:
@@ -48,6 +48,7 @@ classes = (
     operators_converter.OBJECT_OT_SetToonSmooth,
     operators_outline.OBJECT_OT_SetOutlineColor,
     operators_outline.OBJECT_OT_SetOutlineThickness,
+    operators_outline.OBJECT_OT_SetOutlineAlphaThreshold,
     operators_outline.OBJECT_OT_AddOutline,
     operators_outline.OBJECT_OT_RefreshOutline,
     operators_outline.OBJECT_OT_RemoveOutline,
@@ -101,6 +102,16 @@ def register():
         precision=4,
         default=operators_outline.DEFAULT_OUTLINE_THICKNESS,
     )
+    bpy.types.Scene.cyclestooner_outline_alpha_threshold = bpy.props.FloatProperty(
+        name="Outline Alpha Threshold",
+        translation_context=translations.LABEL_CONTEXT,
+        description="Materials whose opacity is at or below this value get no outline. Texture alpha is not taken into account",
+        min=0.0,
+        max=1.0,
+        precision=3,
+        default=operators_outline.DEFAULT_OUTLINE_ALPHA_THRESHOLD,
+        subtype='FACTOR',
+    )
     bpy.types.Material.cyclestooner_opacity = bpy.props.FloatProperty(
         name="Opacity",
         translation_context=translations.LABEL_CONTEXT,
@@ -127,6 +138,13 @@ def register():
         description="Stop this CyclesTooner material from casting shadows in Cycles",
         default=False,
         update=operators_converter.update_material_no_shadow_property,
+    )
+    bpy.types.Material.cyclestooner_no_outline = bpy.props.BoolProperty(
+        name="No Outline",
+        translation_context=translations.LABEL_CONTEXT,
+        description="Exclude the faces of this CyclesTooner material from the model's outline",
+        default=False,
+        update=operators_converter.update_material_no_outline_property,
     )
     bpy.types.Material.cyclestooner_emission = bpy.props.BoolProperty(
         name="Emission",
@@ -156,6 +174,8 @@ def unregister():
         del bpy.types.Material.cyclestooner_smooth
     if hasattr(bpy.types.Material, "cyclestooner_no_shadow"):
         del bpy.types.Material.cyclestooner_no_shadow
+    if hasattr(bpy.types.Material, "cyclestooner_no_outline"):
+        del bpy.types.Material.cyclestooner_no_outline
     if hasattr(bpy.types.Material, "cyclestooner_emission"):
         del bpy.types.Material.cyclestooner_emission
     if hasattr(bpy.types.Material, "cyclestooner_emission_factor"):
@@ -168,6 +188,8 @@ def unregister():
         del bpy.types.Scene.cyclestooner_outline_color
     if hasattr(bpy.types.Scene, "cyclestooner_outline_thickness"):
         del bpy.types.Scene.cyclestooner_outline_thickness
+    if hasattr(bpy.types.Scene, "cyclestooner_outline_alpha_threshold"):
+        del bpy.types.Scene.cyclestooner_outline_alpha_threshold
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)

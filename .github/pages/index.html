@@ -115,6 +115,16 @@
       </div>
       <div class="update-list">
         <details class="update-entry" open>
+          <summary><span class="update-version">v1.29.0</span><strong>Outlines skip transparent materials</strong><time datetime="2026-11-20">November 20, 2026</time></summary>
+          <ul>
+            <li>Parts hidden by setting their material opacity to 0, as MMD models often do, no longer keep an outline.</li>
+            <li>Adds Outline Alpha Threshold and Apply Outline Alpha Threshold, a per-model setting that removes the outline from materials at or below that opacity. Raise it to also skip semi-transparent parts.</li>
+            <li>Adds a No Outline toggle to the Material fields for parts such as blush, tears, and eyeglass lenses that should have no outline.</li>
+            <li>Changes to Opacity, No Outline, and the threshold show up on the outline right away. Run Refresh Outline to bring outlines from earlier versions up to date.</li>
+            <li>Local builds of the extension no longer pack previously built packages.</li>
+          </ul>
+        </details>
+        <details class="update-entry">
           <summary><span class="update-version">v1.28.3</span><strong>Contact button removed</strong><time datetime="2026-10-06">October 6, 2026</time></summary>
           <ul>
             <li>Removes the Contact button from the bottom of the panel, as requested in the Blender Extensions review. The add-on no longer opens any web page.</li>
@@ -152,15 +162,6 @@
             <li>Operator messages, warnings, button tooltips, and property descriptions now follow Blender's language setting and appear in English or Japanese.</li>
             <li>Tooltips now explain each button instead of showing internal notes, and the Add Outline tooltip states that it is intended for converted models.</li>
             <li>Turning off report or tooltip translation in Preferences shows the English text.</li>
-          </ul>
-        </details>
-        <details class="update-entry">
-          <summary><span class="update-version">v1.26.3</span><strong>Cleaner package and clearer documentation</strong><time datetime="2026-09-29">September 29, 2026</time></summary>
-          <ul>
-            <li>The extension package no longer includes development-only files, so installs contain only the add-on, its README, and the license.</li>
-            <li>The extension listing now describes CyclesTooner as a tool for rendering EEVEE toon avatars in Cycles, adds the Render tag, and links to this documentation site.</li>
-            <li>The add-on metadata now credits utagestudio as its author.</li>
-            <li>The README and this site were reorganized around a quick start, a supported-shader table, cautions before converting, and troubleshooting, and now document Unitypackage Importer Unlit conversion.</li>
           </ul>
         </details>
       </div>
@@ -201,11 +202,13 @@
             Build inverted-hull outline objects from the selected model root using Geometry Nodes,
             excluding meshes disabled for rendering and keeping internal source collections out of the active View Layer.
             Converted VRToon models reuse the weights and Thickness prepared during conversion.
+            Parts hidden by setting their opacity to 0, as MMD models often do, get no outline.
           </p>
           <ul>
             <li>Object-driven outline targets</li>
             <li>Automatic CT_Outline weights for per-vertex thickness</li>
             <li>Reuse prepared VRToon weights and Thickness</li>
+            <li>Per-model alpha threshold that skips transparent materials</li>
             <li>Refresh and remove outline tools</li>
           </ul>
         </article>
@@ -221,6 +224,7 @@
             <li>Batch Smooth slider</li>
             <li>Per-material adjustment</li>
             <li>No Shadow toggle for materials that should not cast shadows</li>
+            <li>No Outline toggle for materials that should not have an outline</li>
             <li>Emission toggle for an unlit look</li>
           </ul>
         </article>

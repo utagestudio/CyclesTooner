@@ -76,7 +76,8 @@ def update_material_opacity_property(self, context):
     if is_outline_material(self):
         return
     opacity = clamp_opacity(getattr(self, "cyclestooner_opacity", 1.0))
-    set_material_opacity(self, opacity)
+    if set_material_opacity(self, opacity):
+        operators_outline.refresh_outline_hidden_faces_for_materials([self])
 
 
 def update_material_smooth_property(self, context):
@@ -90,6 +91,12 @@ def update_material_no_shadow_property(self, context):
     if is_outline_material(self):
         return
     refresh_material_opacity_flow(self)
+
+
+def update_material_no_outline_property(self, context):
+    if is_outline_material(self):
+        return
+    operators_outline.refresh_outline_hidden_faces_for_materials([self])
 
 
 def update_material_emission_property(self, context):
@@ -1330,9 +1337,12 @@ class OBJECT_OT_ToonConverter(bpy.types.Operator):
             
         # 収集したオブジェクトごとにマテリアル変換処理を実行
         processed_count = 0
+        processed_materials = []
         for mat in iter_object_materials(objects_to_process):
             if self.process_material(mat):
                 processed_count += 1
+                processed_materials.append(mat)
+        operators_outline.refresh_outline_hidden_faces_for_materials(processed_materials)
 
         prepared_count = operators_outline.prepare_vrtoon_outlines(objects_to_process)
         
@@ -1650,9 +1660,12 @@ class OBJECT_OT_ToonReverter(bpy.types.Operator):
             
         # 収集したオブジェクトごとにリバート処理を実行
         processed_count = 0
+        processed_materials = []
         for mat in iter_object_materials(objects_to_process):
             if self.revert_material(mat):
                 processed_count += 1
+                processed_materials.append(mat)
+        operators_outline.refresh_outline_hidden_faces_for_materials(processed_materials)
         
         self.report({'INFO'}, report_message("Reverted materials on {count} object(s).", count=len(objects_to_process)))
         return {'FINISHED'}
@@ -1771,6 +1784,8 @@ class OBJECT_OT_ToonReverter(bpy.types.Operator):
             mat.cyclestooner_no_shadow = False
         if getattr(mat, "cyclestooner_emission", False):
             mat.cyclestooner_emission = False
+        if getattr(mat, "cyclestooner_no_outline", False):
+            mat.cyclestooner_no_outline = False
             
         return True
 
@@ -1802,9 +1817,12 @@ class OBJECT_OT_SetToonOpacity(bpy.types.Operator):
         objects_to_process = collect_selected_objects_recursive(context.selected_objects)
         processed_count = 0
 
+        processed_materials = []
         for mat in iter_object_materials(objects_to_process):
             if self.apply_opacity_to_material(mat, self.opacity):
                 processed_count += 1
+                processed_materials.append(mat)
+        operators_outline.refresh_outline_hidden_faces_for_materials(processed_materials)
 
         self.report({'INFO'}, report_message("Applied opacity to {count} material(s).", count=processed_count))
         return {'FINISHED'}

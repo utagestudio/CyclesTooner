@@ -28,6 +28,10 @@ JAPANESE = {
     "Changed the outline color.": "アウトライン色を変更しました。",
     "Could not update the outline Thickness input.": "アウトラインのThickness入力を更新できませんでした。",
     "Changed the outline thickness.": "アウトラインの太さを変更しました。",
+    "Changed the outline alpha threshold.": "アウトラインのアルファしきい値を変更しました。",
+    "The outline source collection was not found.": "アウトラインの対象コレクションが見つかりませんでした。",
+    "The outline root object was not found. Run Remove Outline and Add Outline again.":
+        "アウトラインのルートオブジェクトが見つかりませんでした。Remove OutlineのあとにAdd Outlineをやり直してください。",
     "No collection to refresh was found.": "更新対象のコレクションが見つかりませんでした。",
     "No outline to refresh was found. Run Add Outline first.":
         "更新対象のアウトラインが見つかりませんでした。先にAdd Outlineを実行してください。",
@@ -57,6 +61,8 @@ JAPANESE = {
         "選択したオブジェクトを含むモデルに、背面法のアウトラインを作成します。CyclesTooner で変換済みのモデル向けの機能です",
     "Apply the outline color to the selected model's outline": "選択したモデルのアウトラインに色を適用します",
     "Apply the base thickness to the selected model's outline": "選択したモデルのアウトラインに基本の太さを適用します",
+    "Apply the alpha threshold to the selected model's outline. Faces of materials whose opacity is at or below it get no outline":
+        "選択したモデルのアウトラインにアルファしきい値を適用します。不透明度がこの値以下のマテリアルの面には、アウトラインが付きません",
     "Rebuild the outline sources from the model's current render visibility":
         "モデルの現在のレンダー表示状態に合わせて、アウトラインの対象を作り直します",
     "Remove the selected model's outline and its unused data":
@@ -75,6 +81,10 @@ JAPANESE = {
         "このCyclesToonerマテリアルにEmissionを混ぜて、陰の中でも色が沈まないようにします",
     "How much of the Emission shader is mixed in. 0 keeps the Toon shading and 1 shows the unshaded color":
         "Emissionを混ぜる割合。0でToonの陰影のまま、1で陰影のない色になります",
+    "Exclude the faces of this CyclesTooner material from the model's outline":
+        "このCyclesToonerマテリアルの面を、モデルのアウトラインの対象から外します",
+    "Materials whose opacity is at or below this value get no outline. Texture alpha is not taken into account":
+        "不透明度がこの値以下のマテリアルには、アウトラインが付きません。テクスチャのアルファは判定に含めません",
 }
 
 # Translation context for button labels and property names. Nothing is
