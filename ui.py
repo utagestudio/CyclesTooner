@@ -65,6 +65,7 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
             box.prop(active_mat, "cyclestooner_opacity", text="Opacity", translate=False)
             box.prop(active_mat, "cyclestooner_smooth", text="Smooth", translate=False)
             box.prop(active_mat, "cyclestooner_no_shadow", text="No Shadow", translate=False)
+            box.prop(active_mat, "cyclestooner_no_outline", text="No Outline", translate=False)
             box.prop(active_mat, "cyclestooner_emission", text="Emission", translate=False)
             if active_mat.cyclestooner_emission:
                 box.prop(active_mat, "cyclestooner_emission_factor", text="Emission Factor", translate=False)
@@ -93,3 +94,8 @@ class VIEW3D_PT_CyclesTooner(bpy.types.Panel):
         row = column.row()
         op = row.operator("object.set_toon_outline_thickness", text="Apply Outline Thickness", translate=False)
         op.thickness = context.scene.cyclestooner_outline_thickness
+
+        column.prop(context.scene, "cyclestooner_outline_alpha_threshold", text="Outline Alpha Threshold", translate=False)
+        row = column.row()
+        op = row.operator("object.set_toon_outline_alpha_threshold", text="Apply Outline Alpha Threshold", translate=False)
+        op.threshold = context.scene.cyclestooner_outline_alpha_threshold
