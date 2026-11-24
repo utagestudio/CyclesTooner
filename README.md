@@ -179,6 +179,10 @@ GitHub のアカウントをお持ちなら、[Issues](https://github.com/utages
 
 元に戻すときは、アドオンを無効にしてからリンクを削除します。
 
+## 制作
+
+制作: [UTAGE.STUDIO](https://utage.studio/)
+
 ## ライセンス
 
 [GPL-3.0-or-later](LICENSE)

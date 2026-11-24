@@ -179,6 +179,10 @@ Symlink the repository working tree into Blender's `user_default` extensions dir
 
 To undo this, disable the add-on and then delete the link.
 
+## Credits
+
+Developed by [UTAGE.STUDIO](https://utage.studio/)
+
 ## License
 
 [GPL-3.0-or-later](LICENSE)
